@@ -1,0 +1,2 @@
+from .import_dialog import TreatmentPaymentImportDialog
+from .view_dialog import TreatmentPaymentViewDialog
