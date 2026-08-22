@@ -31,6 +31,9 @@ def get_token() -> str:
 
 def _get_ssl_context():
     ctx = ssl.create_default_context()
+    # 允许自签名证书（必须先禁用 check_hostname，再设置 verify_mode）
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     return ctx
 
 
