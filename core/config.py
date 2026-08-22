@@ -2,7 +2,7 @@ import os
 import sys
 
 APP_NAME = "人口信息查询系统"
-APP_VERSION = "2.3.12"
+APP_VERSION = "0.0.1"
 
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)
