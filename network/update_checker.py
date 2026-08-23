@@ -13,7 +13,7 @@ from typing import Optional, Dict, Tuple
 
           
 VERSION_URLS = [
-    "https://gitee.com/tension0712/population-query-system/raw/main/updates/version.json",
+    "https://gitee.com/tension0712/population-system/raw/main/updates/version.json",
 ]
 
 def _get_config_dir():
@@ -102,7 +102,7 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[Dict], str]:
 def _get_release_download_url(app_type: str = "desktop") -> Optional[str]:
                                  
     try:
-        api_url = "https://gitee.com/api/v5/repos/tension0712/population-query-system/releases/latest"
+        api_url = "https://gitee.com/api/v5/repos/tension0712/population-system/releases/latest"
         headers = {'User-Agent': 'Mozilla/5.0'}
         resp = requests.get(api_url, headers=headers, timeout=10)
         resp.raise_for_status()
