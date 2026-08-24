@@ -195,7 +195,7 @@ class ExportFilterDialog(QDialog):
         form.addRow("脱贫户类型：", self.cmb_poor_type)
 
         self.cmb_dibao = QComboBox()
-        self.cmb_dibao.addItems(["全部", "否", "是"])
+        self.cmb_dibao.addItems(["全部", "是", "否", "低保边缘家庭", "特困家庭"])
         form.addRow("低保：", self.cmb_dibao)
 
         self.cmb_jisheng = QComboBox()

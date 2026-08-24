@@ -96,7 +96,8 @@ class EditDialog(QDialog):
         self.txt_remark = QLineEdit()
         self.txt_disability = QLineEdit()
         self.txt_dis_level = QLineEdit()
-        self.txt_dibao = QLineEdit()
+        self.cbo_dibao = QComboBox()
+        self.cbo_dibao.addItems(["", "是", "否", "低保边缘家庭", "特困家庭"])
         self.txt_jisheng = QLineEdit()
 
         fields = [
@@ -115,7 +116,7 @@ class EditDialog(QDialog):
             ("备注：", self.txt_remark),
             ("残疾：", self.txt_disability),
             ("残疾等级：", self.txt_dis_level),
-            ("低保：", self.txt_dibao),
+            ("低保：", self.cbo_dibao),
             ("是否计生家庭：", self.txt_jisheng),
         ]
 
@@ -278,7 +279,12 @@ class EditDialog(QDialog):
         self.txt_remark.setText(p.remark if p.remark != "无" else "")
         self.txt_disability.setText(p.disability if p.disability != "无" else "")
         self.txt_dis_level.setText(p.dis_level if p.dis_level != "无" else "")
-        self.txt_dibao.setText(p.dibao if p.dibao != "无" else "")
+        dibao_val = p.dibao if p.dibao != "无" else ""
+        idx = self.cbo_dibao.findText(dibao_val)
+        if idx >= 0:
+            self.cbo_dibao.setCurrentIndex(idx)
+        else:
+            self.cbo_dibao.setCurrentIndex(0)
         self.txt_jisheng.setText(p.jisheng if p.jisheng != "无" else "")
         self._load_current_photo()
         self._load_education_data()
@@ -574,7 +580,7 @@ class EditDialog(QDialog):
                 'remark': self.txt_remark.text().strip() or "无",
                 'disability': self.txt_disability.text().strip() or "无",
                 'dis_level': self.txt_dis_level.text().strip() or "无",
-                'dibao': self.txt_dibao.text().strip() or "无",
+                'dibao': self.cbo_dibao.currentText() or "无",
                 'jisheng': self.txt_jisheng.text().strip() or "无",
                 'updated_at': getattr(self.person, 'updated_at', ''),
                 'land_area_change_reason': land_reason
@@ -617,7 +623,7 @@ class EditDialog(QDialog):
             self.person.remark = self.txt_remark.text().strip() or "无"
             self.person.disability = self.txt_disability.text().strip() or "无"
             self.person.dis_level = self.txt_dis_level.text().strip() or "无"
-            self.person.dibao = self.txt_dibao.text().strip() or "无"
+            self.person.dibao = self.cbo_dibao.currentText() or "无"
             self.person.jisheng = self.txt_jisheng.text().strip() or "无"
 
             try:
