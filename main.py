@@ -24,6 +24,8 @@ from dialogs.land_subsidy.import_dialog import LandSubsidyImportDialog
 from dialogs.land_subsidy.view_dialog import LandSubsidyViewDialog
 from dialogs.treatment_payment.import_dialog import TreatmentPaymentImportDialog
 from dialogs.treatment_payment.view_dialog import TreatmentPaymentViewDialog
+from dialogs.pension_insurance.import_dialog import PensionInsuranceImportDialog
+from dialogs.pension_insurance.view_dialog import PensionInsuranceViewDialog
 from data.excel_importer import backup_database
 from network.client import get_server_url
 from network.update_checker import check_update, download_update, verify_file, update_local_version, apply_update
@@ -236,6 +238,15 @@ class MainWindow(QMainWindow):
         treatment_import_action.setEnabled(is_admin)
         treatment_menu.addAction(treatment_import_action)
         treatment_menu.addAction(treatment_view_action)
+
+        pension_menu = menubar.addMenu("养老保险")
+        pension_import_action = QAction("导入养老保险", self)
+        pension_import_action.triggered.connect(self._import_pension_insurance)
+        pension_view_action = QAction("查看养老保险", self)
+        pension_view_action.triggered.connect(self._view_pension_insurance)
+        pension_import_action.setEnabled(is_admin)
+        pension_menu.addAction(pension_import_action)
+        pension_menu.addAction(pension_view_action)
 
         help_menu = menubar.addMenu("帮助")
         check_update_action = QAction("检查更新", self)
@@ -1630,6 +1641,16 @@ class MainWindow(QMainWindow):
     def _view_treatment_payment(self):
         is_admin = self.current_user.get('role') == 'admin'
         dialog = TreatmentPaymentViewDialog(self.is_network_mode, is_admin, self)
+        dialog.exec()
+
+    def _import_pension_insurance(self):
+        dialog = PensionInsuranceImportDialog(self.is_network_mode, self)
+        if dialog.exec():
+            pass
+
+    def _view_pension_insurance(self):
+        is_admin = self.current_user.get('role') == 'admin'
+        dialog = PensionInsuranceViewDialog(self.is_network_mode, is_admin, self)
         dialog.exec()
 
     def _add_household(self):
