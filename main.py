@@ -540,7 +540,7 @@ class MainWindow(QMainWindow):
             dialog.exec()
         elif subsidy_key == "treatment_payment":
             dialog = TreatmentPaymentViewDialog(self.is_network_mode, is_admin, parent_dialog)
-            dialog.txt_search.setText(name)
+            dialog.txt_id_card.setText(id_card)
             dialog.exec()
 
     def _on_double_click(self, index):
