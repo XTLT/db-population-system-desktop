@@ -124,7 +124,7 @@ def get_backup_status() -> dict:
 
 def import_excel_full(file_path: str, progress_callback=None) -> dict:
     backup_database()
-    df = pd.read_excel(file_path, dtype=str)
+    df = _read_excel_robust(file_path)
     df = df.fillna("")
     total = len(df)
     imported = 0
@@ -155,7 +155,7 @@ def import_excel_full(file_path: str, progress_callback=None) -> dict:
 
 def import_excel_incremental(file_path: str, progress_callback=None) -> dict:
     backup_database()
-    df = pd.read_excel(file_path, dtype=str)
+    df = _read_excel_robust(file_path)
     df = df.fillna("")
     total = len(df)
     imported = 0
@@ -350,6 +350,23 @@ def _update_person_from_row(person: Person, row):
     person.land_area = safe_str(row.get("土地面积", person.land_area))
 
 
+def _read_excel_robust(file_path: str, header=None):
+    """读取 Excel 文件，自动检测格式和引擎"""
+    ext = os.path.splitext(file_path)[1].lower()
+    engines = (['openpyxl', 'xlrd'] if ext == '.xlsx'
+               else ['xlrd', 'openpyxl'] if ext == '.xls'
+               else ['openpyxl', 'xlrd'])
+    for engine in engines:
+        try:
+            return pd.read_excel(file_path, dtype=str, header=header, engine=engine)
+        except Exception:
+            continue
+    try:
+        return pd.read_csv(file_path, dtype=str, header=header, encoding='utf-8')
+    except Exception:
+        return pd.read_csv(file_path, dtype=str, header=header, encoding='gbk')
+
+
 def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callback=None) -> dict:
     """导入地力补贴数据
     
@@ -358,7 +375,7 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
     from core.database import get_session, LandSubsidy, Person
     import secrets
 
-    df = pd.read_excel(file_path, dtype=str, header=None)
+    df = _read_excel_robust(file_path)
     df = df.fillna("")
 
     header_row = -1
@@ -575,7 +592,7 @@ def import_treatment_payment(file_path: str, progress_callback=None) -> dict:
     import secrets
     import os
 
-    df = pd.read_excel(file_path, dtype=str, header=0)
+    df = _read_excel_robust(file_path, header=0)
     df = df.fillna("")
 
     # 检测表格类型
@@ -722,7 +739,7 @@ def import_pension_insurance(file_path: str, progress_callback=None) -> dict:
     """
     from core.database import get_session, PensionInsurance, Person
 
-    df = pd.read_excel(file_path, dtype=str, header=0)
+    df = _read_excel_robust(file_path, header=0)
     df = df.fillna("")
 
     columns = list(df.columns)
