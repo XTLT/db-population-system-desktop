@@ -99,6 +99,10 @@ class EditDialog(QDialog):
         self.cbo_dibao = QComboBox()
         self.cbo_dibao.addItems(["", "是", "否", "低保边缘家庭", "特困家庭"])
         self.txt_jisheng = QLineEdit()
+        self.cbo_tekun = QComboBox()
+        self.cbo_tekun.addItems(["", "是", "否"])
+        self.cbo_tekun_type = QComboBox()
+        self.cbo_tekun_type.addItems(["", "集中供养", "散居特困"])
 
         fields = [
             ("姓名：", self.txt_name),
@@ -118,6 +122,8 @@ class EditDialog(QDialog):
             ("残疾等级：", self.txt_dis_level),
             ("低保：", self.cbo_dibao),
             ("是否计生家庭：", self.txt_jisheng),
+            ("是否特困供养：", self.cbo_tekun),
+            ("供养类型：", self.cbo_tekun_type),
         ]
 
         for label_text, widget in fields:
@@ -286,6 +292,22 @@ class EditDialog(QDialog):
         else:
             self.cbo_dibao.setCurrentIndex(0)
         self.txt_jisheng.setText(p.jisheng if p.jisheng != "无" else "")
+        tekun_val = getattr(p, 'tekun', '') or ''
+        if tekun_val == "无":
+            tekun_val = ""
+        idx = self.cbo_tekun.findText(tekun_val)
+        if idx >= 0:
+            self.cbo_tekun.setCurrentIndex(idx)
+        else:
+            self.cbo_tekun.setCurrentIndex(0)
+        tekun_type_val = getattr(p, 'tekun_type', '') or ''
+        if tekun_type_val == "无":
+            tekun_type_val = ""
+        idx = self.cbo_tekun_type.findText(tekun_type_val)
+        if idx >= 0:
+            self.cbo_tekun_type.setCurrentIndex(idx)
+        else:
+            self.cbo_tekun_type.setCurrentIndex(0)
         self._load_current_photo()
         self._load_education_data()
 
@@ -582,6 +604,8 @@ class EditDialog(QDialog):
                 'dis_level': self.txt_dis_level.text().strip() or "无",
                 'dibao': self.cbo_dibao.currentText() or "无",
                 'jisheng': self.txt_jisheng.text().strip() or "无",
+                'tekun': self.cbo_tekun.currentText() or "无",
+                'tekun_type': self.cbo_tekun_type.currentText() or "无",
                 'updated_at': getattr(self.person, 'updated_at', ''),
                 'land_area_change_reason': land_reason
             }
@@ -625,6 +649,8 @@ class EditDialog(QDialog):
             self.person.dis_level = self.txt_dis_level.text().strip() or "无"
             self.person.dibao = self.cbo_dibao.currentText() or "无"
             self.person.jisheng = self.txt_jisheng.text().strip() or "无"
+            self.person.tekun = self.cbo_tekun.currentText() or "无"
+            self.person.tekun_type = self.cbo_tekun_type.currentText() or "无"
 
             try:
                 update_person(self.person)

@@ -222,6 +222,14 @@ def query_persons_with_filters(filters: dict) -> list:
             query = query.filter(Person.dibao == filters["dibao"])
         if filters.get("jisheng") and filters["jisheng"] != "全部":
             query = query.filter(Person.jisheng == filters["jisheng"])
+        if filters.get("tekun") and filters["tekun"] != "全部":
+            query = query.filter(Person.tekun == filters["tekun"])
+        if filters.get("tekun_type"):
+            tekun_type = filters["tekun_type"]
+            if isinstance(tekun_type, list) and tekun_type:
+                query = query.filter(Person.tekun_type.in_(tekun_type))
+            elif isinstance(tekun_type, str) and tekun_type != "全部":
+                query = query.filter(Person.tekun_type == tekun_type)
         land = filters.get("land_area", "全部")
         if land == "不为0":
             query = query.filter(Person.land_area != "", Person.land_area.isnot(None))
@@ -288,6 +296,8 @@ def export_excel(file_path: str, progress_callback=None, filters: dict = None) -
             "残疾等级": p.dis_level,
             "低保": p.dibao,
             "是否计生家庭": p.jisheng,
+            "特困供养": getattr(p, 'tekun', '') or "",
+            "供养类型": getattr(p, 'tekun_type', '') or "",
             "社保卡号1": p.social_card1,
             "社保卡号2": p.social_card2,
             "社保卡号3": p.social_card3,
@@ -323,6 +333,8 @@ def _row_to_person(row, idx) -> Person:
         dis_level=safe_str(row.get("残疾等级", "")),
         dibao=safe_str(row.get("低保", "")),
         jisheng=safe_str(row.get("是否计生家庭", "")),
+        tekun=safe_str(row.get("特困供养", "")),
+        tekun_type=safe_str(row.get("供养类型", "")),
         social_card1=safe_str(row.get("社保卡号1", "")),
         social_card2=safe_str(row.get("社保卡号2", "")),
         social_card3=safe_str(row.get("社保卡号3", "")),
@@ -344,6 +356,8 @@ def _update_person_from_row(person: Person, row):
     person.dis_level = safe_str(row.get("残疾等级", person.dis_level))
     person.dibao = safe_str(row.get("低保", person.dibao))
     person.jisheng = safe_str(row.get("是否计生家庭", person.jisheng))
+    person.tekun = safe_str(row.get("特困供养", getattr(person, 'tekun', '')))
+    person.tekun_type = safe_str(row.get("供养类型", getattr(person, 'tekun_type', '')))
     person.social_card1 = safe_str(row.get("社保卡号1", person.social_card1))
     person.social_card2 = safe_str(row.get("社保卡号2", person.social_card2))
     person.social_card3 = safe_str(row.get("社保卡号3", person.social_card3))

@@ -382,7 +382,8 @@ class MainWindow(QMainWindow):
         headers = [
             "匹配序号", "家庭人员姓名", "身份证号码", "与户主关系", "本户地址", "年龄",
             "电话号码", "是否死亡", "社保卡号1", "社保卡号2", "社保卡号3",
-            "脱贫户或监测户", "备注", "残疾", "残疾等级", "低保", "是否计生家庭", "土地面积",
+            "脱贫户或监测户", "备注", "残疾", "残疾等级", "低保", "是否计生家庭",
+            "特困供养", "供养类型", "土地面积",
             "本年地力补贴", "照片", "学生标记", "操作"
         ]
         self.table.setColumnCount(len(headers))
@@ -420,7 +421,8 @@ class MainWindow(QMainWindow):
         empty_cols = [
             (8, 'social_card1'), (9, 'social_card2'), (10, 'social_card3'),
             (11, 'poor_type'), (12, 'remark'), (13, 'disability'),
-            (14, 'dis_level'), (15, 'dibao'), (16, 'jisheng'), (17, 'land_area')
+            (14, 'dis_level'), (15, 'dibao'), (16, 'jisheng'),
+            (17, 'tekun'), (18, 'tekun_type'), (19, 'land_area')
         ]
         for col_idx, field in empty_cols:
             if not any(getattr(p, field, None) and getattr(p, field) != "无" for p in all_persons):
@@ -459,7 +461,9 @@ class MainWindow(QMainWindow):
                     p.age, p.phone, p.is_dead,
                     p.social_card1, p.social_card2, p.social_card3,
                     p.poor_type, p.remark, p.disability, p.dis_level,
-                    p.dibao, p.jisheng, p.land_area or "",
+                    p.dibao, p.jisheng,
+                    getattr(p, 'tekun', None) or "", getattr(p, 'tekun_type', None) or "",
+                    p.land_area or "",
                     subsidy_amount, photo_status, student_mark, "查看补贴"
                 ]
                 is_dead = p.is_dead == "是"
@@ -474,7 +478,7 @@ class MainWindow(QMainWindow):
                     else:
                         item = QTableWidgetItem(str(val) if val else "")
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        if col_idx == 18 and val:
+                        if col_idx == 20 and val:
                             item.setForeground(QColor(0, 102, 0))
                             item.setFont(QFont(FONT_NAME, FONT_SIZE, QFont.Weight.Bold))
                         if is_dead:

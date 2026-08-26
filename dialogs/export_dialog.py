@@ -202,6 +202,13 @@ class ExportFilterDialog(QDialog):
         self.cmb_jisheng.addItems(["全部", "否", "是"])
         form.addRow("计生家庭：", self.cmb_jisheng)
 
+        self.cmb_tekun = QComboBox()
+        self.cmb_tekun.addItems(["全部", "是", "否"])
+        form.addRow("特困供养：", self.cmb_tekun)
+
+        self.cmb_tekun_type = CheckableComboBox(["集中供养", "散居特困"])
+        form.addRow("供养类型：", self.cmb_tekun_type)
+
         self.cmb_land = QComboBox()
         self.cmb_land.addItems(["全部", "不为0", "空白"])
         form.addRow("土地面积：", self.cmb_land)
@@ -239,6 +246,8 @@ class ExportFilterDialog(QDialog):
         self.cmb_poor_type.reset_selection()
         self.cmb_dibao.setCurrentIndex(0)
         self.cmb_jisheng.setCurrentIndex(0)
+        self.cmb_tekun.setCurrentIndex(0)
+        self.cmb_tekun_type.reset_selection()
         self.cmb_land.setCurrentIndex(0)
 
     def update_count(self, count: int):
@@ -257,5 +266,7 @@ class ExportFilterDialog(QDialog):
             "poor_type": self.cmb_poor_type.get_selected(),
             "dibao": self.cmb_dibao.currentText(),
             "jisheng": self.cmb_jisheng.currentText(),
+            "tekun": self.cmb_tekun.currentText(),
+            "tekun_type": self.cmb_tekun_type.get_selected(),
             "land_area": self.cmb_land.currentText(),
         }

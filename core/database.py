@@ -147,6 +147,8 @@ class Person(Base):
     land_area = Column(String, default="")
     land_area_change_reason = Column(String, default="")
     land_area_change_time = Column(String, default="")
+    tekun = Column(String, default="")
+    tekun_type = Column(String, default="")
 
     __table_args__ = (
         Index("idx_name_hu_hao", "name", "hu_hao"),
@@ -291,6 +293,8 @@ class DeletedPerson(Base):
     social_card1 = Column(String, default="")
     social_card2 = Column(String, default="")
     social_card3 = Column(String, default="")
+    tekun = Column(String, default="")
+    tekun_type = Column(String, default="")
     is_migrated = Column(String, default="否")
     migration_date = Column(String, default="")
     migration_place = Column(String, default="")
@@ -413,6 +417,16 @@ def _migrate_db(engine):
             pass
         try:
             conn.execute(text("ALTER TABLE treatment_payment ADD COLUMN import_source VARCHAR DEFAULT ''"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE persons ADD COLUMN tekun VARCHAR DEFAULT ''"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE persons ADD COLUMN tekun_type VARCHAR DEFAULT ''"))
             conn.commit()
         except Exception:
             pass
@@ -817,6 +831,8 @@ def delete_person(person_id: str):
                 social_card1=person.social_card1,
                 social_card2=person.social_card2,
                 social_card3=person.social_card3,
+                tekun=person.tekun,
+                tekun_type=person.tekun_type,
                 is_migrated=person.is_migrated,
                 migration_date=person.migration_date,
                 migration_place=person.migration_place,
@@ -857,6 +873,8 @@ def recover_person(deleted_id: str):
                 social_card1=deleted.social_card1,
                 social_card2=deleted.social_card2,
                 social_card3=deleted.social_card3,
+                tekun=deleted.tekun,
+                tekun_type=deleted.tekun_type,
                 is_migrated=deleted.is_migrated,
                 migration_date=deleted.migration_date,
                 migration_place=deleted.migration_place,
