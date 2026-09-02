@@ -3,9 +3,10 @@ from PyQt6.QtWidgets import (
     QComboBox, QPushButton, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
-from core.database import add_person, check_duplicate_id_card
+from core.database import add_person
 from core.utils import calculate_age
 from core.database import Person
 from network.client import get_server_url
@@ -60,17 +61,40 @@ class AddDialog(QDialog):
         self.txt_social1 = QLineEdit()
         self.txt_social2 = QLineEdit()
         self.txt_social3 = QLineEdit()
-        self.txt_poor_type = QLineEdit()
+        self.cbo_poor_type = QComboBox()
+        self.cbo_poor_type.addItems(["", "脱贫户", "脱贫不稳定户", "突发严重困难户", "边缘易致贫户"])
         self.txt_remark = QLineEdit()
-        self.txt_disability = QLineEdit()
-        self.txt_dis_level = QLineEdit()
+        self.cbo_disability = QComboBox()
+        self.cbo_disability.addItems(["", "是", "否"])
+        self.cbo_disability.currentTextChanged.connect(self._on_disability_changed)
+        self.cbo_disability_type = QComboBox()
+        self.cbo_disability_type.addItems(["", "视力残疾", "听力残疾", "言语残疾", "肢体残疾", "智力残疾", "精神残疾", "多重残疾"])
+        self.cbo_disability_type_label = QLabel("残疾类型：")
+        self.cbo_disability_type_label.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.cbo_disability_type_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.cbo_disability_type.setVisible(False)
+        self.cbo_disability_type_label.setVisible(False)
+        self.cbo_dis_level = QComboBox()
+        self.cbo_dis_level.addItems(["", "一级", "二级", "三级", "四级"])
+        self.cbo_dis_level_label = QLabel("残疾等级：")
+        self.cbo_dis_level_label.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.cbo_dis_level_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.cbo_dis_level.setVisible(False)
+        self.cbo_dis_level_label.setVisible(False)
         self.cbo_dibao = QComboBox()
         self.cbo_dibao.addItems(["", "是", "否", "低保边缘家庭", "特困家庭"])
-        self.txt_jisheng = QLineEdit()
+        self.cbo_jisheng = QComboBox()
+        self.cbo_jisheng.addItems(["", "是", "否"])
         self.cbo_tekun = QComboBox()
         self.cbo_tekun.addItems(["", "是", "否"])
+        self.cbo_tekun.currentTextChanged.connect(self._on_tekun_changed)
         self.cbo_tekun_type = QComboBox()
         self.cbo_tekun_type.addItems(["", "集中供养", "散居特困"])
+        self.cbo_tekun_type_label = QLabel("供养类型：")
+        self.cbo_tekun_type_label.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.cbo_tekun_type_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.cbo_tekun_type.setVisible(False)
+        self.cbo_tekun_type_label.setVisible(False)
 
         fields = [
             ("姓名：", self.txt_name),
@@ -83,22 +107,33 @@ class AddDialog(QDialog):
             ("社保卡号1：", self.txt_social1),
             ("社保卡号2：", self.txt_social2),
             ("社保卡号3：", self.txt_social3),
-            ("脱贫户或监测户：", self.txt_poor_type),
+            ("脱贫户或监测户：", self.cbo_poor_type),
             ("备注：", self.txt_remark),
-            ("残疾：", self.txt_disability),
-            ("残疾等级：", self.txt_dis_level),
-            ("低保：", self.cbo_dibao),
-            ("是否计生家庭：", self.txt_jisheng),
-            ("是否特困供养：", self.cbo_tekun),
-            ("供养类型：", self.cbo_tekun_type),
+            ("残疾：", self.cbo_disability),
         ]
 
         for label_text, widget in fields:
             label = QLabel(label_text)
-            from PyQt6.QtGui import QFont
             label.setFont(QFont(FONT_NAME, FONT_SIZE))
             label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             form.addRow(label, widget)
+
+        form.addRow(self.cbo_disability_type_label, self.cbo_disability_type)
+        form.addRow(self.cbo_dis_level_label, self.cbo_dis_level)
+
+        more_fields = [
+            ("低保：", self.cbo_dibao),
+            ("是否计生家庭：", self.cbo_jisheng),
+            ("是否特困供养：", self.cbo_tekun),
+        ]
+
+        for label_text, widget in more_fields:
+            label = QLabel(label_text)
+            label.setFont(QFont(FONT_NAME, FONT_SIZE))
+            label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            form.addRow(label, widget)
+
+        form.addRow(self.cbo_tekun_type_label, self.cbo_tekun_type)
 
         layout.addLayout(form)
 
@@ -120,6 +155,18 @@ class AddDialog(QDialog):
         if age:
             self.txt_age.setText(age)
 
+    def _on_disability_changed(self, text):
+        is_disabled = (text == "是")
+        self.cbo_disability_type.setVisible(is_disabled)
+        self.cbo_disability_type_label.setVisible(is_disabled)
+        self.cbo_dis_level.setVisible(is_disabled)
+        self.cbo_dis_level_label.setVisible(is_disabled)
+
+    def _on_tekun_changed(self, text):
+        is_tekun = (text == "是")
+        self.cbo_tekun_type.setVisible(is_tekun)
+        self.cbo_tekun_type_label.setVisible(is_tekun)
+
     def _save(self):
         name = self.txt_name.text().strip()
         id_card = self.txt_id_card.text().strip()
@@ -135,18 +182,6 @@ class AddDialog(QDialog):
             return
 
         if get_server_url():
-            try:
-                from network.client import api_check_duplicate
-                if api_check_duplicate(self.hu_hao, id_card):
-                    reply = QMessageBox.question(
-                        self, "重复提醒", "该身份证号已存在于本户中，是否继续添加？",
-                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-                    )
-                    if reply == QMessageBox.StandardButton.No:
-                        return
-            except Exception:
-                pass
-
             data = {
                 'hu_hao': self.hu_hao,
                 'id_card': id_card,
@@ -159,12 +194,13 @@ class AddDialog(QDialog):
                 'social_card1': self.txt_social1.text().strip() or "无",
                 'social_card2': self.txt_social2.text().strip() or "无",
                 'social_card3': self.txt_social3.text().strip() or "无",
-                'poor_type': self.txt_poor_type.text().strip() or "无",
+                'poor_type': self.cbo_poor_type.currentText() or "无",
                 'remark': self.txt_remark.text().strip() or "无",
-                'disability': self.txt_disability.text().strip() or "无",
-                'dis_level': self.txt_dis_level.text().strip() or "无",
+                'disability': self.cbo_disability.currentText() or "无",
+                'disability_type': self.cbo_disability_type.currentText() or "无",
+                'dis_level': self.cbo_dis_level.currentText() or "无",
                 'dibao': self.cbo_dibao.currentText() or "无",
-                'jisheng': self.txt_jisheng.text().strip() or "无",
+                'jisheng': self.cbo_jisheng.currentText() or "无",
                 'tekun': self.cbo_tekun.currentText() or "无",
                 'tekun_type': self.cbo_tekun_type.currentText() or "无",
             }
@@ -179,14 +215,6 @@ class AddDialog(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"添加失败：{str(e)}")
         else:
-            if check_duplicate_id_card(self.hu_hao, id_card):
-                reply = QMessageBox.question(
-                    self, "重复提醒", "该身份证号已存在于本户中，是否继续添加？",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-                )
-                if reply == QMessageBox.StandardButton.No:
-                    return
-
             person = Person(
                 id=f"new_{id_card}",
                 hu_hao=self.hu_hao,
@@ -200,12 +228,13 @@ class AddDialog(QDialog):
                 social_card1=self.txt_social1.text().strip() or "无",
                 social_card2=self.txt_social2.text().strip() or "无",
                 social_card3=self.txt_social3.text().strip() or "无",
-                poor_type=self.txt_poor_type.text().strip() or "无",
+                poor_type=self.cbo_poor_type.currentText() or "无",
                 remark=self.txt_remark.text().strip() or "无",
-                disability=self.txt_disability.text().strip() or "无",
-                dis_level=self.txt_dis_level.text().strip() or "无",
+                disability=self.cbo_disability.currentText() or "无",
+                disability_type=self.cbo_disability_type.currentText() or "无",
+                dis_level=self.cbo_dis_level.currentText() or "无",
                 dibao=self.cbo_dibao.currentText() or "无",
-                jisheng=self.txt_jisheng.text().strip() or "无",
+                jisheng=self.cbo_jisheng.currentText() or "无",
                 tekun=self.cbo_tekun.currentText() or "无",
                 tekun_type=self.cbo_tekun_type.currentText() or "无",
             )

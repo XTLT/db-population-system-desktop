@@ -92,7 +92,7 @@ GRADE_PROMOTION_MAP = {
 
 GRADUATION_GRADES = {"V3", "J3", "C3", "U5", "M3", "D4"}
 
-STUDENT_STATUSES = ["在读", "留级", "跳级", "休学", "转学", "毕业"]
+STUDENT_STATUSES = ["", "在读", "留级", "跳级", "休学", "转学", "毕业"]
 
 BLOCKED_PROMOTION_STATUSES = {"留级", "休学", "转学"}
 
@@ -107,6 +107,7 @@ DB_FIELD_MAP = {
     "备注": "remark",
     "脱贫户或监测户": "poor_type",
     "残疾": "disability",
+    "残疾类型": "disability_type",
     "残疾等级": "dis_level",
     "低保": "dibao",
     "是否计生家庭": "jisheng",

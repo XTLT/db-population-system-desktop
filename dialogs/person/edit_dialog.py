@@ -14,7 +14,7 @@ from core.config import (
     PHOTO_TYPES, PHOTOS_DIR, GRADES, GRADE_DISPLAY, STUDENT_STATUSES
 )
 from core.database import (
-    update_person, migrate_person, check_duplicate_id_card,
+    update_person, migrate_person,
     get_student_education, save_student_education, delete_student_education,
     get_education_history, get_family_members, Person, StudentEducation
 )
@@ -92,17 +92,40 @@ class EditDialog(QDialog):
         self.txt_social1 = QLineEdit()
         self.txt_social2 = QLineEdit()
         self.txt_social3 = QLineEdit()
-        self.txt_poor_type = QLineEdit()
+        self.cbo_poor_type = QComboBox()
+        self.cbo_poor_type.addItems(["", "脱贫户", "脱贫不稳定户", "突发严重困难户", "边缘易致贫户"])
         self.txt_remark = QLineEdit()
-        self.txt_disability = QLineEdit()
-        self.txt_dis_level = QLineEdit()
+        self.cbo_disability = QComboBox()
+        self.cbo_disability.addItems(["", "是", "否"])
+        self.cbo_disability.currentTextChanged.connect(self._on_disability_changed)
+        self.cbo_disability_type = QComboBox()
+        self.cbo_disability_type.addItems(["", "视力残疾", "听力残疾", "言语残疾", "肢体残疾", "智力残疾", "精神残疾", "多重残疾"])
+        self.cbo_disability_type_label = QLabel("残疾类型：")
+        self.cbo_disability_type_label.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.cbo_disability_type_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.cbo_disability_type.setVisible(False)
+        self.cbo_disability_type_label.setVisible(False)
+        self.cbo_dis_level = QComboBox()
+        self.cbo_dis_level.addItems(["", "一级", "二级", "三级", "四级"])
+        self.cbo_dis_level_label = QLabel("残疾等级：")
+        self.cbo_dis_level_label.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.cbo_dis_level_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.cbo_dis_level.setVisible(False)
+        self.cbo_dis_level_label.setVisible(False)
         self.cbo_dibao = QComboBox()
         self.cbo_dibao.addItems(["", "是", "否", "低保边缘家庭", "特困家庭"])
-        self.txt_jisheng = QLineEdit()
+        self.cbo_jisheng = QComboBox()
+        self.cbo_jisheng.addItems(["", "是", "否"])
         self.cbo_tekun = QComboBox()
         self.cbo_tekun.addItems(["", "是", "否"])
+        self.cbo_tekun.currentTextChanged.connect(self._on_tekun_changed)
         self.cbo_tekun_type = QComboBox()
         self.cbo_tekun_type.addItems(["", "集中供养", "散居特困"])
+        self.cbo_tekun_type_label = QLabel("供养类型：")
+        self.cbo_tekun_type_label.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.cbo_tekun_type_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.cbo_tekun_type.setVisible(False)
+        self.cbo_tekun_type_label.setVisible(False)
 
         fields = [
             ("姓名：", self.txt_name),
@@ -116,14 +139,9 @@ class EditDialog(QDialog):
             ("社保卡号1：", self.txt_social1),
             ("社保卡号2：", self.txt_social2),
             ("社保卡号3：", self.txt_social3),
-            ("脱贫户或监测户：", self.txt_poor_type),
+            ("脱贫户或监测户：", self.cbo_poor_type),
             ("备注：", self.txt_remark),
-            ("残疾：", self.txt_disability),
-            ("残疾等级：", self.txt_dis_level),
-            ("低保：", self.cbo_dibao),
-            ("是否计生家庭：", self.txt_jisheng),
-            ("是否特困供养：", self.cbo_tekun),
-            ("供养类型：", self.cbo_tekun_type),
+            ("残疾：", self.cbo_disability),
         ]
 
         for label_text, widget in fields:
@@ -131,6 +149,23 @@ class EditDialog(QDialog):
             label.setFont(QFont(FONT_NAME, FONT_SIZE))
             label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             form.addRow(label, widget)
+
+        form.addRow(self.cbo_disability_type_label, self.cbo_disability_type)
+        form.addRow(self.cbo_dis_level_label, self.cbo_dis_level)
+
+        more_fields = [
+            ("低保：", self.cbo_dibao),
+            ("是否计生家庭：", self.cbo_jisheng),
+            ("是否特困供养：", self.cbo_tekun),
+        ]
+
+        for label_text, widget in more_fields:
+            label = QLabel(label_text)
+            label.setFont(QFont(FONT_NAME, FONT_SIZE))
+            label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            form.addRow(label, widget)
+
+        form.addRow(self.cbo_tekun_type_label, self.cbo_tekun_type)
 
         layout.addLayout(form)
 
@@ -220,6 +255,9 @@ class EditDialog(QDialog):
         self.date_enrollment.setCalendarPopup(True)
         self.date_enrollment.setDate(QDate.currentDate())
 
+        self.txt_graduation_date = QLineEdit()
+        self.txt_graduation_date.setPlaceholderText("自动计算，如：2029-06")
+
         edu_fields = [
             ("学校名称：", self.txt_school),
             ("年级：", self.cbo_grade),
@@ -229,6 +267,7 @@ class EditDialog(QDialog):
             ("是否留守儿童：", self.cbo_is_left_behind),
             ("学生状态：", self.cbo_student_status),
             ("入学日期：", self.date_enrollment),
+            ("毕业时间：", self.txt_graduation_date),
         ]
 
         for label_text, widget in edu_fields:
@@ -267,6 +306,37 @@ class EditDialog(QDialog):
                     self.date_enrollment.setDate(QDate.fromString(enrollment_date, "yyyy-MM-dd"))
                 except Exception:
                     pass
+            self._update_graduation_date(grade_code)
+
+    def _update_graduation_date(self, grade_code):
+        grade_years = {
+            'G1': 6, 'G2': 5, 'G3': 4, 'G4': 3, 'G5': 2, 'G6': 1,
+            'G7': 3, 'G8': 2, 'G9': 1,
+            'G10': 3, 'G11': 2, 'G12': 1,
+        }
+        total_years = grade_years.get(grade_code, 0)
+        if total_years > 0:
+            from core.utils import calculate_enrollment_date
+            enrollment_date = calculate_enrollment_date(grade_code)
+            if enrollment_date:
+                try:
+                    enroll_year = int(enrollment_date[:4])
+                    grad_year = enroll_year + total_years
+                    self.txt_graduation_date.setText(f"{grad_year}-06")
+                except Exception:
+                    pass
+
+    def _on_disability_changed(self, text):
+        is_disabled = (text == "是")
+        self.cbo_disability_type.setVisible(is_disabled)
+        self.cbo_disability_type_label.setVisible(is_disabled)
+        self.cbo_dis_level.setVisible(is_disabled)
+        self.cbo_dis_level_label.setVisible(is_disabled)
+
+    def _on_tekun_changed(self, text):
+        is_tekun = (text == "是")
+        self.cbo_tekun_type.setVisible(is_tekun)
+        self.cbo_tekun_type_label.setVisible(is_tekun)
 
     def _load_data(self):
         p = self.person
@@ -281,17 +351,36 @@ class EditDialog(QDialog):
         self.txt_social1.setText(p.social_card1 if p.social_card1 != "无" else "")
         self.txt_social2.setText(p.social_card2 if p.social_card2 != "无" else "")
         self.txt_social3.setText(p.social_card3 if p.social_card3 != "无" else "")
-        self.txt_poor_type.setText(p.poor_type if p.poor_type != "无" else "")
+        poor_val = p.poor_type if p.poor_type != "无" else ""
+        idx = self.cbo_poor_type.findText(poor_val)
+        if idx >= 0:
+            self.cbo_poor_type.setCurrentIndex(idx)
         self.txt_remark.setText(p.remark if p.remark != "无" else "")
-        self.txt_disability.setText(p.disability if p.disability != "无" else "")
-        self.txt_dis_level.setText(p.dis_level if p.dis_level != "无" else "")
+        dis_val = p.disability if p.disability != "无" else ""
+        idx = self.cbo_disability.findText(dis_val)
+        if idx >= 0:
+            self.cbo_disability.setCurrentIndex(idx)
+        dis_type_val = getattr(p, 'disability_type', '') or ''
+        if dis_type_val == "无":
+            dis_type_val = ""
+        idx = self.cbo_disability_type.findText(dis_type_val)
+        if idx >= 0:
+            self.cbo_disability_type.setCurrentIndex(idx)
+        dis_level_val = p.dis_level if p.dis_level != "无" else ""
+        idx = self.cbo_dis_level.findText(dis_level_val)
+        if idx >= 0:
+            self.cbo_dis_level.setCurrentIndex(idx)
+        self._on_disability_changed(dis_val)
         dibao_val = p.dibao if p.dibao != "无" else ""
         idx = self.cbo_dibao.findText(dibao_val)
         if idx >= 0:
             self.cbo_dibao.setCurrentIndex(idx)
         else:
             self.cbo_dibao.setCurrentIndex(0)
-        self.txt_jisheng.setText(p.jisheng if p.jisheng != "无" else "")
+        jisheng_val = p.jisheng if p.jisheng != "无" else ""
+        idx = self.cbo_jisheng.findText(jisheng_val)
+        if idx >= 0:
+            self.cbo_jisheng.setCurrentIndex(idx)
         tekun_val = getattr(p, 'tekun', '') or ''
         if tekun_val == "无":
             tekun_val = ""
@@ -308,6 +397,7 @@ class EditDialog(QDialog):
             self.cbo_tekun_type.setCurrentIndex(idx)
         else:
             self.cbo_tekun_type.setCurrentIndex(0)
+        self._on_tekun_changed(tekun_val)
         self._load_current_photo()
         self._load_education_data()
 
@@ -320,21 +410,32 @@ class EditDialog(QDialog):
                 if edu_data:
                     self.txt_school.setText(edu_data.get('school_name', ''))
                     grade = edu_data.get('grade', '')
+                    grade_set = False
                     for i in range(self.cbo_grade.count()):
                         if self.cbo_grade.itemData(i) == grade:
                             self.cbo_grade.setCurrentIndex(i)
+                            grade_set = True
                             break
+                    if not grade_set and grade:
+                        for i in range(self.cbo_grade.count()):
+                            if self.cbo_grade.itemText(i) == grade:
+                                self.cbo_grade.setCurrentIndex(i)
+                                grade_set = True
+                                break
+                    if not grade_set and grade:
+                        self.cbo_grade.setEditText(grade)
                     self.txt_class.setText(edu_data.get('class_name', ''))
                     self.cbo_guardian.setCurrentText(edu_data.get('guardian', ''))
                     self.txt_guardian_phone.setText(edu_data.get('guardian_phone', ''))
                     self.cbo_is_left_behind.setCurrentText(edu_data.get('is_left_behind', '否'))
-                    self.cbo_student_status.setCurrentText(edu_data.get('student_status', '在读'))
+                    self.cbo_student_status.setCurrentText(edu_data.get('student_status', ''))
                     enrollment_date = edu_data.get('enrollment_date', '')
                     if enrollment_date:
                         try:
                             self.date_enrollment.setDate(QDate.fromString(enrollment_date, "yyyy-MM-dd"))
                         except Exception:
                             pass
+                    self.txt_graduation_date.setText(edu_data.get('graduation_date', ''))
             except Exception:
                 pass
             self.history_table.setColumnCount(0)
@@ -357,6 +458,7 @@ class EditDialog(QDialog):
                         self.date_enrollment.setDate(QDate.fromString(edu.enrollment_date, "yyyy-MM-dd"))
                     except Exception:
                         pass
+                self.txt_graduation_date.setText(getattr(edu, 'graduation_date', '') or '')
 
             history = get_education_history(self.person.id)
             headers = ["日期", "学校", "年级", "班级", "状态", "原因"]
@@ -573,18 +675,6 @@ class EditDialog(QDialog):
             land_reason = land_reason.strip()
 
         if get_server_url():
-            try:
-                from network.client import api_check_duplicate
-                if api_check_duplicate(self.person.hu_hao, id_card):
-                    reply = QMessageBox.question(
-                        self, "重复提醒", "该身份证号已存在于本户中，是否继续保存？",
-                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-                    )
-                    if reply == QMessageBox.StandardButton.No:
-                        return
-            except Exception:
-                pass
-
             from network.client import api_update_person
             data = {
                 'name': name,
@@ -598,12 +688,13 @@ class EditDialog(QDialog):
                 'social_card1': self.txt_social1.text().strip() or "无",
                 'social_card2': self.txt_social2.text().strip() or "无",
                 'social_card3': self.txt_social3.text().strip() or "无",
-                'poor_type': self.txt_poor_type.text().strip() or "无",
+                'poor_type': self.cbo_poor_type.currentText() or "无",
                 'remark': self.txt_remark.text().strip() or "无",
-                'disability': self.txt_disability.text().strip() or "无",
-                'dis_level': self.txt_dis_level.text().strip() or "无",
+                'disability': self.cbo_disability.currentText() or "无",
+                'disability_type': self.cbo_disability_type.currentText() or "无",
+                'dis_level': self.cbo_dis_level.currentText() or "无",
                 'dibao': self.cbo_dibao.currentText() or "无",
-                'jisheng': self.txt_jisheng.text().strip() or "无",
+                'jisheng': self.cbo_jisheng.currentText() or "无",
                 'tekun': self.cbo_tekun.currentText() or "无",
                 'tekun_type': self.cbo_tekun_type.currentText() or "无",
                 'updated_at': getattr(self.person, 'updated_at', ''),
@@ -620,14 +711,6 @@ class EditDialog(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"修改失败：{str(e)}")
         else:
-            if check_duplicate_id_card(self.person.hu_hao, id_card, self.person.id):
-                reply = QMessageBox.question(
-                    self, "重复提醒", "该身份证号已存在于本户中，是否继续保存？",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-                )
-                if reply == QMessageBox.StandardButton.No:
-                    return
-
             self.person.name = name
             self.person.id_card = id_card
             self.person.age = age
@@ -643,12 +726,13 @@ class EditDialog(QDialog):
             self.person.social_card1 = self.txt_social1.text().strip() or "无"
             self.person.social_card2 = self.txt_social2.text().strip() or "无"
             self.person.social_card3 = self.txt_social3.text().strip() or "无"
-            self.person.poor_type = self.txt_poor_type.text().strip() or "无"
+            self.person.poor_type = self.cbo_poor_type.currentText() or "无"
             self.person.remark = self.txt_remark.text().strip() or "无"
-            self.person.disability = self.txt_disability.text().strip() or "无"
-            self.person.dis_level = self.txt_dis_level.text().strip() or "无"
+            self.person.disability = self.cbo_disability.currentText() or "无"
+            self.person.disability_type = self.cbo_disability_type.currentText() or "无"
+            self.person.dis_level = self.cbo_dis_level.currentText() or "无"
             self.person.dibao = self.cbo_dibao.currentText() or "无"
-            self.person.jisheng = self.txt_jisheng.text().strip() or "无"
+            self.person.jisheng = self.cbo_jisheng.currentText() or "无"
             self.person.tekun = self.cbo_tekun.currentText() or "无"
             self.person.tekun_type = self.cbo_tekun_type.currentText() or "无"
 
@@ -663,19 +747,22 @@ class EditDialog(QDialog):
     def _save_education(self):
         school = self.txt_school.text().strip()
         grade_code = self.cbo_grade.currentData()
+        grade_display = self.cbo_grade.currentText().strip() if not grade_code else ''
         class_name = self.txt_class.text().strip()
+        graduation_date = self.txt_graduation_date.text().strip()
 
         if get_server_url():
             from network.client import api_update_education
             edu_data = {
                 'school_name': school,
-                'grade': grade_code or '',
+                'grade': grade_code or grade_display or '',
                 'class_name': class_name,
                 'guardian': self.cbo_guardian.currentText().strip(),
                 'guardian_phone': self.txt_guardian_phone.text().strip(),
                 'is_left_behind': self.cbo_is_left_behind.currentText(),
                 'student_status': self.cbo_student_status.currentText(),
-                'enrollment_date': self.date_enrollment.date().toString("yyyy-MM-dd")
+                'enrollment_date': self.date_enrollment.date().toString("yyyy-MM-dd"),
+                'graduation_date': graduation_date,
             }
             try:
                 api_update_education(self.person.id, edu_data)
@@ -693,7 +780,8 @@ class EditDialog(QDialog):
                 guardian_phone=self.txt_guardian_phone.text().strip(),
                 is_left_behind=self.cbo_is_left_behind.currentText(),
                 student_status=self.cbo_student_status.currentText(),
-                enrollment_date=self.date_enrollment.date().toString("yyyy-MM-dd")
+                enrollment_date=self.date_enrollment.date().toString("yyyy-MM-dd"),
+                graduation_date=graduation_date,
             )
             save_student_education(edu)
         else:

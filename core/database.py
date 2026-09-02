@@ -133,6 +133,7 @@ class Person(Base):
     remark = Column(String, default="")
     poor_type = Column(String, default="")
     disability = Column(String, default="")
+    disability_type = Column(String, default="")
     dis_level = Column(String, default="")
     dibao = Column(String, default="")
     jisheng = Column(String, default="")
@@ -167,8 +168,9 @@ class StudentEducation(Base):
     guardian = Column(String, default="")
     guardian_phone = Column(String, default="")
     is_left_behind = Column(String, default="否")
-    student_status = Column(String, default="在读")
+    student_status = Column(String, default="")
     enrollment_date = Column(String, default="")
+    graduation_date = Column(String, default="")
 
 
 class LandSubsidy(Base):
@@ -287,6 +289,7 @@ class DeletedPerson(Base):
     remark = Column(String, default="")
     poor_type = Column(String, default="")
     disability = Column(String, default="")
+    disability_type = Column(String, default="")
     dis_level = Column(String, default="")
     dibao = Column(String, default="")
     jisheng = Column(String, default="")
@@ -427,6 +430,16 @@ def _migrate_db(engine):
             pass
         try:
             conn.execute(text("ALTER TABLE persons ADD COLUMN tekun_type VARCHAR DEFAULT ''"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE persons ADD COLUMN disability_type VARCHAR DEFAULT ''"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE student_education ADD COLUMN graduation_date VARCHAR DEFAULT ''"))
             conn.commit()
         except Exception:
             pass
