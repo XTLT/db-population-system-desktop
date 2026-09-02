@@ -680,7 +680,21 @@ class MainWindow(QMainWindow):
             if path:
                 try:
                     from network.client import api_export_filtered
-                    api_export_filtered(path, filters)
+                    try:
+                        api_export_filtered(path, filters)
+                    except ConnectionError as e:
+                        if '验证密码' in str(e):
+                            from PyQt6.QtWidgets import QInputDialog
+                            password, ok = QInputDialog.getText(
+                                self, "密码验证", "导出敏感数据需要验证密码：",
+                                QLineEdit.EchoMode.Password
+                            )
+                            if ok and password:
+                                api_export_filtered(path, filters, password)
+                            else:
+                                return
+                        else:
+                            raise
                     QMessageBox.information(self, "成功", f"数据已导出到：\n{path}")
                 except Exception as e:
                     QMessageBox.critical(self, "导出失败", str(e))
