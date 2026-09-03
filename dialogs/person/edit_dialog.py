@@ -682,19 +682,19 @@ class EditDialog(QDialog):
                 'age': age,
                 'relation': self.txt_relation.text().strip(),
                 'address': self.txt_address.text().strip(),
-                'phone': self.txt_phone.text().strip() or "无",
+                'phone': self.txt_phone.text().strip(),
                 'is_dead': self.cbo_is_dead.currentText(),
                 'land_area': new_land_area,
                 'social_card1': self.txt_social1.text().strip(),
                 'social_card2': self.txt_social2.text().strip(),
                 'social_card3': self.txt_social3.text().strip(),
-                'poor_type': self.cbo_poor_type.currentText() or "无",
-                'remark': self.txt_remark.text().strip() or "无",
-                'disability': self.cbo_disability.currentText() or "无",
-                'disability_type': self.cbo_disability_type.currentText() or "无",
-                'dis_level': self.cbo_dis_level.currentText() or "无",
-                'dibao': self.cbo_dibao.currentText() or "无",
-                'jisheng': self.cbo_jisheng.currentText() or "无",
+                'poor_type': self.cbo_poor_type.currentText(),
+                'remark': self.txt_remark.text().strip(),
+                'disability': self.cbo_disability.currentText(),
+                'disability_type': self.cbo_disability_type.currentText(),
+                'dis_level': self.cbo_dis_level.currentText(),
+                'dibao': self.cbo_dibao.currentText(),
+                'jisheng': self.cbo_jisheng.currentText(),
                 'tekun': self.cbo_tekun.currentText(),
                 'tekun_type': self.cbo_tekun_type.currentText(),
                 'updated_at': getattr(self.person, 'updated_at', ''),
@@ -716,7 +716,7 @@ class EditDialog(QDialog):
             self.person.age = age
             self.person.relation = self.txt_relation.text().strip()
             self.person.address = self.txt_address.text().strip()
-            self.person.phone = self.txt_phone.text().strip() or "无"
+            self.person.phone = self.txt_phone.text().strip()
             self.person.is_dead = self.cbo_is_dead.currentText()
             self.person.land_area = new_land_area
             if land_changed:
@@ -726,13 +726,13 @@ class EditDialog(QDialog):
             self.person.social_card1 = self.txt_social1.text().strip()
             self.person.social_card2 = self.txt_social2.text().strip()
             self.person.social_card3 = self.txt_social3.text().strip()
-            self.person.poor_type = self.cbo_poor_type.currentText() or "无"
-            self.person.remark = self.txt_remark.text().strip() or "无"
-            self.person.disability = self.cbo_disability.currentText() or "无"
-            self.person.disability_type = self.cbo_disability_type.currentText() or "无"
-            self.person.dis_level = self.cbo_dis_level.currentText() or "无"
-            self.person.dibao = self.cbo_dibao.currentText() or "无"
-            self.person.jisheng = self.cbo_jisheng.currentText() or "无"
+            self.person.poor_type = self.cbo_poor_type.currentText()
+            self.person.remark = self.txt_remark.text().strip()
+            self.person.disability = self.cbo_disability.currentText()
+            self.person.disability_type = self.cbo_disability_type.currentText()
+            self.person.dis_level = self.cbo_dis_level.currentText()
+            self.person.dibao = self.cbo_dibao.currentText()
+            self.person.jisheng = self.cbo_jisheng.currentText()
             self.person.tekun = self.cbo_tekun.currentText()
             self.person.tekun_type = self.cbo_tekun_type.currentText()
 
