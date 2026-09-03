@@ -685,9 +685,9 @@ class EditDialog(QDialog):
                 'phone': self.txt_phone.text().strip() or "无",
                 'is_dead': self.cbo_is_dead.currentText(),
                 'land_area': new_land_area,
-                'social_card1': self.txt_social1.text().strip() or "无",
-                'social_card2': self.txt_social2.text().strip() or "无",
-                'social_card3': self.txt_social3.text().strip() or "无",
+                'social_card1': self.txt_social1.text().strip(),
+                'social_card2': self.txt_social2.text().strip(),
+                'social_card3': self.txt_social3.text().strip(),
                 'poor_type': self.cbo_poor_type.currentText() or "无",
                 'remark': self.txt_remark.text().strip() or "无",
                 'disability': self.cbo_disability.currentText() or "无",
@@ -695,8 +695,8 @@ class EditDialog(QDialog):
                 'dis_level': self.cbo_dis_level.currentText() or "无",
                 'dibao': self.cbo_dibao.currentText() or "无",
                 'jisheng': self.cbo_jisheng.currentText() or "无",
-                'tekun': self.cbo_tekun.currentText() or "无",
-                'tekun_type': self.cbo_tekun_type.currentText() or "无",
+                'tekun': self.cbo_tekun.currentText(),
+                'tekun_type': self.cbo_tekun_type.currentText(),
                 'updated_at': getattr(self.person, 'updated_at', ''),
                 'land_area_change_reason': land_reason
             }
@@ -723,9 +723,9 @@ class EditDialog(QDialog):
                 from datetime import datetime
                 self.person.land_area_change_reason = land_reason
                 self.person.land_area_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.person.social_card1 = self.txt_social1.text().strip() or "无"
-            self.person.social_card2 = self.txt_social2.text().strip() or "无"
-            self.person.social_card3 = self.txt_social3.text().strip() or "无"
+            self.person.social_card1 = self.txt_social1.text().strip()
+            self.person.social_card2 = self.txt_social2.text().strip()
+            self.person.social_card3 = self.txt_social3.text().strip()
             self.person.poor_type = self.cbo_poor_type.currentText() or "无"
             self.person.remark = self.txt_remark.text().strip() or "无"
             self.person.disability = self.cbo_disability.currentText() or "无"
@@ -733,8 +733,8 @@ class EditDialog(QDialog):
             self.person.dis_level = self.cbo_dis_level.currentText() or "无"
             self.person.dibao = self.cbo_dibao.currentText() or "无"
             self.person.jisheng = self.cbo_jisheng.currentText() or "无"
-            self.person.tekun = self.cbo_tekun.currentText() or "无"
-            self.person.tekun_type = self.cbo_tekun_type.currentText() or "无"
+            self.person.tekun = self.cbo_tekun.currentText()
+            self.person.tekun_type = self.cbo_tekun_type.currentText()
 
             try:
                 update_person(self.person)

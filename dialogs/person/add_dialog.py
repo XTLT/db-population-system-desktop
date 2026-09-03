@@ -191,9 +191,9 @@ class AddDialog(QDialog):
                 'relation': self.txt_relation.text().strip(),
                 'is_dead': self.cbo_is_dead.currentText(),
                 'phone': self.txt_phone.text().strip() or "无",
-                'social_card1': self.txt_social1.text().strip() or "无",
-                'social_card2': self.txt_social2.text().strip() or "无",
-                'social_card3': self.txt_social3.text().strip() or "无",
+                'social_card1': self.txt_social1.text().strip(),
+                'social_card2': self.txt_social2.text().strip(),
+                'social_card3': self.txt_social3.text().strip(),
                 'poor_type': self.cbo_poor_type.currentText() or "无",
                 'remark': self.txt_remark.text().strip() or "无",
                 'disability': self.cbo_disability.currentText() or "无",
@@ -201,8 +201,8 @@ class AddDialog(QDialog):
                 'dis_level': self.cbo_dis_level.currentText() or "无",
                 'dibao': self.cbo_dibao.currentText() or "无",
                 'jisheng': self.cbo_jisheng.currentText() or "无",
-                'tekun': self.cbo_tekun.currentText() or "无",
-                'tekun_type': self.cbo_tekun_type.currentText() or "无",
+                'tekun': self.cbo_tekun.currentText(),
+                'tekun_type': self.cbo_tekun_type.currentText(),
             }
             try:
                 from network.client import api_add_person
@@ -225,9 +225,9 @@ class AddDialog(QDialog):
                 relation=self.txt_relation.text().strip(),
                 is_dead=self.cbo_is_dead.currentText(),
                 phone=self.txt_phone.text().strip() or "无",
-                social_card1=self.txt_social1.text().strip() or "无",
-                social_card2=self.txt_social2.text().strip() or "无",
-                social_card3=self.txt_social3.text().strip() or "无",
+                social_card1=self.txt_social1.text().strip(),
+                social_card2=self.txt_social2.text().strip(),
+                social_card3=self.txt_social3.text().strip(),
                 poor_type=self.cbo_poor_type.currentText() or "无",
                 remark=self.txt_remark.text().strip() or "无",
                 disability=self.cbo_disability.currentText() or "无",
@@ -235,8 +235,8 @@ class AddDialog(QDialog):
                 dis_level=self.cbo_dis_level.currentText() or "无",
                 dibao=self.cbo_dibao.currentText() or "无",
                 jisheng=self.cbo_jisheng.currentText() or "无",
-                tekun=self.cbo_tekun.currentText() or "无",
-                tekun_type=self.cbo_tekun_type.currentText() or "无",
+                tekun=self.cbo_tekun.currentText(),
+                tekun_type=self.cbo_tekun_type.currentText(),
             )
 
             try:
