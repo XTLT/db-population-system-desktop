@@ -572,25 +572,6 @@ def get_person_subsidy_total(id_card: str, subsidy_year: str = None) -> str:
         session.close()
 
 
-def get_year_subsidy_totals() -> dict:
-
-    session = get_session()
-    try:
-        subsidies = session.query(LandSubsidy).all()
-        totals = {}
-        for s in subsidies:
-            year = s.subsidy_year or "未知"
-            if year not in totals:
-                totals[year] = 0.0
-            try:
-                totals[year] += float(s.total_amount)
-            except (ValueError, TypeError):
-                pass
-        return totals
-    finally:
-        session.close()
-
-
 def import_treatment_payment(file_path: str, progress_callback=None) -> dict:
     """导入待遇发放数据，支持三种表格格式
     

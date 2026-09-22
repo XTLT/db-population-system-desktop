@@ -109,11 +109,6 @@ def api_add_person(data: dict) -> dict:
     return _request('POST', '/api/person', data)
 
 
-def api_check_duplicate(hu_hao: str, id_card: str) -> bool:
-    result = _request('GET', f'/api/check_duplicate?hu_hao={urllib.parse.quote(hu_hao)}&id_card={urllib.parse.quote(id_card)}')
-    return result.get('duplicate', False)
-
-
 def api_update_education(person_id: str, data: dict) -> dict:
     return _request('PUT', f'/api/person/{person_id}/education', data)
 
