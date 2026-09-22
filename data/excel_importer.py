@@ -7,8 +7,8 @@ import hashlib
 import secrets
 import json
 
-from core.config import DB_PATH, BACKUP_DIR, PHOTOS_DIR, EXCEL_TEMPLATE_COLUMNS, DB_FIELD_MAP
-from core.database import get_session, Person, get_person_count, get_db_password, _derive_key
+from core.config import DB_PATH, BACKUP_DIR, PHOTOS_DIR, EXCEL_TEMPLATE_COLUMNS
+from core.database import get_session, Person, get_db_password, _derive_key, LandSubsidy, TreatmentPayment, PensionInsurance
 from core.utils import safe_str, calculate_age
 
 
@@ -386,8 +386,6 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
     
     只导入身份证号在数据库中存在的人员
     """
-    from core.database import get_session, LandSubsidy, Person
-    import secrets
 
     df = _read_excel_robust(file_path)
     df = df.fillna("")
@@ -527,7 +525,6 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
 
 
 def get_all_land_subsidies(subsidy_year: str = None) -> list:
-    from core.database import get_session, LandSubsidy
 
     session = get_session()
     try:
@@ -540,7 +537,6 @@ def get_all_land_subsidies(subsidy_year: str = None) -> list:
 
 
 def delete_land_subsidy(subsidy_id: str):
-    from core.database import get_session, LandSubsidy
 
     session = get_session()
     try:
@@ -556,7 +552,6 @@ def delete_land_subsidy(subsidy_id: str):
 
 
 def get_person_subsidy_total(id_card: str, subsidy_year: str = None) -> str:
-    from core.database import get_session, LandSubsidy
 
     session = get_session()
     try:
@@ -578,7 +573,6 @@ def get_person_subsidy_total(id_card: str, subsidy_year: str = None) -> str:
 
 
 def get_year_subsidy_totals() -> dict:
-    from core.database import get_session, LandSubsidy
 
     session = get_session()
     try:
@@ -602,9 +596,6 @@ def import_treatment_payment(file_path: str, progress_callback=None) -> dict:
     
     只导入身份证号在数据库中存在的人员
     """
-    from core.database import get_session, TreatmentPayment, Person
-    import secrets
-    import os
 
     df = _read_excel_robust(file_path, header=0)
     df = df.fillna("")
@@ -714,7 +705,6 @@ def import_treatment_payment(file_path: str, progress_callback=None) -> dict:
 
 
 def get_all_treatment_payments(period: str = None, id_card: str = None, subsidy_type: str = None) -> list:
-    from core.database import get_session, TreatmentPayment
 
     session = get_session()
     try:
@@ -731,7 +721,6 @@ def get_all_treatment_payments(period: str = None, id_card: str = None, subsidy_
 
 
 def delete_treatment_payment(payment_id: str):
-    from core.database import get_session, TreatmentPayment
 
     session = get_session()
     try:
@@ -751,7 +740,6 @@ def import_pension_insurance(file_path: str, progress_callback=None) -> dict:
     
     只导入身份证号在数据库中存在的人员
     """
-    from core.database import get_session, PensionInsurance, Person
 
     df = _read_excel_robust(file_path, header=0)
     df = df.fillna("")
@@ -837,7 +825,6 @@ def import_pension_insurance(file_path: str, progress_callback=None) -> dict:
 
 
 def get_all_pension_insurance(period: str = None, id_card: str = None) -> list:
-    from core.database import get_session, PensionInsurance
 
     session = get_session()
     try:
@@ -852,7 +839,6 @@ def get_all_pension_insurance(period: str = None, id_card: str = None) -> list:
 
 
 def delete_pension_insurance(record_id: str):
-    from core.database import get_session, PensionInsurance
 
     session = get_session()
     try:

@@ -1,6 +1,5 @@
 import os
 import shutil
-from PIL import Image
 
 from core.config import PHOTOS_DIR, PHOTO_EXTENSIONS
 from core.utils import clean_filename, find_existing_photo, get_photo_base_name

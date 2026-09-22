@@ -76,7 +76,6 @@ def _check_local_server(app_type: str, current_code: int) -> Optional[Dict]:
 
 def check_update(app_type: str = "desktop") -> Tuple[Optional[Dict], str]:
     config = load_local_config()
-    current_version = config.get("current_version", "1.0.0")
     current_code = config.get("version_code", 1)
 
     try:
@@ -100,10 +99,8 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[Dict], str]:
             return None, f"所有更新源均无法访问: {last_error}"
 
         if app_type == "desktop":
-            latest_version = data.get("desktop_version", data.get("latest_version", "0.0.0"))
             latest_code = data.get("desktop_version_code", data.get("version_code", 0))
         else:
-            latest_version = data.get("server_version", data.get("latest_version", "0.0.0"))
             latest_code = data.get("server_version_code", data.get("version_code", 0))
 
         if latest_code > current_code:
@@ -160,7 +157,6 @@ def download_update(version_info: Dict, progress_callback=None) -> Tuple[Optiona
     last_error = None
     for url in urls:
         try:
-            is_local = not url.startswith("http")
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }

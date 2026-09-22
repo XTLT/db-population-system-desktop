@@ -73,7 +73,7 @@ class TreatmentPaymentViewDialog(QDialog):
 
         btn_layout = QHBoxLayout()
         btn_delete = QPushButton("删除选中")
-        btn_delete.setStyleSheet(f"background-color: #CC0000; color: white; padding: 8px;")
+        btn_delete.setStyleSheet("background-color: #CC0000; color: white; padding: 8px;")
         btn_delete.setEnabled(self.is_admin)
         btn_export = QPushButton("导出Excel")
         btn_export.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; padding: 8px;")

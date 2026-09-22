@@ -1,5 +1,4 @@
 import os
-import sys
 
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit,
@@ -11,7 +10,7 @@ from PyQt6.QtGui import QPixmap, QFont
 
 from core.config import (
     FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_ADD_COLOR, BTN_CANCEL_COLOR,
-    PHOTO_TYPES, PHOTOS_DIR, GRADES, GRADE_DISPLAY, STUDENT_STATUSES
+    PHOTO_TYPES, GRADES, GRADE_DISPLAY, STUDENT_STATUSES
 )
 from core.database import (
     update_person, migrate_person,
@@ -19,7 +18,6 @@ from core.database import (
     get_education_history, get_family_members, Person, StudentEducation
 )
 from data.photo_manager import save_photo, delete_photo, get_photo_path, get_photo_status
-from core.utils import calculate_age
 from network.client import get_server_url
 
 

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit,
-    QComboBox, QPushButton, QLabel, QMessageBox, QDateEdit
+    QComboBox, QPushButton, QLabel, QDateEdit
 )
 from PyQt6.QtCore import Qt, QDate
 

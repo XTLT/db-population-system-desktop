@@ -1,7 +1,7 @@
 
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLineEdit,
-    QPushButton, QLabel, QMessageBox, QComboBox
+    QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
+    QLabel, QMessageBox, QComboBox
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont
@@ -116,20 +116,20 @@ class ConnectDialog(QDialog):
         # 自动搜索按钮
         self.btn_scan = QPushButton("🔍 自动搜索局域网服务器")
         self.btn_scan.setFont(QFont(FONT_NAME, FONT_SIZE))
-        self.btn_scan.setStyleSheet(f"""
-            QPushButton {{
+        self.btn_scan.setStyleSheet("""
+            QPushButton {
                 background-color: #0078D4;
                 color: white;
                 font-weight: bold;
                 padding: 12px;
                 border-radius: 6px;
-            }}
-            QPushButton:hover {{
+            }
+            QPushButton:hover {
                 background-color: #106EBE;
-            }}
-            QPushButton:disabled {{
+            }
+            QPushButton:disabled {
                 background-color: #999;
-            }}
+            }
         """)
         self.btn_scan.clicked.connect(self._start_scan)
         layout.addWidget(self.btn_scan)

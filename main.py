@@ -6,18 +6,18 @@ from datetime import datetime, date
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QFormLayout, QLineEdit, QPushButton, QLabel, QTableWidget, QTableWidgetItem,
-    QMenuBar, QMenu, QMessageBox, QHeaderView, QAbstractItemView, QSplitter,
-    QScrollArea, QSystemTrayIcon, QInputDialog, QDialog
+    QMenu, QMessageBox, QHeaderView, QAbstractItemView, QSplitter, QScrollArea,
+    QSystemTrayIcon, QDialog, QFileDialog, QInputDialog, QCheckBox, QTextEdit, QProgressBar
 )
 from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QAction, QIcon, QPixmap, QPainter
 
 from core.config import (
-    APP_NAME, FONT_NAME, FONT_SIZE, MATCHES_PER_COLUMN, MAX_COLUMNS,
+    APP_NAME, FONT_NAME, FONT_SIZE, MATCHES_PER_COLUMN,
     BTN_SAVE_COLOR, BTN_ADD_COLOR, BTN_CANCEL_COLOR, PHOTOS_DIR, ensure_dirs, GRADE_DISPLAY
 )
-from core.database import init_db, search_by_name, get_family_members, get_person_count, get_student_education, Person
-from core.utils import has_any_photo, calculate_age
+from core.database import search_by_name, get_family_members, get_person_count, get_student_education, Person
+from core.utils import has_any_photo
 from dialogs.person.edit_dialog import EditDialog
 from dialogs.import_export.import_dialog import ImportDialog
 from dialogs.land_subsidy.import_dialog import LandSubsidyImportDialog
@@ -28,7 +28,7 @@ from dialogs.pension_insurance.import_dialog import PensionInsuranceImportDialog
 from dialogs.pension_insurance.view_dialog import PensionInsuranceViewDialog
 from data.excel_importer import backup_database
 from network.client import get_server_url
-from network.update_checker import check_update, download_update, verify_file, update_local_version, apply_update
+from network.update_checker import download_update, verify_file, update_local_version, apply_update
 
 
 class DownloadWorker(QThread):
@@ -356,7 +356,6 @@ class MainWindow(QMainWindow):
         grid_layout.setSpacing(4)
         grid_layout.setContentsMargins(8, 8, 8, 8)
 
-        cols = min((count - 1) // MATCHES_PER_COLUMN + 1, MAX_COLUMNS)
         for idx, person in enumerate(self.matches):
             col = idx // MATCHES_PER_COLUMN
             row = idx % MATCHES_PER_COLUMN
@@ -498,7 +497,6 @@ class MainWindow(QMainWindow):
         self.table.horizontalHeader().setStretchLastSection(True)
 
     def _open_subsidy_detail(self, id_card: str, name: str):
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 
         is_admin = self.current_user.get('role') == 'admin'
 
@@ -585,7 +583,6 @@ class MainWindow(QMainWindow):
 
     def _import_excel(self):
         if self.is_network_mode:
-            from PyQt6.QtWidgets import QFileDialog, QInputDialog
             path, _ = QFileDialog.getOpenFileName(
                 self, "选择Excel文件", "",
                 "Excel文件 (*.xlsx *.xls)"
@@ -628,15 +625,12 @@ class MainWindow(QMainWindow):
             self._refresh_status()
 
     def _export_excel(self):
-        from PyQt6.QtWidgets import QFileDialog
         from dialogs.export_dialog import ExportFilterDialog
 
         if self.is_network_mode:
-            from data.excel_importer import query_persons_with_filters
-
             dialog = ExportFilterDialog(self)
 
-            def update_preview():
+            def update_preview_network():
                 try:
                     filters = dialog.get_filters()
                     from network.client import api_search
@@ -657,17 +651,17 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     dialog.lbl_count.setText(f"查询出错：{e}")
 
-            dialog.txt_name.textChanged.connect(lambda: update_preview())
-            dialog.txt_address.textChanged.connect(lambda: update_preview())
-            dialog.cmb_is_dead.currentTextChanged.connect(lambda: update_preview())
-            dialog.cmb_relation.selectionChanged.connect(lambda: update_preview())
-            dialog.cmb_disability.selectionChanged.connect(lambda: update_preview())
-            dialog.cmb_dis_level.selectionChanged.connect(lambda: update_preview())
-            dialog.cmb_poor_type.selectionChanged.connect(lambda: update_preview())
-            dialog.cmb_dibao.currentTextChanged.connect(lambda: update_preview())
-            dialog.cmb_jisheng.currentTextChanged.connect(lambda: update_preview())
+            dialog.txt_name.textChanged.connect(lambda: update_preview_network())
+            dialog.txt_address.textChanged.connect(lambda: update_preview_network())
+            dialog.cmb_is_dead.currentTextChanged.connect(lambda: update_preview_network())
+            dialog.cmb_relation.selectionChanged.connect(lambda: update_preview_network())
+            dialog.cmb_disability.selectionChanged.connect(lambda: update_preview_network())
+            dialog.cmb_dis_level.selectionChanged.connect(lambda: update_preview_network())
+            dialog.cmb_poor_type.selectionChanged.connect(lambda: update_preview_network())
+            dialog.cmb_dibao.currentTextChanged.connect(lambda: update_preview_network())
+            dialog.cmb_jisheng.currentTextChanged.connect(lambda: update_preview_network())
 
-            update_preview()
+            update_preview_network()
 
             if not dialog.exec():
                 return
@@ -684,7 +678,6 @@ class MainWindow(QMainWindow):
                         api_export_filtered(path, filters)
                     except ConnectionError as e:
                         if '验证密码' in str(e):
-                            from PyQt6.QtWidgets import QInputDialog
                             password, ok = QInputDialog.getText(
                                 self, "密码验证", "导出敏感数据需要验证密码：",
                                 QLineEdit.EchoMode.Password
@@ -754,7 +747,6 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "提示", "没有符合条件的数据可导出")
 
     def _report_import_excel(self):
-        from PyQt6.QtWidgets import QFileDialog, QInputDialog
         path, _ = QFileDialog.getOpenFileName(
             self, "选择Excel文件", "",
             "Excel文件 (*.xlsx *.xls *.et)"
@@ -794,10 +786,6 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "上传失败", str(e))
 
     def _report_online_edit(self):
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
-        from PyQt6.QtGui import QFont
-        from network.client import get_server_url
-        from PyQt6.QtCore import Qt
 
         if not get_server_url():
             QMessageBox.warning(self, "提示", "请先连接服务器后再使用在线编辑功能")
@@ -867,7 +855,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(dialog, "提示", "请选择一个报表")
                 return
             report_id = table.item(row, 0).data(Qt.ItemDataRole.UserRole)
-            from network.client import get_server_url, get_token
+            from network.client import get_token
             server_url = get_server_url()
             token = get_token()
             edit_url = f"{server_url}/api/reports/{report_id}/edit?token={token}"
@@ -880,8 +868,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _report_export_excel(self):
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QFileDialog
-        from PyQt6.QtGui import QFont
 
         try:
             from network.client import _request
@@ -930,7 +916,7 @@ class MainWindow(QMainWindow):
         btn_download = QPushButton("下载")
         btn_download.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; font-weight: bold; padding: 8px 20px;")
         btn_logs = QPushButton("查看日志")
-        btn_logs.setStyleSheet(f"background-color: #FF6600; color: white; padding: 8px 20px;")
+        btn_logs.setStyleSheet("background-color: #FF6600; color: white; padding: 8px 20px;")
         btn_close = QPushButton("关闭")
         btn_close.setStyleSheet(f"background-color: {BTN_CANCEL_COLOR}; padding: 8px 20px;")
         btn_layout.addStretch()
@@ -973,8 +959,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _show_report_logs(self, report_id, parent):
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
-        from PyQt6.QtGui import QFont
 
         try:
             from network.client import _request
@@ -1013,9 +997,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _view_change_log(self):
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QLabel
-        from PyQt6.QtGui import QFont
-        from network.client import get_server_url
 
         if not get_server_url():
             QMessageBox.warning(self, "提示", "请先连接服务器后查看日志")
@@ -1093,8 +1074,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _show_report_logs_dialog(self, report_id, report_name, parent):
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
-        from PyQt6.QtGui import QFont
 
         try:
             from network.client import _request
@@ -1133,11 +1112,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _batch_import_ids(self):
-        from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-                                      QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView,
-                                      QAbstractItemView)
-        from PyQt6.QtGui import QFont
-        from network.client import get_server_url
 
         if not get_server_url():
             QMessageBox.warning(self, "提示", "请先连接服务器后使用此功能")
@@ -1370,8 +1344,6 @@ class MainWindow(QMainWindow):
 
     def _show_update_dialog(self, version_info):
                      
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QTextEdit, QProgressBar
-        from PyQt6.QtGui import QFont
 
         if self._update_dialog:
             self._update_dialog.raise_()
@@ -1563,7 +1535,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _import_student_education(self):
-        from PyQt6.QtWidgets import QFileDialog
         path, _ = QFileDialog.getOpenFileName(
             self, "选择Excel文件", "",
             "Excel文件 (*.xlsx *.xls *.et)"
@@ -1603,7 +1574,6 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "导入结果", msg)
 
     def _export_student_education(self):
-        from PyQt6.QtWidgets import QFileDialog
         path, _ = QFileDialog.getSaveFileName(
             self, "导出就读信息", f"学生就读信息_{datetime.now().strftime('%Y%m%d')}.xlsx",
             "Excel文件 (*.xlsx)"
@@ -1625,7 +1595,6 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "提示", "没有数据可导出")
 
     def _generate_student_template(self):
-        from PyQt6.QtWidgets import QFileDialog
         from data.student_importer import export_student_education_template
         path, _ = QFileDialog.getSaveFileName(
             self, "保存模板", "学生就读信息模板.xlsx",
@@ -1672,8 +1641,6 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _add_household(self):
-        from PyQt6.QtWidgets import QDialog, QFormLayout, QLineEdit, QPushButton, QHBoxLayout
-        from PyQt6.QtGui import QFont
         from core.database import generate_new_hu_hao, add_new_household
 
         dialog = QDialog(self)
@@ -1770,7 +1737,6 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "提示", "请先查询并选择一个家庭！")
             return
 
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QCheckBox, QPushButton, QHBoxLayout, QLabel, QScrollArea, QWidget
 
         dialog = QDialog(self)
         dialog.setWindowTitle("分户")
@@ -1846,7 +1812,6 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "提示", "请先查询并选择一个家庭！")
             return
 
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QCheckBox, QPushButton, QHBoxLayout, QLabel, QLineEdit, QScrollArea, QWidget
 
         dialog = QDialog(self)
         dialog.setWindowTitle("合户")
@@ -1977,9 +1942,8 @@ def main():
         else:
             sys.exit(1)
     else:
-        from core.database import get_session, Person, set_db_password, reset_engine, is_database_encrypted, decrypt_database, encrypt_database, init_db, create_user, get_all_users
+        from core.database import get_session, set_db_password, reset_engine, is_database_encrypted, decrypt_database, encrypt_database, init_db, get_all_users
         from core.config import DB_PATH
-        import os
 
         password = None
         from dialogs.password_dialog import PasswordDialog
@@ -2044,8 +2008,8 @@ def main():
 
         session = get_session()
         try:
-            count = session.query(Person).count()
-        except Exception as e:
+            session.query(Person).count()
+        except Exception:
             if password:
                 QMessageBox.critical(None, "错误", "数据库访问失败！")
                 sys.exit(1)

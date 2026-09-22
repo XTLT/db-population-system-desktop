@@ -456,8 +456,6 @@ def validate_password(password: str) -> tuple[bool, str]:
 
 
 def create_user(username: str, password: str, real_name: str = "", role: str = "user") -> User:
-    import hashlib
-    import secrets
     from datetime import datetime
     valid, msg = validate_password(password)
     if not valid:
@@ -488,7 +486,6 @@ def create_user(username: str, password: str, real_name: str = "", role: str = "
 
 
 def authenticate_user(username: str, password: str, ip_address: str = "", client_type: str = "") -> User | None:
-    import hashlib
     from datetime import datetime, timedelta
     session = get_session()
     try:
@@ -529,7 +526,6 @@ def authenticate_user(username: str, password: str, ip_address: str = "", client
 
 def add_operation_log(user_id: str, username: str, operation_type: str, operation_target: str = "", ip_address: str = "", client_type: str = "", is_high_risk: str = "否"):
     from datetime import datetime
-    import secrets
     session = get_session()
     try:
         log = OperationLog(

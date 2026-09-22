@@ -1,14 +1,12 @@
-import os
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit,
-    QPushButton, QLabel, QMessageBox, QTableWidget, QTableWidgetItem,
-    QHeaderView, QAbstractItemView, QComboBox
+    QPushButton, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
-from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_ADD_COLOR, BTN_CANCEL_COLOR
-from core.database import get_all_users, create_user, delete_user, update_user, User, authenticate_user
+from core.config import FONT_NAME, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
+from core.database import authenticate_user
 class LoginDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
