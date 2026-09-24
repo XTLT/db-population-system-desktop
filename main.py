@@ -66,6 +66,16 @@ class MainWindow(QMainWindow):
         self.is_network_mode = bool(get_server_url())
         mode_text = "【网络模式】" if self.is_network_mode else "【本地模式】"
         self.setWindowTitle(f"{APP_NAME} {mode_text}")
+        icon_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            icon_dir = os.path.dirname(sys.executable)
+        window_icon = os.path.join(icon_dir, "window_icon.png")
+        if os.path.exists(window_icon):
+            self.setWindowIcon(QIcon(window_icon))
+        else:
+            ico = os.path.join(icon_dir, "app.ico")
+            if os.path.exists(ico):
+                self.setWindowIcon(QIcon(ico))
         screen = QApplication.primaryScreen().geometry()
         w = min(1400, int(screen.width() * 0.85))
         h = min(900, int(screen.height() * 0.85))
@@ -262,15 +272,22 @@ class MainWindow(QMainWindow):
         account_menu.addAction(profile_action)
 
     def _setup_tray(self):
-        pixmap = QPixmap(64, 64)
-        pixmap.fill(QColor(0, 102, 204))
-        painter = QPainter(pixmap)
-        painter.setPen(QColor(255, 255, 255))
-        painter.setFont(QFont("Arial", 28, QFont.Weight.Bold))
-        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "人")
-        painter.end()
-        self._tray_pixmap = pixmap
-        self._tray_icon_obj = QIcon(pixmap)
+        icon_dir = os.path.dirname(os.path.abspath(__file__))
+        if getattr(sys, 'frozen', False):
+            icon_dir = os.path.dirname(sys.executable)
+        tray_icon_path = os.path.join(icon_dir, "tray_icon.png")
+        if os.path.exists(tray_icon_path):
+            self._tray_icon_obj = QIcon(tray_icon_path)
+        else:
+            pixmap = QPixmap(64, 64)
+            pixmap.fill(QColor(0, 102, 204))
+            painter = QPainter(pixmap)
+            painter.setPen(QColor(255, 255, 255))
+            painter.setFont(QFont("Arial", 28, QFont.Weight.Bold))
+            painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "人")
+            painter.end()
+            self._tray_pixmap = pixmap
+            self._tray_icon_obj = QIcon(pixmap)
 
         self.tray_icon = QSystemTrayIcon(self._tray_icon_obj)
         self.tray_icon.setToolTip(APP_NAME)
