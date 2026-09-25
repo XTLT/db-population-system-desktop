@@ -213,9 +213,17 @@ class ExportFilterDialog(QDialog):
         self.cmb_land.addItems(["全部", "不为0", "空白"])
         form.addRow("土地面积：", self.cmb_land)
 
-        self.cmb_forest = QComboBox()
-        self.cmb_forest.addItems(["全部", "不为0", "空白"])
-        form.addRow("林地面积：", self.cmb_forest)
+        self.cmb_local_welfare_forest = QComboBox()
+        self.cmb_local_welfare_forest.addItems(["全部", "不为0", "空白"])
+        form.addRow("地方公益林：", self.cmb_local_welfare_forest)
+
+        self.cmb_national_welfare_forest = QComboBox()
+        self.cmb_national_welfare_forest.addItems(["全部", "不为0", "空白"])
+        form.addRow("国家公益林：", self.cmb_national_welfare_forest)
+
+        self.cmb_commercial_forest = QComboBox()
+        self.cmb_commercial_forest.addItems(["全部", "不为0", "空白"])
+        form.addRow("非国有天然商品林：", self.cmb_commercial_forest)
 
         filter_group.setLayout(form)
         layout.addWidget(filter_group)
@@ -253,7 +261,9 @@ class ExportFilterDialog(QDialog):
         self.cmb_tekun.setCurrentIndex(0)
         self.cmb_tekun_type.reset_selection()
         self.cmb_land.setCurrentIndex(0)
-        self.cmb_forest.setCurrentIndex(0)
+        self.cmb_local_welfare_forest.setCurrentIndex(0)
+        self.cmb_national_welfare_forest.setCurrentIndex(0)
+        self.cmb_commercial_forest.setCurrentIndex(0)
 
     def update_count(self, count: int):
         self.lbl_count.setText(f"当前符合条件：共 {count} 条记录")
@@ -274,5 +284,7 @@ class ExportFilterDialog(QDialog):
             "tekun": self.cmb_tekun.currentText(),
             "tekun_type": self.cmb_tekun_type.get_selected(),
             "land_area": self.cmb_land.currentText(),
-            "forest_area": self.cmb_forest.currentText(),
+            "local_welfare_forest_area": self.cmb_local_welfare_forest.currentText(),
+            "national_welfare_forest_area": self.cmb_national_welfare_forest.currentText(),
+            "commercial_forest_area": self.cmb_commercial_forest.currentText(),
         }

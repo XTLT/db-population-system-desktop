@@ -85,8 +85,12 @@ class EditDialog(QDialog):
         self.txt_phone = QLineEdit()
         self.txt_land_area = QLineEdit()
         self.txt_land_area.setPlaceholderText("亩")
-        self.txt_forest_area = QLineEdit()
-        self.txt_forest_area.setPlaceholderText("亩")
+        self.txt_local_welfare_forest = QLineEdit()
+        self.txt_local_welfare_forest.setPlaceholderText("亩")
+        self.txt_national_welfare_forest = QLineEdit()
+        self.txt_national_welfare_forest.setPlaceholderText("亩")
+        self.txt_commercial_forest = QLineEdit()
+        self.txt_commercial_forest.setPlaceholderText("亩")
         self.cbo_is_dead = QComboBox()
         self.cbo_is_dead.addItems(["否", "是"])
         self.txt_social1 = QLineEdit()
@@ -135,7 +139,9 @@ class EditDialog(QDialog):
             ("年龄：", self.txt_age),
             ("电话号码：", self.txt_phone),
             ("土地面积：", self.txt_land_area),
-            ("林地面积：", self.txt_forest_area),
+            ("地方公益林：", self.txt_local_welfare_forest),
+            ("国家公益林：", self.txt_national_welfare_forest),
+            ("非国有天然商品林：", self.txt_commercial_forest),
             ("是否死亡：", self.cbo_is_dead),
             ("社保卡号1：", self.txt_social1),
             ("社保卡号2：", self.txt_social2),
@@ -348,7 +354,9 @@ class EditDialog(QDialog):
         self.txt_age.setText(p.age)
         self.txt_phone.setText(p.phone if p.phone != "无" else "")
         self.txt_land_area.setText(getattr(p, 'land_area', '') or "")
-        self.txt_forest_area.setText(getattr(p, 'forest_area', '') or "")
+        self.txt_local_welfare_forest.setText(getattr(p, 'local_welfare_forest_area', '') or "")
+        self.txt_national_welfare_forest.setText(getattr(p, 'national_welfare_forest_area', '') or "")
+        self.txt_commercial_forest.setText(getattr(p, 'commercial_forest_area', '') or "")
         self.cbo_is_dead.setCurrentText("是" if p.is_dead == "是" else "否")
         self.txt_social1.setText(p.social_card1 if p.social_card1 != "无" else "")
         self.txt_social2.setText(p.social_card2 if p.social_card2 != "无" else "")
@@ -676,21 +684,53 @@ class EditDialog(QDialog):
                 return
             land_reason = land_reason.strip()
 
-        new_forest_area = self.txt_forest_area.text().strip()
-        old_forest_area = getattr(self.person, 'forest_area', '') or ''
-        forest_changed = new_forest_area != old_forest_area
-        forest_reason = ""
+        new_local_welfare_forest = self.txt_local_welfare_forest.text().strip()
+        old_local_welfare_forest = getattr(self.person, 'local_welfare_forest_area', '') or ''
+        local_welfare_forest_changed = new_local_welfare_forest != old_local_welfare_forest
+        local_welfare_forest_reason = ""
 
-        if forest_changed:
+        if local_welfare_forest_changed and old_local_welfare_forest:
             from PyQt6.QtWidgets import QInputDialog
-            forest_reason, ok = QInputDialog.getText(
-                self, "林地面积变更",
-                f"林地面积从「{old_forest_area or '空'}」变更为「{new_forest_area or '空'}」\n\n请输入变更原因：",
+            local_welfare_forest_reason, ok = QInputDialog.getText(
+                self, "地方公益林变更",
+                f"地方公益林从「{old_local_welfare_forest}」变更为「{new_local_welfare_forest or '空'}」\n\n请输入变更原因：",
             )
-            if not ok or not forest_reason.strip():
-                QMessageBox.warning(self, "提示", "林地面积变更时必须填写变更原因！")
+            if not ok or not local_welfare_forest_reason.strip():
+                QMessageBox.warning(self, "提示", "地方公益林变更时必须填写变更原因！")
                 return
-            forest_reason = forest_reason.strip()
+            local_welfare_forest_reason = local_welfare_forest_reason.strip()
+
+        new_national_welfare_forest = self.txt_national_welfare_forest.text().strip()
+        old_national_welfare_forest = getattr(self.person, 'national_welfare_forest_area', '') or ''
+        national_welfare_forest_changed = new_national_welfare_forest != old_national_welfare_forest
+        national_welfare_forest_reason = ""
+
+        if national_welfare_forest_changed and old_national_welfare_forest:
+            from PyQt6.QtWidgets import QInputDialog
+            national_welfare_forest_reason, ok = QInputDialog.getText(
+                self, "国家公益林变更",
+                f"国家公益林从「{old_national_welfare_forest}」变更为「{new_national_welfare_forest or '空'}」\n\n请输入变更原因：",
+            )
+            if not ok or not national_welfare_forest_reason.strip():
+                QMessageBox.warning(self, "提示", "国家公益林变更时必须填写变更原因！")
+                return
+            national_welfare_forest_reason = national_welfare_forest_reason.strip()
+
+        new_commercial_forest = self.txt_commercial_forest.text().strip()
+        old_commercial_forest = getattr(self.person, 'commercial_forest_area', '') or ''
+        commercial_forest_changed = new_commercial_forest != old_commercial_forest
+        commercial_forest_reason = ""
+
+        if commercial_forest_changed and old_commercial_forest:
+            from PyQt6.QtWidgets import QInputDialog
+            commercial_forest_reason, ok = QInputDialog.getText(
+                self, "非国有天然商品林变更",
+                f"非国有天然商品林从「{old_commercial_forest}」变更为「{new_commercial_forest or '空'}」\n\n请输入变更原因：",
+            )
+            if not ok or not commercial_forest_reason.strip():
+                QMessageBox.warning(self, "提示", "非国有天然商品林变更时必须填写变更原因！")
+                return
+            commercial_forest_reason = commercial_forest_reason.strip()
 
         if get_server_url():
             from network.client import api_update_person
@@ -703,7 +743,9 @@ class EditDialog(QDialog):
                 'phone': self.txt_phone.text().strip(),
                 'is_dead': self.cbo_is_dead.currentText(),
                 'land_area': new_land_area,
-                'forest_area': new_forest_area,
+                'local_welfare_forest_area': new_local_welfare_forest,
+                'national_welfare_forest_area': new_national_welfare_forest,
+                'commercial_forest_area': new_commercial_forest,
                 'social_card1': self.txt_social1.text().strip(),
                 'social_card2': self.txt_social2.text().strip(),
                 'social_card3': self.txt_social3.text().strip(),
@@ -718,7 +760,9 @@ class EditDialog(QDialog):
                 'tekun_type': self.cbo_tekun_type.currentText(),
                 'updated_at': getattr(self.person, 'updated_at', ''),
                 'land_area_change_reason': land_reason,
-                'forest_area_change_reason': forest_reason
+                'local_welfare_forest_change_reason': local_welfare_forest_reason,
+                'national_welfare_forest_change_reason': national_welfare_forest_reason,
+                'commercial_forest_change_reason': commercial_forest_reason
             }
             try:
                 result = api_update_person(self.person.id, data)
@@ -743,11 +787,21 @@ class EditDialog(QDialog):
                 from datetime import datetime
                 self.person.land_area_change_reason = land_reason
                 self.person.land_area_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.person.forest_area = new_forest_area
-            if forest_changed:
+            self.person.local_welfare_forest_area = new_local_welfare_forest
+            if local_welfare_forest_changed and local_welfare_forest_reason:
                 from datetime import datetime
-                self.person.forest_area_change_reason = forest_reason
-                self.person.forest_area_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.person.local_welfare_forest_change_reason = local_welfare_forest_reason
+                self.person.local_welfare_forest_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.person.national_welfare_forest_area = new_national_welfare_forest
+            if national_welfare_forest_changed and national_welfare_forest_reason:
+                from datetime import datetime
+                self.person.national_welfare_forest_change_reason = national_welfare_forest_reason
+                self.person.national_welfare_forest_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.person.commercial_forest_area = new_commercial_forest
+            if commercial_forest_changed and commercial_forest_reason:
+                from datetime import datetime
+                self.person.commercial_forest_change_reason = commercial_forest_reason
+                self.person.commercial_forest_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.person.social_card1 = self.txt_social1.text().strip()
             self.person.social_card2 = self.txt_social2.text().strip()
             self.person.social_card3 = self.txt_social3.text().strip()
