@@ -237,6 +237,13 @@ def query_persons_with_filters(filters: dict) -> list:
             query = query.filter(
                 (Person.land_area == "") | (Person.land_area.is_(None))
             )
+        forest = filters.get("forest_area", "全部")
+        if forest == "不为0":
+            query = query.filter(Person.forest_area != "", Person.forest_area.isnot(None))
+        elif forest == "空白":
+            query = query.filter(
+                (Person.forest_area == "") | (Person.forest_area.is_(None))
+            )
 
         persons = query.all()
 
@@ -302,6 +309,7 @@ def export_excel(file_path: str, progress_callback=None, filters: dict = None) -
             "社保卡号2": p.social_card2,
             "社保卡号3": p.social_card3,
             "土地面积": p.land_area or "",
+            "林地面积": p.forest_area or "",
         })
         if progress_callback and (i + 1) % 100 == 0:
             progress_callback(int((i + 1) / len(persons) * 100))
@@ -339,6 +347,7 @@ def _row_to_person(row, idx) -> Person:
         social_card2=safe_str(row.get("社保卡号2", "")),
         social_card3=safe_str(row.get("社保卡号3", "")),
         land_area=safe_str(row.get("土地面积", "")),
+        forest_area=safe_str(row.get("林地面积", "")),
     )
 
 
@@ -362,6 +371,7 @@ def _update_person_from_row(person: Person, row):
     person.social_card2 = safe_str(row.get("社保卡号2", person.social_card2))
     person.social_card3 = safe_str(row.get("社保卡号3", person.social_card3))
     person.land_area = safe_str(row.get("土地面积", person.land_area))
+    person.forest_area = safe_str(row.get("林地面积", person.forest_area))
 
 
 def _read_excel_robust(file_path: str, header=None):

@@ -399,7 +399,7 @@ class MainWindow(QMainWindow):
             "匹配序号", "家庭人员姓名", "身份证号码", "与户主关系", "本户地址", "年龄",
             "电话号码", "是否死亡", "社保卡号1", "社保卡号2", "社保卡号3",
             "脱贫户或监测户", "备注", "残疾", "残疾等级", "低保", "是否计生家庭",
-            "特困供养", "供养类型", "土地面积",
+            "特困供养", "供养类型", "土地面积", "林地面积",
             "本年地力补贴", "照片", "学生标记", "操作"
         ]
         self.table.setColumnCount(len(headers))
@@ -438,7 +438,7 @@ class MainWindow(QMainWindow):
             (8, 'social_card1'), (9, 'social_card2'), (10, 'social_card3'),
             (11, 'poor_type'), (12, 'remark'), (13, 'disability'),
             (14, 'dis_level'), (15, 'dibao'), (16, 'jisheng'),
-            (17, 'tekun'), (18, 'tekun_type'), (19, 'land_area')
+            (17, 'tekun'), (18, 'tekun_type'), (19, 'land_area'), (20, 'forest_area')
         ]
         for col_idx, field in empty_cols:
             if not any(getattr(p, field, None) and getattr(p, field) != "无" for p in all_persons):
@@ -480,6 +480,7 @@ class MainWindow(QMainWindow):
                     p.dibao, p.jisheng,
                     getattr(p, 'tekun', None) or "", getattr(p, 'tekun_type', None) or "",
                     p.land_area or "",
+                    p.forest_area or "",
                     subsidy_amount, photo_status, student_mark, "查看补贴"
                 ]
                 is_dead = p.is_dead == "是"
@@ -494,7 +495,7 @@ class MainWindow(QMainWindow):
                     else:
                         item = QTableWidgetItem(str(val) if val else "")
                         item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                        if col_idx == 20 and val:
+                        if col_idx == 21 and val:
                             item.setForeground(QColor(0, 102, 0))
                             item.setFont(QFont(FONT_NAME, FONT_SIZE, QFont.Weight.Bold))
                         if is_dead:
@@ -748,6 +749,7 @@ class MainWindow(QMainWindow):
             filters["disability"], filters["dis_level"],
             filters["poor_type"], filters["dibao"] != "全部",
             filters["jisheng"] != "全部", filters["land_area"] != "全部",
+            filters["forest_area"] != "全部",
         ])
 
         path, _ = QFileDialog.getSaveFileName(
@@ -1662,7 +1664,7 @@ class MainWindow(QMainWindow):
 
         dialog = QDialog(self)
         dialog.setWindowTitle("新增户")
-        dialog.setFixedSize(400, 300)
+        dialog.setFixedSize(400, 340)
         layout = QVBoxLayout(dialog)
 
         title = QLabel("新增户")
@@ -1695,6 +1697,9 @@ class MainWindow(QMainWindow):
         txt_land = QLineEdit()
         txt_land.setPlaceholderText("亩")
         form.addRow("土地面积：", txt_land)
+        txt_forest = QLineEdit()
+        txt_forest.setPlaceholderText("亩")
+        form.addRow("林地面积：", txt_forest)
         layout.addLayout(form)
 
         def do_add():
@@ -1713,7 +1718,8 @@ class MainWindow(QMainWindow):
                         'id_card': txt_idcard.text().strip(),
                         'address': txt_address.text().strip(),
                         'phone': txt_phone.text().strip(),
-                        'land_area': txt_land.text().strip()
+                        'land_area': txt_land.text().strip(),
+                        'forest_area': txt_forest.text().strip()
                     })
                     if result.get('success'):
                         QMessageBox.information(dialog, "成功", f"新户 {txt_huhao.text()} 创建成功！")
@@ -1728,7 +1734,8 @@ class MainWindow(QMainWindow):
                         id_card=txt_idcard.text().strip(),
                         address=txt_address.text().strip(),
                         phone=txt_phone.text().strip(),
-                        land_area=txt_land.text().strip()
+                        land_area=txt_land.text().strip(),
+                        forest_area=txt_forest.text().strip()
                     )
                     QMessageBox.information(dialog, "成功", f"新户 {txt_huhao.text()} 创建成功！")
                     dialog.accept()

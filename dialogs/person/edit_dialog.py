@@ -85,6 +85,8 @@ class EditDialog(QDialog):
         self.txt_phone = QLineEdit()
         self.txt_land_area = QLineEdit()
         self.txt_land_area.setPlaceholderText("亩")
+        self.txt_forest_area = QLineEdit()
+        self.txt_forest_area.setPlaceholderText("亩")
         self.cbo_is_dead = QComboBox()
         self.cbo_is_dead.addItems(["否", "是"])
         self.txt_social1 = QLineEdit()
@@ -133,6 +135,7 @@ class EditDialog(QDialog):
             ("年龄：", self.txt_age),
             ("电话号码：", self.txt_phone),
             ("土地面积：", self.txt_land_area),
+            ("林地面积：", self.txt_forest_area),
             ("是否死亡：", self.cbo_is_dead),
             ("社保卡号1：", self.txt_social1),
             ("社保卡号2：", self.txt_social2),
@@ -345,6 +348,7 @@ class EditDialog(QDialog):
         self.txt_age.setText(p.age)
         self.txt_phone.setText(p.phone if p.phone != "无" else "")
         self.txt_land_area.setText(getattr(p, 'land_area', '') or "")
+        self.txt_forest_area.setText(getattr(p, 'forest_area', '') or "")
         self.cbo_is_dead.setCurrentText("是" if p.is_dead == "是" else "否")
         self.txt_social1.setText(p.social_card1 if p.social_card1 != "无" else "")
         self.txt_social2.setText(p.social_card2 if p.social_card2 != "无" else "")
@@ -672,6 +676,22 @@ class EditDialog(QDialog):
                 return
             land_reason = land_reason.strip()
 
+        new_forest_area = self.txt_forest_area.text().strip()
+        old_forest_area = getattr(self.person, 'forest_area', '') or ''
+        forest_changed = new_forest_area != old_forest_area
+        forest_reason = ""
+
+        if forest_changed:
+            from PyQt6.QtWidgets import QInputDialog
+            forest_reason, ok = QInputDialog.getText(
+                self, "林地面积变更",
+                f"林地面积从「{old_forest_area or '空'}」变更为「{new_forest_area or '空'}」\n\n请输入变更原因：",
+            )
+            if not ok or not forest_reason.strip():
+                QMessageBox.warning(self, "提示", "林地面积变更时必须填写变更原因！")
+                return
+            forest_reason = forest_reason.strip()
+
         if get_server_url():
             from network.client import api_update_person
             data = {
@@ -683,6 +703,7 @@ class EditDialog(QDialog):
                 'phone': self.txt_phone.text().strip(),
                 'is_dead': self.cbo_is_dead.currentText(),
                 'land_area': new_land_area,
+                'forest_area': new_forest_area,
                 'social_card1': self.txt_social1.text().strip(),
                 'social_card2': self.txt_social2.text().strip(),
                 'social_card3': self.txt_social3.text().strip(),
@@ -696,7 +717,8 @@ class EditDialog(QDialog):
                 'tekun': self.cbo_tekun.currentText(),
                 'tekun_type': self.cbo_tekun_type.currentText(),
                 'updated_at': getattr(self.person, 'updated_at', ''),
-                'land_area_change_reason': land_reason
+                'land_area_change_reason': land_reason,
+                'forest_area_change_reason': forest_reason
             }
             try:
                 result = api_update_person(self.person.id, data)
@@ -721,6 +743,11 @@ class EditDialog(QDialog):
                 from datetime import datetime
                 self.person.land_area_change_reason = land_reason
                 self.person.land_area_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.person.forest_area = new_forest_area
+            if forest_changed:
+                from datetime import datetime
+                self.person.forest_area_change_reason = forest_reason
+                self.person.forest_area_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.person.social_card1 = self.txt_social1.text().strip()
             self.person.social_card2 = self.txt_social2.text().strip()
             self.person.social_card3 = self.txt_social3.text().strip()
