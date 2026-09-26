@@ -1458,8 +1458,8 @@ class MainWindow(QMainWindow):
             return
 
         latest_version = version_info.get("desktop_version", version_info.get("latest_version", ""))
-        release_notes = version_info.get("release_notes", "无")
-        file_size = version_info.get("file_size", 0)
+        release_notes = version_info.get("desktop_release_notes", version_info.get("release_notes", "无"))
+        file_size = version_info.get("desktop_file_size", version_info.get("file_size", 0))
 
         self._update_status.setText(f"发现新版本：{latest_version}")
         self._update_status.setStyleSheet("color: #0066CC; font-weight: bold;")
