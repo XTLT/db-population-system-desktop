@@ -4,7 +4,7 @@
 Excel 导入导出逻辑从 excel_importer.py 中提取为独立函数，由统一入口调用。
 每类林地完全复刻 land_area 的函数模式。
 """
-from utils import safe_str
+from core.utils import safe_str
 
 
 def apply_land_area_filter(query, filter_value, Person):
