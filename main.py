@@ -1387,11 +1387,7 @@ class MainWindow(QMainWindow):
         )
 
     def _check_for_updates(self):
-                          
         self._update_dialog = None
-        self._version_worker = VersionCheckWorker()
-        self._version_worker.finished.connect(self._on_version_check_done)
-        self._version_worker.start()
         self._show_update_dialog(None)
 
     def _show_update_dialog(self, version_info):
@@ -1406,7 +1402,8 @@ class MainWindow(QMainWindow):
         self._update_dialog.setWindowTitle("检查更新")
         self._update_dialog.setFixedSize(480, 320)
         self._update_dialog.setWindowFlags(self._update_dialog.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
-        self._update_dialog.finished.connect(lambda: setattr(self, '_update_dialog', None))
+        self._update_btn_now = None
+        self._update_dialog.finished.connect(lambda: (setattr(self, '_update_dialog', None), setattr(self, '_update_btn_now', None)))
         layout = QVBoxLayout(self._update_dialog)
         layout.setSpacing(12)
 
@@ -1480,8 +1477,12 @@ class MainWindow(QMainWindow):
         self._update_btn_close.setText("暂不更新")
         self._update_btn_close.setVisible(True)
 
+        if hasattr(self, '_update_btn_now') and self._update_btn_now:
+            return
+
         btn_update = QPushButton("立即更新")
         btn_update.setStyleSheet("background-color: #0078D4; color: white; font-weight: bold; padding: 8px 24px;")
+        self._update_btn_now = btn_update
         btn_layout = self._update_dialog.findChild(QHBoxLayout)
         btn_layout.insertWidget(0, btn_update)
 

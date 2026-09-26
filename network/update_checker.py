@@ -127,10 +127,12 @@ def _get_release_download_url(app_type: str = "desktop") -> Optional[str]:
         assets = data.get('assets', [])
         for asset in assets:
             name = asset.get('name', '')
-            if app_type == 'desktop' and '服务器' not in name and '服务' not in name and name.endswith('.exe'):
-                return asset.get('browser_download_url')
-            elif app_type == 'server' and ('服务器' in name or '服务' in name) and name.endswith('.exe'):
-                return asset.get('browser_download_url')
+            if app_type == 'desktop':
+                if name.endswith('.zip') and '服务器' not in name and '服务' not in name:
+                    return asset.get('browser_download_url')
+            elif app_type == 'server':
+                if name.endswith('.zip') and ('服务器' in name or '服务' in name):
+                    return asset.get('browser_download_url')
     except Exception:
         pass
     return None
@@ -150,7 +152,7 @@ def download_update(version_info: Dict, progress_callback=None) -> Tuple[Optiona
     if not urls:
         return None, "未找到下载链接"
 
-    filename = "update.exe"
+    filename = "update.zip"
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     filepath = os.path.join(DOWNLOAD_DIR, filename)
 
@@ -225,37 +227,58 @@ def update_local_version(version_info: Dict, app_type: str = "desktop"):
 
 
 def apply_update(filepath: str):
+    """解压 ZIP 更新包并自动替换整个应用目录后重启。
+
+    filepath 指向下载的 update.zip。ZIP 包内应包含完整的应用文件
+    （人口通.exe + _internal/ 目录等），解压后直接覆盖当前应用目录。
+    """
     if not getattr(sys, 'frozen', False):
         return False, "非打包环境，无法自动更新"
 
     current_exe = sys.executable
     app_dir = os.path.dirname(current_exe)
-    new_exe = filepath
+    zip_path = filepath
 
     dangerous_chars = ['$', '`', '"', "'", '\\', '\n', '\r', ';', '&', '|', '<', '>', '(', ')']
 
     def is_path_safe(path):
         return not any(char in path for char in dangerous_chars)
 
-    if not is_path_safe(current_exe) or not is_path_safe(new_exe) or not is_path_safe(app_dir):
+    if not is_path_safe(current_exe) or not is_path_safe(zip_path) or not is_path_safe(app_dir):
         return False, "安全错误：更新路径包含不安全字符，拒绝自动更新"
+
+    import zipfile
+    if not zipfile.is_zipfile(zip_path):
+        return False, "下载的文件不是有效的 ZIP 格式"
 
     if sys.platform == 'win32':
         bat_path = os.path.join(app_dir, '_auto_update.bat')
+        exe_name = os.path.basename(current_exe)
         bat_content = f'''@echo off
 chcp 65001 >nul
 title 自动更新中...
+echo ========================================
+echo   正在更新 人口通 桌面客户端...
+echo ========================================
+echo.
 echo 正在关闭程序...
-taskkill /f /t /im "{os.path.basename(current_exe)}" >nul 2>&1
+taskkill /f /t /im "{exe_name}" >nul 2>&1
 echo 等待文件释放...
-:wait_loop
 timeout /t 2 /nobreak >nul
-copy /y "{new_exe}" "{current_exe}" >nul 2>&1
-if errorlevel 1 goto wait_loop
-echo 更新完成，正在启动...
-del "{new_exe}" >nul 2>&1
+
+echo 正在解压更新文件...
+powershell -NoProfile -Command "Expand-Archive -Path '{zip_path}' -DestinationPath '{app_dir}' -Force"
+if errorlevel 1 (
+    echo 解压失败！请手动解压 {zip_path} 到 {app_dir}
+    pause
+    exit /b 1
+)
+
+echo.
+echo 更新完成，正在启动程序...
 start "" "{current_exe}"
 timeout /t 3 /nobreak >nul
+del "{zip_path}" >nul 2>&1
 del "%~f0"
 '''
         with open(bat_path, 'w', encoding='gbk') as f:
@@ -272,9 +295,9 @@ del "%~f0"
 sleep 2
 killall "{os.path.basename(current_exe)}" 2>/dev/null
 sleep 1
-cp -f "{new_exe}" "{current_exe}"
-chmod +x "{current_exe}"
-rm -f "{new_exe}"
+cd "{app_dir}"
+unzip -o "{zip_path}" -d "{app_dir}"
+rm -f "{zip_path}"
 "{current_exe}" &
 rm -f "{script_path}"
 '''
