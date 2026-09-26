@@ -236,27 +236,46 @@ class MainWindow(QMainWindow):
         subsidy_import_action.triggered.connect(self._import_land_subsidy)
         subsidy_view_action = QAction("查看地力补贴", self)
         subsidy_view_action.triggered.connect(self._view_land_subsidy)
+        subsidy_template_action = QAction("生成地力补贴模板", self)
+        subsidy_template_action.triggered.connect(self._generate_land_subsidy_template)
         subsidy_import_action.setEnabled(is_admin)
         subsidy_menu.addAction(subsidy_import_action)
         subsidy_menu.addAction(subsidy_view_action)
+        subsidy_menu.addAction(subsidy_template_action)
 
         treatment_menu = menubar.addMenu("待遇发放")
         treatment_import_action = QAction("导入待遇发放", self)
         treatment_import_action.triggered.connect(self._import_treatment_payment)
         treatment_view_action = QAction("查看待遇发放", self)
         treatment_view_action.triggered.connect(self._view_treatment_payment)
+        treatment_template_action = QAction("生成待遇发放模板", self)
+        treatment_template_action.triggered.connect(self._generate_treatment_payment_template)
         treatment_import_action.setEnabled(is_admin)
         treatment_menu.addAction(treatment_import_action)
         treatment_menu.addAction(treatment_view_action)
+        treatment_menu.addAction(treatment_template_action)
 
         pension_menu = menubar.addMenu("养老保险")
         pension_import_action = QAction("导入养老保险", self)
         pension_import_action.triggered.connect(self._import_pension_insurance)
         pension_view_action = QAction("查看养老保险", self)
         pension_view_action.triggered.connect(self._view_pension_insurance)
+        pension_template_action = QAction("生成养老保险模板", self)
+        pension_template_action.triggered.connect(self._generate_pension_insurance_template)
         pension_import_action.setEnabled(is_admin)
         pension_menu.addAction(pension_import_action)
         pension_menu.addAction(pension_view_action)
+        pension_menu.addAction(pension_template_action)
+
+        dibao_menu = menubar.addMenu("低保发放")
+        dibao_template_action = QAction("生成低保发放模板", self)
+        dibao_template_action.triggered.connect(self._generate_dibao_payment_template)
+        dibao_menu.addAction(dibao_template_action)
+
+        tekun_menu = menubar.addMenu("特困发放")
+        tekun_template_action = QAction("生成特困发放模板", self)
+        tekun_template_action.triggered.connect(self._generate_tekun_payment_template)
+        tekun_menu.addAction(tekun_template_action)
 
         help_menu = menubar.addMenu("帮助")
         check_update_action = QAction("检查更新", self)
@@ -1627,6 +1646,44 @@ class MainWindow(QMainWindow):
         if path:
             export_student_education_template(path)
             QMessageBox.information(self, "成功", f"模板已生成：{path}")
+
+    def _generate_payment_template(self, func_name, default_filename):
+        from data.excel_payment_templates import (
+            generate_land_subsidy_template,
+            generate_treatment_payment_template,
+            generate_pension_insurance_template,
+            generate_dibao_payment_template,
+            generate_tekun_payment_template,
+        )
+        func_map = {
+            'land_subsidy': generate_land_subsidy_template,
+            'treatment_payment': generate_treatment_payment_template,
+            'pension_insurance': generate_pension_insurance_template,
+            'dibao_payment': generate_dibao_payment_template,
+            'tekun_payment': generate_tekun_payment_template,
+        }
+        path, _ = QFileDialog.getSaveFileName(
+            self, "保存模板", default_filename,
+            "Excel文件 (*.xlsx)"
+        )
+        if path:
+            func_map[func_name](path)
+            QMessageBox.information(self, "成功", f"模板已生成：{path}")
+
+    def _generate_land_subsidy_template(self):
+        self._generate_payment_template('land_subsidy', '地力补贴导入模板.xlsx')
+
+    def _generate_treatment_payment_template(self):
+        self._generate_payment_template('treatment_payment', '待遇发放导入模板.xlsx')
+
+    def _generate_pension_insurance_template(self):
+        self._generate_payment_template('pension_insurance', '养老保险导入模板.xlsx')
+
+    def _generate_dibao_payment_template(self):
+        self._generate_payment_template('dibao_payment', '低保发放导入模板.xlsx')
+
+    def _generate_tekun_payment_template(self):
+        self._generate_payment_template('tekun_payment', '特困发放导入模板.xlsx')
 
     def _grade_promotion(self):
         from dialogs.student.grade_promotion_dialog import GradePromotionDialog
