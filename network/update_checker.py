@@ -140,10 +140,7 @@ def _get_release_download_url(app_type: str = "desktop") -> Optional[str]:
         for asset in assets:
             name = asset.get('name', '')
             if app_type == 'desktop':
-                if name.endswith('.zip') and '服务器' not in name and '服务' not in name:
-                    return asset.get('browser_download_url')
-            elif app_type == 'server':
-                if name.endswith('.zip') and ('服务器' in name or '服务' in name):
+                if name.endswith('.zip') and '人口通' in name:
                     return asset.get('browser_download_url')
     except Exception:
         pass
