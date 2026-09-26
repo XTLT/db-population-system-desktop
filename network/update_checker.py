@@ -85,9 +85,11 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[Dict], str]:
 
         data = None
         last_error = None
+        import time
         for url in VERSION_URLS:
             try:
-                resp = requests.get(url, timeout=10)
+                cache_bust_url = f"{url}?t={int(time.time())}"
+                resp = requests.get(cache_bust_url, timeout=10)
                 resp.raise_for_status()
                 data = resp.json()
                 break
@@ -239,7 +241,7 @@ def apply_update(filepath: str):
     app_dir = os.path.dirname(current_exe)
     zip_path = filepath
 
-    dangerous_chars = ['$', '`', '"', "'", '\\', '\n', '\r', ';', '&', '|', '<', '>', '(', ')']
+    dangerous_chars = ['$', '`', '"', "'", '\n', '\r', ';', '&', '|', '<', '>', '(', ')']
 
     def is_path_safe(path):
         return not any(char in path for char in dangerous_chars)
