@@ -213,9 +213,12 @@ class MainWindow(QMainWindow):
         forest_menu = menubar.addMenu("林地管理")
         forest_view_action = QAction("查看林地信息", self)
         forest_view_action.triggered.connect(self._view_forest_info)
+        forest_import_action = QAction("导入林地面积", self)
+        forest_import_action.triggered.connect(self._import_forest_data)
         forest_export_action = QAction("导出林地数据", self)
         forest_export_action.triggered.connect(self._export_forest_data)
         forest_menu.addAction(forest_view_action)
+        forest_menu.addAction(forest_import_action)
         forest_menu.addAction(forest_export_action)
 
         student_menu = menubar.addMenu("学生管理")
@@ -1600,7 +1603,7 @@ class MainWindow(QMainWindow):
         if self.is_network_mode:
             try:
                 from network.client import _request
-                resp = _request('GET', '/api/persons', params={'page': 1, 'per_page': 10000})
+                resp = _request('GET', '/api/persons?page=1&per_page=10000')
                 persons = resp.get('persons', resp.get('data', resp.get('items', [])))
             except Exception as e:
                 QMessageBox.warning(self, "错误", f"查询失败：{e}")
@@ -1628,6 +1631,51 @@ class MainWindow(QMainWindow):
         lbl_summary = QLabel(f"共 {rows} 人有林地信息")
         layout.addWidget(lbl_summary)
         dialog.exec()
+
+    def _import_forest_data(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "选择林地面积Excel文件", "",
+            "Excel文件 (*.xlsx *.xls)"
+        )
+        if not path:
+            return
+
+        if self.is_network_mode:
+            import mimetypes
+            boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW'
+            with open(path, 'rb') as f:
+                file_data = f.read()
+            content_type = mimetypes.guess_type(path)[0] or 'application/octet-stream'
+            body = (
+                f'--{boundary}\r\n'
+                f'Content-Disposition: form-data; name="mode"\r\n\r\n'
+                f'incremental\r\n'
+                f'--{boundary}\r\n'
+                f'Content-Disposition: form-data; name="file"; filename="{os.path.basename(path)}"\r\n'
+                f'Content-Type: {content_type}\r\n\r\n'
+            ).encode('utf-8') + file_data + f'\r\n--{boundary}--\r\n'.encode('utf-8')
+            try:
+                from network.client import _request_raw
+                result = _request_raw('POST', '/api/import/excel', body,
+                                      f'multipart/form-data; boundary={boundary}')
+                if result.get('imported') is not None:
+                    msg = f"林地面积导入完成！\n成功：{result.get('imported', 0)}条\n更新：{result.get('updated', 0)}条\n跳过：{result.get('skipped', 0)}条"
+                    QMessageBox.information(self, "导入结果", msg)
+                else:
+                    QMessageBox.critical(self, "导入失败", result.get('error', '未知错误'))
+            except Exception as e:
+                QMessageBox.critical(self, "导入失败", str(e))
+        else:
+            try:
+                from data.excel_importer import import_excel_incremental
+                result = import_excel_incremental(path)
+                if result.get('imported') is not None:
+                    msg = f"林地面积导入完成！\n成功：{result.get('imported', 0)}条\n更新：{result.get('updated', 0)}条\n跳过：{result.get('skipped', 0)}条"
+                    QMessageBox.information(self, "导入结果", msg)
+                else:
+                    QMessageBox.critical(self, "导入失败", result.get('error', '未知错误'))
+            except Exception as e:
+                QMessageBox.critical(self, "导入失败", str(e))
 
     def _export_forest_data(self):
         self._export_excel()
