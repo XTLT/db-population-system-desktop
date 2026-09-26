@@ -46,6 +46,7 @@ def _get_server_url_and_token():
 
 
 def _check_local_server(app_type: str, current_code: int) -> Optional[Dict]:
+    """Fallback: query local server's /api/update/check endpoint."""
     server_url, token = _get_server_url_and_token()
     if not server_url:
         return None
@@ -66,8 +67,9 @@ def _check_local_server(app_type: str, current_code: int) -> Optional[Dict]:
         data = resp.json()
 
         if data.get("has_update"):
-            if data.get("download_url"):
-                data["download_url"] = f"{server_url}{data['download_url']}"
+            download_url = data.get("download_url", "")
+            if download_url and not download_url.startswith("http"):
+                data["download_url"] = f"{server_url}{download_url}"
             return data
     except Exception:
         pass
@@ -79,10 +81,7 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[Dict], str]:
     current_code = config.get("version_code", 1)
 
     try:
-        local_result = _check_local_server(app_type, current_code)
-        if local_result:
-            return local_result, ""
-
+        # Step 1: Check version.json (authoritative for version comparison)
         data = None
         last_error = None
         import time
@@ -97,18 +96,29 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[Dict], str]:
                 last_error = e
                 continue
 
-        if data is None:
+        if data:
+            if app_type == "desktop":
+                latest_code = data.get("desktop_version_code", data.get("version_code", 0))
+            else:
+                latest_code = data.get("server_version_code", data.get("version_code", 0))
+
+            if latest_code > current_code:
+                # Has update — get download URL from Gitee releases
+                download_url = _get_release_download_url(app_type)
+                if download_url:
+                    data["download_url"] = download_url
+                return data, ""
+            else:
+                return None, ""
+
+        # Step 2: Fall back to local server check
+        local_result = _check_local_server(app_type, current_code)
+        if local_result:
+            return local_result, ""
+
+        if last_error:
             return None, f"所有更新源均无法访问: {last_error}"
-
-        if app_type == "desktop":
-            latest_code = data.get("desktop_version_code", data.get("version_code", 0))
-        else:
-            latest_code = data.get("server_version_code", data.get("version_code", 0))
-
-        if latest_code > current_code:
-            return data, ""
-        else:
-            return None, ""
+        return None, ""
 
     except requests.exceptions.RequestException as e:
         return None, f"检查更新失败: {e}"
