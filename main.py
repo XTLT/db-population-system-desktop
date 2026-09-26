@@ -210,6 +210,14 @@ class MainWindow(QMainWindow):
         recover_action.triggered.connect(self._recover_person)
         hh_menu.addAction(recover_action)
 
+        forest_menu = menubar.addMenu("林地管理")
+        forest_view_action = QAction("查看林地信息", self)
+        forest_view_action.triggered.connect(self._view_forest_info)
+        forest_export_action = QAction("导出林地数据", self)
+        forest_export_action.triggered.connect(self._export_forest_data)
+        forest_menu.addAction(forest_view_action)
+        forest_menu.addAction(forest_export_action)
+
         student_menu = menubar.addMenu("学生管理")
         student_query_action = QAction("学生信息查询", self)
         student_query_action.triggered.connect(self._student_query)
@@ -217,8 +225,6 @@ class MainWindow(QMainWindow):
         student_import_action.triggered.connect(self._import_student_education)
         student_export_action = QAction("导出就读信息", self)
         student_export_action.triggered.connect(self._export_student_education)
-        student_template_action = QAction("生成就读信息模板", self)
-        student_template_action.triggered.connect(self._generate_student_template)
         grade_promotion_action = QAction("年级升级", self)
         grade_promotion_action.triggered.connect(self._grade_promotion)
 
@@ -227,7 +233,6 @@ class MainWindow(QMainWindow):
         student_menu.addAction(student_query_action)
         student_menu.addAction(student_import_action)
         student_menu.addAction(student_export_action)
-        student_menu.addAction(student_template_action)
         student_menu.addSeparator()
         student_menu.addAction(grade_promotion_action)
 
@@ -236,46 +241,47 @@ class MainWindow(QMainWindow):
         subsidy_import_action.triggered.connect(self._import_land_subsidy)
         subsidy_view_action = QAction("查看地力补贴", self)
         subsidy_view_action.triggered.connect(self._view_land_subsidy)
-        subsidy_template_action = QAction("生成地力补贴模板", self)
-        subsidy_template_action.triggered.connect(self._generate_land_subsidy_template)
         subsidy_import_action.setEnabled(is_admin)
         subsidy_menu.addAction(subsidy_import_action)
         subsidy_menu.addAction(subsidy_view_action)
-        subsidy_menu.addAction(subsidy_template_action)
 
         treatment_menu = menubar.addMenu("待遇发放")
         treatment_import_action = QAction("导入待遇发放", self)
         treatment_import_action.triggered.connect(self._import_treatment_payment)
         treatment_view_action = QAction("查看待遇发放", self)
         treatment_view_action.triggered.connect(self._view_treatment_payment)
-        treatment_template_action = QAction("生成待遇发放模板", self)
-        treatment_template_action.triggered.connect(self._generate_treatment_payment_template)
         treatment_import_action.setEnabled(is_admin)
         treatment_menu.addAction(treatment_import_action)
         treatment_menu.addAction(treatment_view_action)
-        treatment_menu.addAction(treatment_template_action)
 
         pension_menu = menubar.addMenu("养老保险")
         pension_import_action = QAction("导入养老保险", self)
         pension_import_action.triggered.connect(self._import_pension_insurance)
         pension_view_action = QAction("查看养老保险", self)
         pension_view_action.triggered.connect(self._view_pension_insurance)
-        pension_template_action = QAction("生成养老保险模板", self)
-        pension_template_action.triggered.connect(self._generate_pension_insurance_template)
         pension_import_action.setEnabled(is_admin)
         pension_menu.addAction(pension_import_action)
         pension_menu.addAction(pension_view_action)
-        pension_menu.addAction(pension_template_action)
 
-        dibao_menu = menubar.addMenu("低保发放")
-        dibao_template_action = QAction("生成低保发放模板", self)
-        dibao_template_action.triggered.connect(self._generate_dibao_payment_template)
-        dibao_menu.addAction(dibao_template_action)
-
-        tekun_menu = menubar.addMenu("特困发放")
-        tekun_template_action = QAction("生成特困发放模板", self)
-        tekun_template_action.triggered.connect(self._generate_tekun_payment_template)
-        tekun_menu.addAction(tekun_template_action)
+        template_menu = menubar.addMenu("下载模板")
+        tpl_student = QAction("就读信息模板", self)
+        tpl_student.triggered.connect(self._generate_student_template)
+        tpl_subsidy = QAction("地力补贴模板", self)
+        tpl_subsidy.triggered.connect(self._generate_land_subsidy_template)
+        tpl_treatment = QAction("待遇发放模板", self)
+        tpl_treatment.triggered.connect(self._generate_treatment_payment_template)
+        tpl_pension = QAction("养老保险模板", self)
+        tpl_pension.triggered.connect(self._generate_pension_insurance_template)
+        tpl_dibao = QAction("低保发放模板", self)
+        tpl_dibao.triggered.connect(self._generate_dibao_payment_template)
+        tpl_tekun = QAction("特困发放模板", self)
+        tpl_tekun.triggered.connect(self._generate_tekun_payment_template)
+        template_menu.addAction(tpl_student)
+        template_menu.addAction(tpl_subsidy)
+        template_menu.addAction(tpl_treatment)
+        template_menu.addAction(tpl_pension)
+        template_menu.addAction(tpl_dibao)
+        template_menu.addAction(tpl_tekun)
 
         help_menu = menubar.addMenu("帮助")
         check_update_action = QAction("检查更新", self)
@@ -1571,6 +1577,56 @@ class MainWindow(QMainWindow):
                 self, "年级升级提醒",
                 f"距离9月1日年级升级还有 {31 - today.day} 天，请做好准备。"
             )
+
+    def _view_forest_info(self):
+        from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
+        dialog = QDialog(self)
+        dialog.setWindowTitle("林地信息查看")
+        dialog.resize(900, 500)
+        layout = QVBoxLayout(dialog)
+
+        headers = ["户号", "姓名", "地方公益林(亩)", "国家公益林(亩)", "非国有天然商品林(亩)"]
+        table = QTableWidget()
+        table.setColumnCount(len(headers))
+        table.setHorizontalHeaderLabels(headers)
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        layout.addWidget(table)
+
+        persons = []
+        if self.is_network_mode:
+            try:
+                from network.client import _request
+                resp = _request('GET', '/api/persons', params={'page': 1, 'per_page': 10000})
+                persons = resp.get('persons', resp.get('data', resp.get('items', [])))
+            except Exception as e:
+                QMessageBox.warning(self, "错误", f"查询失败：{e}")
+                return
+        else:
+            from core.database import get_session, Person
+            session = get_session()
+            persons = session.query(Person).all()
+            session.close()
+
+        rows = 0
+        for p in persons:
+            lw = getattr(p, 'local_welfare_forest_area', None) or ""
+            nw = getattr(p, 'national_welfare_forest_area', None) or ""
+            cf = getattr(p, 'commercial_forest_area', None) or ""
+            if lw or nw or cf:
+                table.insertRow(rows)
+                table.setItem(rows, 0, QTableWidgetItem(str(getattr(p, 'hu_hao', '') or "")))
+                table.setItem(rows, 1, QTableWidgetItem(str(getattr(p, 'name', '') or "")))
+                table.setItem(rows, 2, QTableWidgetItem(str(lw)))
+                table.setItem(rows, 3, QTableWidgetItem(str(nw)))
+                table.setItem(rows, 4, QTableWidgetItem(str(cf)))
+                rows += 1
+
+        lbl_summary = QLabel(f"共 {rows} 人有林地信息")
+        layout.addWidget(lbl_summary)
+        dialog.exec()
+
+    def _export_forest_data(self):
+        self._export_excel()
 
     def _student_query(self):
         from dialogs.student.student_query_dialog import StudentQueryDialog
