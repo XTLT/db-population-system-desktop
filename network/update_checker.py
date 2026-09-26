@@ -7,7 +7,7 @@ import ssl
 from typing import Optional, Dict, Tuple
 
 VERSION_URLS = [
-    "https://gitee.com/tension0712/population-system/raw/main/updates/version.json",
+    "https://gitee.com/tension0712/population-system/raw/master/updates/version.json",
 ]
 
 
