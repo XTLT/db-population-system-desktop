@@ -266,6 +266,8 @@ class MainWindow(QMainWindow):
         template_menu = menubar.addMenu("下载模板")
         tpl_student = QAction("就读信息模板", self)
         tpl_student.triggered.connect(self._generate_student_template)
+        tpl_forest = QAction("林地面积模板", self)
+        tpl_forest.triggered.connect(self._generate_forest_template)
         tpl_subsidy = QAction("地力补贴模板", self)
         tpl_subsidy.triggered.connect(self._generate_land_subsidy_template)
         tpl_treatment = QAction("待遇发放模板", self)
@@ -277,6 +279,7 @@ class MainWindow(QMainWindow):
         tpl_tekun = QAction("特困发放模板", self)
         tpl_tekun.triggered.connect(self._generate_tekun_payment_template)
         template_menu.addAction(tpl_student)
+        template_menu.addAction(tpl_forest)
         template_menu.addAction(tpl_subsidy)
         template_menu.addAction(tpl_treatment)
         template_menu.addAction(tpl_pension)
@@ -1701,6 +1704,16 @@ class MainWindow(QMainWindow):
         )
         if path:
             export_student_education_template(path)
+            QMessageBox.information(self, "成功", f"模板已生成：{path}")
+
+    def _generate_forest_template(self):
+        from data.excel_forest_template import generate_forest_template
+        path, _ = QFileDialog.getSaveFileName(
+            self, "保存模板", "林地面积导入模板.xlsx",
+            "Excel文件 (*.xlsx)"
+        )
+        if path:
+            generate_forest_template(path)
             QMessageBox.information(self, "成功", f"模板已生成：{path}")
 
     def _generate_payment_template(self, func_name, default_filename):
