@@ -1616,13 +1616,17 @@ class MainWindow(QMainWindow):
 
         rows = 0
         for p in persons:
-            lw = getattr(p, 'local_welfare_forest_area', None) or ""
-            nw = getattr(p, 'national_welfare_forest_area', None) or ""
-            cf = getattr(p, 'commercial_forest_area', None) or ""
+            def _get(key, default=""):
+                if isinstance(p, dict):
+                    return p.get(key) or default
+                return getattr(p, key, None) or default
+            lw = _get('local_welfare_forest_area')
+            nw = _get('national_welfare_forest_area')
+            cf = _get('commercial_forest_area')
             if lw or nw or cf:
                 table.insertRow(rows)
-                table.setItem(rows, 0, QTableWidgetItem(str(getattr(p, 'hu_hao', '') or "")))
-                table.setItem(rows, 1, QTableWidgetItem(str(getattr(p, 'name', '') or "")))
+                table.setItem(rows, 0, QTableWidgetItem(str(_get('hu_hao'))))
+                table.setItem(rows, 1, QTableWidgetItem(str(_get('name'))))
                 table.setItem(rows, 2, QTableWidgetItem(str(lw)))
                 table.setItem(rows, 3, QTableWidgetItem(str(nw)))
                 table.setItem(rows, 4, QTableWidgetItem(str(cf)))
