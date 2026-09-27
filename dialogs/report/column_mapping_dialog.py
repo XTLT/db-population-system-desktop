@@ -10,6 +10,7 @@ from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
 
 FIELD_OPTIONS = [
     ('', '不填写'),
+    ('name', '姓名'),
     ('id_card', '身份证号'),
     ('phone', '电话'),
     ('social_card1', '社保卡1'),
@@ -19,14 +20,17 @@ FIELD_OPTIONS = [
     ('address', '地址'),
 ]
 
+MATCH_BY_NAME = 'name'
+MATCH_BY_ID_CARD = 'id_card'
+
 
 class ColumnMappingDialog(QDialog):
-    """选择姓名匹配列和各列填写内容"""
+    """选择匹配方式和各列填写内容"""
 
     def __init__(self, headers, parent=None):
         super().__init__(parent)
         self.setWindowTitle("列映射设置")
-        self.setMinimumSize(600, 450)
+        self.setMinimumSize(600, 480)
         self._headers = headers
         self._field_combos = []
         self._setup_ui()
@@ -34,20 +38,31 @@ class ColumnMappingDialog(QDialog):
     def _setup_ui(self):
         layout = QVBoxLayout(self)
 
-        info = QLabel("请设置姓名匹配列和需要填写的数据列：")
+        info = QLabel("请设置匹配列和需要填写的数据列：")
         info.setFont(QFont(FONT_NAME, FONT_SIZE))
         layout.addWidget(info)
 
-        name_row = QHBoxLayout()
-        name_row.addWidget(QLabel("姓名匹配列："))
-        self.cbo_name = QComboBox()
-        self.cbo_name.setFont(QFont(FONT_NAME, FONT_SIZE))
+        match_row = QHBoxLayout()
+        match_row.addWidget(QLabel("匹配方式："))
+        self.cbo_match = QComboBox()
+        self.cbo_match.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.cbo_match.addItem("按姓名匹配", MATCH_BY_NAME)
+        self.cbo_match.addItem("按身份证号匹配", MATCH_BY_ID_CARD)
+        self.cbo_match.currentDataChanged.connect(self._update_match_combo)
+        match_row.addWidget(self.cbo_match)
+        match_row.addStretch()
+        layout.addLayout(match_row)
+
+        col_row = QHBoxLayout()
+        col_row.addWidget(QLabel("匹配列："))
+        self.cbo_match_col = QComboBox()
+        self.cbo_match_col.setFont(QFont(FONT_NAME, FONT_SIZE))
         for i, h in enumerate(self._headers):
             display = f"第{i+1}列: {h or '(空)'}"
-            self.cbo_name.addItem(display, i + 1)
-        name_row.addWidget(self.cbo_name)
-        name_row.addStretch()
-        layout.addLayout(name_row)
+            self.cbo_match_col.addItem(display, i + 1)
+        col_row.addWidget(self.cbo_match_col)
+        col_row.addStretch()
+        layout.addLayout(col_row)
 
         table_label = QLabel("各列填写内容：")
         table_label.setFont(QFont(FONT_NAME, FONT_SIZE))
@@ -93,16 +108,29 @@ class ColumnMappingDialog(QDialog):
         btn_row.addWidget(btn_cancel)
         layout.addLayout(btn_row)
 
+    def _update_match_combo(self):
+        match_by = self.cbo_match.currentData()
+        for combo in self._field_combos:
+            for i in range(combo.count()):
+                if combo.itemData(i) == match_by:
+                    combo.model().item(i).setEnabled(False)
+                else:
+                    combo.model().item(i).setEnabled(True)
+
     @property
-    def name_col(self):
-        return self.cbo_name.currentData()
+    def match_by(self):
+        return self.cbo_match.currentData()
+
+    @property
+    def match_col(self):
+        return self.cbo_match_col.currentData()
 
     @property
     def fill_map(self):
-        name_col = self.cbo_name.currentData()
+        match_col = self.cbo_match_col.currentData()
         result = {}
         for i, combo in enumerate(self._field_combos):
             val = combo.currentData()
-            if val and (i + 1) != name_col:
+            if val and (i + 1) != match_col:
                 result[i + 1] = val
         return result

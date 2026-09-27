@@ -1168,7 +1168,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _batch_import_ids(self):
-        """从数据库按姓名匹配，将人员信息填入Excel表格"""
+        """从数据库按姓名或身份证号匹配，将人员信息填入Excel表格"""
         path, _ = QFileDialog.getOpenFileName(
             self, "选择需要填写数据的Excel文件", "",
             "Excel文件 (*.xlsx)"
@@ -1189,12 +1189,13 @@ class MainWindow(QMainWindow):
             val = ws.cell(1, col).value
             headers.append(str(val).strip() if val else "")
 
-        from dialogs.report.column_mapping_dialog import ColumnMappingDialog
+        from dialogs.report.column_mapping_dialog import ColumnMappingDialog, MATCH_BY_NAME, MATCH_BY_ID_CARD
         mapping_dialog = ColumnMappingDialog(headers, self)
         if mapping_dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
-        name_col = mapping_dialog.name_col
+        match_by = mapping_dialog.match_by
+        match_col = mapping_dialog.match_col
         fill_map = mapping_dialog.fill_map
 
         if not fill_map:
@@ -1203,9 +1204,9 @@ class MainWindow(QMainWindow):
 
         is_network = bool(get_server_url())
         if is_network:
-            from network.client import api_search
+            from network.client import api_search, api_person
         else:
-            from core.database import search_by_name as db_search_by_name
+            from core.database import search_by_name as db_search_by_name, get_session, Person
 
         total = ws.max_row - 1
         if total <= 0:
@@ -1224,36 +1225,57 @@ class MainWindow(QMainWindow):
         not_found = 0
         multi_selected = 0
         skipped = 0
-        not_found_names = []
+        not_found_values = []
 
         for row_idx in range(2, ws.max_row + 1):
             if progress.wasCanceled():
                 break
 
-            name_val = str(ws.cell(row_idx, name_col).value or '').strip()
-            if not name_val:
+            match_val = str(ws.cell(row_idx, match_col).value or '').strip()
+            if not match_val:
                 skipped += 1
                 progress.setValue(row_idx - 1)
                 continue
 
-            progress.setLabelText(f"第 {row_idx - 1}/{total} 行: {name_val}")
+            progress.setLabelText(f"第 {row_idx - 1}/{total} 行: {match_val}")
             QApplication.processEvents()
 
-            if is_network:
-                try:
-                    results = api_search(name_val)
-                except Exception:
-                    results = []
+            results = []
+            if match_by == MATCH_BY_NAME:
+                if is_network:
+                    try:
+                        results = api_search(match_val)
+                    except Exception:
+                        results = []
+                else:
+                    persons = db_search_by_name(match_val)
+                    results = [{'name': p.name, 'id_card': p.id_card or '', 'phone': p.phone or '',
+                                'social_card1': p.social_card1 or '', 'social_card2': p.social_card2 or '',
+                                'social_card3': p.social_card3 or '', 'hu_hao': p.hu_hao or '',
+                                'address': p.address or '', 'relation': p.relation or ''} for p in persons]
             else:
-                persons = db_search_by_name(name_val)
-                results = [{'name': p.name, 'id_card': p.id_card or '', 'phone': p.phone or '',
-                            'social_card1': p.social_card1 or '', 'social_card2': p.social_card2 or '',
-                            'social_card3': p.social_card3 or '', 'hu_hao': p.hu_hao or '',
-                            'address': p.address or '', 'relation': p.relation or ''} for p in persons]
+                if is_network:
+                    try:
+                        data = api_person(match_val)
+                        if isinstance(data, dict) and data.get('person'):
+                            results = [data['person']]
+                    except Exception:
+                        results = []
+                else:
+                    session = get_session()
+                    try:
+                        p = session.query(Person).filter(Person.id_card == match_val).first()
+                        if p:
+                            results = [{'name': p.name, 'id_card': p.id_card or '', 'phone': p.phone or '',
+                                        'social_card1': p.social_card1 or '', 'social_card2': p.social_card2 or '',
+                                        'social_card3': p.social_card3 or '', 'hu_hao': p.hu_hao or '',
+                                        'address': p.address or '', 'relation': p.relation or ''}]
+                    finally:
+                        session.close()
 
             if len(results) == 0:
                 not_found += 1
-                not_found_names.append(name_val)
+                not_found_values.append(match_val)
                 for col_idx in fill_map:
                     cell = ws.cell(row_idx, col_idx, "未查询到")
                     cell.font = red_font
@@ -1264,7 +1286,7 @@ class MainWindow(QMainWindow):
                     ws.cell(row_idx, col_idx, person.get(field, ''))
             else:
                 from dialogs.report.multi_name_select_dialog import MultiNameSelectDialog
-                select_dialog = MultiNameSelectDialog(results, name_val, self)
+                select_dialog = MultiNameSelectDialog(results, match_val, self)
                 if select_dialog.exec() == QDialog.DialogCode.Accepted and select_dialog.selected_person:
                     person = select_dialog.selected_person
                     found += 1
@@ -1292,15 +1314,17 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "保存失败", f"文件保存失败：{e}")
             return
 
+        match_label = "姓名" if match_by == MATCH_BY_NAME else "身份证号"
         summary = f"处理完成！\n\n"
+        summary += f"匹配方式: 按{match_label}匹配\n"
         summary += f"总行数: {total}\n"
-        summary += f"成功填写: {found} 条（其中同名选择: {multi_selected} 条）\n"
+        summary += f"成功填写: {found} 条（其中手动选择: {multi_selected} 条）\n"
         summary += f"未查询到: {not_found} 条\n"
         summary += f"跳过: {skipped} 条"
-        if not_found_names:
-            summary += f"\n\n未查询到的姓名:\n"
-            for n in not_found_names:
-                summary += f"  - {n}\n"
+        if not_found_values:
+            summary += f"\n\n未查询到的{match_label}:\n"
+            for v in not_found_values:
+                summary += f"  - {v}\n"
         summary += f"\n文件已保存至: {save_path}"
 
         QMessageBox.information(self, "处理结果", summary)
