@@ -1328,10 +1328,19 @@ class MainWindow(QMainWindow):
 
         progress.setValue(total)
 
+        # 保存前把匹配列的公式单元格转为静态值，防止Excel重新计算时外部引用失效变#N/A
+        for row_idx in range(header_row + 1, ws.max_row + 1):
+            cell = ws.cell(row_idx, match_col)
+            if isinstance(cell.value, str) and cell.value.startswith('='):
+                cached = ws_values.cell(row_idx, match_col).value
+                if cached is not None and not (isinstance(cached, str) and cached.startswith('#')):
+                    cell.value = cached
+
         default_name = os.path.splitext(os.path.basename(path))[0] + "_已填写.xlsx"
         save_path, _ = QFileDialog.getSaveFileName(
             self, "保存填写后的文件", default_name,
-            "Excel文件 (*.xlsx)"
+            "Excel文件 (*.xlsx)",
+            options=QFileDialog.Option.DontUseNativeDialog
         )
         if not save_path:
             return
