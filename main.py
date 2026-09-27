@@ -1179,6 +1179,7 @@ class MainWindow(QMainWindow):
         try:
             import openpyxl
             wb = openpyxl.load_workbook(path)
+            wb_values = openpyxl.load_workbook(path, data_only=True)
         except Exception as e:
             QMessageBox.critical(self, "错误", f"读取Excel文件失败：{e}")
             return
@@ -1193,6 +1194,8 @@ class MainWindow(QMainWindow):
         fill_map = mapping_dialog.fill_map
         header_row = mapping_dialog.header_row
         ws = mapping_dialog.ws
+        sheet_name = ws.title
+        ws_values = wb_values[sheet_name]
 
         if not fill_map:
             QMessageBox.warning(self, "提示", "请至少选择一列需要填写的数据")
@@ -1267,7 +1270,7 @@ class MainWindow(QMainWindow):
             if progress.wasCanceled():
                 break
 
-            raw_val = ws.cell(row_idx, match_col).value
+            raw_val = ws_values.cell(row_idx, match_col).value
             match_val = str(raw_val).strip() if raw_val is not None else ''
             if not match_val:
                 skipped += 1
