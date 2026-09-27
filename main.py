@@ -7,7 +7,8 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QFormLayout, QLineEdit, QPushButton, QLabel, QTableWidget, QTableWidgetItem,
     QMenu, QMessageBox, QHeaderView, QAbstractItemView, QSplitter, QScrollArea,
-    QSystemTrayIcon, QDialog, QFileDialog, QInputDialog, QCheckBox, QTextEdit, QProgressBar
+    QSystemTrayIcon, QDialog, QFileDialog, QInputDialog, QCheckBox, QTextEdit, QProgressBar,
+    QProgressDialog
 )
 from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QAction, QIcon, QPixmap, QPainter
@@ -1167,144 +1168,142 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _batch_import_ids(self):
-
-        if not get_server_url():
-            QMessageBox.warning(self, "提示", "请先连接服务器后使用此功能")
-            return
-
-        self.setCursor(Qt.CursorShape.WaitCursor)
-        try:
-            from network.client import _request
-            reports = _request('GET', '/api/reports')
-        except Exception as e:
-            self.setCursor(Qt.CursorShape.ArrowCursor)
-            QMessageBox.critical(self, "错误", f"获取报表列表失败：{e}")
-            return
-        finally:
-            self.setCursor(Qt.CursorShape.ArrowCursor)
-
-        if not reports:
-            QMessageBox.warning(self, "提示", "没有已上传的报表，请先导入报表")
-            return
-
-        sel_dialog = QDialog(self)
-        sel_dialog.setWindowTitle("选择要导入证件号码的报表")
-        sel_dialog.setFixedSize(700, 400)
-        sel_layout = QVBoxLayout(sel_dialog)
-
-        table = QTableWidget()
-        table.setFont(QFont(FONT_NAME, FONT_SIZE))
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        headers = ["报表名称", "上传者", "上传时间"]
-        table.setColumnCount(len(headers))
-        table.setHorizontalHeaderLabels(headers)
-        table.setRowCount(len(reports))
-        for row_idx, r in enumerate(reports):
-            name_item = QTableWidgetItem(r['original_name'])
-            name_item.setData(Qt.ItemDataRole.UserRole, r['report_id'])
-            name_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            table.setItem(row_idx, 0, name_item)
-            table.setItem(row_idx, 1, QTableWidgetItem(r['username']))
-            table.setItem(row_idx, 2, QTableWidgetItem(r['upload_time']))
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        sel_layout.addWidget(table)
-
-        sel_btn_layout = QHBoxLayout()
-        sel_ok = QPushButton("下一步")
-        sel_ok.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; font-weight: bold; padding: 8px 20px;")
-        sel_cancel = QPushButton("取消")
-        sel_cancel.setStyleSheet(f"background-color: {BTN_CANCEL_COLOR}; padding: 8px 20px;")
-        sel_btn_layout.addStretch()
-        sel_btn_layout.addWidget(sel_ok)
-        sel_btn_layout.addWidget(sel_cancel)
-        sel_layout.addLayout(sel_btn_layout)
-
-        selected_report = [None]
-        def do_next():
-            row = table.currentRow()
-            if row < 0:
-                QMessageBox.warning(sel_dialog, "提示", "请选择一个报表")
-                return
-            selected_report[0] = {
-                'report_id': table.item(row, 0).data(Qt.ItemDataRole.UserRole),
-                'report_name': table.item(row, 0).text(),
-            }
-            sel_dialog.accept()
-
-        sel_ok.clicked.connect(do_next)
-        sel_cancel.clicked.connect(sel_dialog.reject)
-
-        if sel_dialog.exec() != QDialog.DialogCode.Accepted or not selected_report[0]:
-            return
-
-        report_id = selected_report[0]['report_id']
-        report_name = selected_report[0]['report_name']
-
+        """从数据库按姓名匹配，将人员信息填入Excel表格"""
         path, _ = QFileDialog.getOpenFileName(
-            self, "选择证件号码Excel文件", "",
-            "Excel文件 (*.xlsx *.xls *.et)"
+            self, "选择需要填写数据的Excel文件", "",
+            "Excel文件 (*.xlsx)"
         )
         if not path:
             return
 
         try:
-            ext = os.path.splitext(path)[1].lower()
-            if ext == '.et':
-                import xlrd
-                wb = xlrd.open_workbook(path)
-                ws = wb.sheet_by_index(0)
-                id_list = []
-                for i in range(1, ws.nrows):
-                    id_card = str(ws.cell(i, 0).value).strip() if ws.cell(i, 0).value else ""
-                    phone = str(ws.cell(i, 1).value).strip() if ws.ncols > 1 and ws.cell(i, 1).value else ""
-                    social1 = str(ws.cell(i, 2).value).strip() if ws.ncols > 2 and ws.cell(i, 2).value else ""
-                    social2 = str(ws.cell(i, 3).value).strip() if ws.ncols > 3 and ws.cell(i, 3).value else ""
-                    social3 = str(ws.cell(i, 4).value).strip() if ws.ncols > 4 and ws.cell(i, 4).value else ""
-                    if id_card:
-                        id_list.append({"id_card": id_card, "phone": phone, "social1": social1, "social2": social2, "social3": social3})
-            else:
-                import openpyxl
-                wb = openpyxl.load_workbook(path, read_only=True)
-                ws = wb.active
-                id_list = []
-                for row in ws.iter_rows(min_row=2, values_only=True):
-                    if not row or not row[0]:
-                        continue
-                    id_card = str(row[0]).strip() if row[0] else ""
-                    phone = str(row[1]).strip() if len(row) > 1 and row[1] else ""
-                    social1 = str(row[2]).strip() if len(row) > 2 and row[2] else ""
-                    social2 = str(row[3]).strip() if len(row) > 3 and row[3] else ""
-                    social3 = str(row[4]).strip() if len(row) > 4 and row[4] else ""
-                    if id_card:
-                        id_list.append({"id_card": id_card, "phone": phone, "social1": social1, "social2": social2, "social3": social3})
+            import openpyxl
+            wb = openpyxl.load_workbook(path)
+            ws = wb.active
         except Exception as e:
-            QMessageBox.critical(self, "读取失败", str(e))
+            QMessageBox.critical(self, "错误", f"读取Excel文件失败：{e}")
             return
 
-        if not id_list:
-            QMessageBox.warning(self, "提示", "文件中没有有效数据")
+        headers = []
+        for col in range(1, ws.max_column + 1):
+            val = ws.cell(1, col).value
+            headers.append(str(val).strip() if val else "")
+
+        from dialogs.report.column_mapping_dialog import ColumnMappingDialog
+        mapping_dialog = ColumnMappingDialog(headers, self)
+        if mapping_dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
-        reply = QMessageBox.question(
-            self, "确认导入",
-            f"将把 {len(id_list)} 条证件号码导入到报表「{report_name}」中，按身份证号匹配。\n\n确定继续？",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        name_col = mapping_dialog.name_col
+        fill_map = mapping_dialog.fill_map
+
+        if not fill_map:
+            QMessageBox.warning(self, "提示", "请至少选择一列需要填写的数据")
+            return
+
+        is_network = bool(get_server_url())
+        if is_network:
+            from network.client import api_search
+        else:
+            from core.database import search_by_name as db_search_by_name
+
+        total = ws.max_row - 1
+        if total <= 0:
+            QMessageBox.warning(self, "提示", "文件中没有数据行")
+            return
+
+        progress = QProgressDialog("正在处理...", "取消", 0, total, self)
+        progress.setWindowTitle("批量填写进度")
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setMinimumDuration(0)
+
+        from openpyxl.styles import Font as XlFont
+        red_font = XlFont(color="FF0000")
+
+        found = 0
+        not_found = 0
+        multi_selected = 0
+        skipped = 0
+        not_found_names = []
+
+        for row_idx in range(2, ws.max_row + 1):
+            if progress.wasCanceled():
+                break
+
+            name_val = str(ws.cell(row_idx, name_col).value or '').strip()
+            if not name_val:
+                skipped += 1
+                progress.setValue(row_idx - 1)
+                continue
+
+            progress.setLabelText(f"第 {row_idx - 1}/{total} 行: {name_val}")
+            QApplication.processEvents()
+
+            if is_network:
+                try:
+                    results = api_search(name_val)
+                except Exception:
+                    results = []
+            else:
+                persons = db_search_by_name(name_val)
+                results = [{'name': p.name, 'id_card': p.id_card or '', 'phone': p.phone or '',
+                            'social_card1': p.social_card1 or '', 'social_card2': p.social_card2 or '',
+                            'social_card3': p.social_card3 or '', 'hu_hao': p.hu_hao or '',
+                            'address': p.address or '', 'relation': p.relation or ''} for p in persons]
+
+            if len(results) == 0:
+                not_found += 1
+                not_found_names.append(name_val)
+                for col_idx in fill_map:
+                    cell = ws.cell(row_idx, col_idx, "未查询到")
+                    cell.font = red_font
+            elif len(results) == 1:
+                found += 1
+                person = results[0]
+                for col_idx, field in fill_map.items():
+                    ws.cell(row_idx, col_idx, person.get(field, ''))
+            else:
+                from dialogs.report.multi_name_select_dialog import MultiNameSelectDialog
+                select_dialog = MultiNameSelectDialog(results, name_val, self)
+                if select_dialog.exec() == QDialog.DialogCode.Accepted and select_dialog.selected_person:
+                    person = select_dialog.selected_person
+                    found += 1
+                    multi_selected += 1
+                    for col_idx, field in fill_map.items():
+                        ws.cell(row_idx, col_idx, person.get(field, ''))
+                else:
+                    skipped += 1
+
+            progress.setValue(row_idx - 1)
+
+        progress.setValue(total)
+
+        default_name = os.path.splitext(os.path.basename(path))[0] + "_已填写.xlsx"
+        save_path, _ = QFileDialog.getSaveFileName(
+            self, "保存填写后的文件", default_name,
+            "Excel文件 (*.xlsx)"
         )
-        if reply != QMessageBox.StandardButton.Yes:
+        if not save_path:
             return
 
         try:
-            from network.client import _request
-            result = _request('POST', f'/api/reports/{report_id}/import_ids', {'ids': id_list})
-            if result.get('success'):
-                QMessageBox.information(self, "导入完成",
-                    f"更新：{result.get('updated', 0)} 条\n未匹配：{result.get('not_found', 0)} 条")
-            else:
-                QMessageBox.critical(self, "导入失败", result.get('error', '未知错误'))
+            wb.save(save_path)
         except Exception as e:
-            QMessageBox.critical(self, "导入失败", str(e))
+            QMessageBox.critical(self, "保存失败", f"文件保存失败：{e}")
+            return
+
+        summary = f"处理完成！\n\n"
+        summary += f"总行数: {total}\n"
+        summary += f"成功填写: {found} 条（其中同名选择: {multi_selected} 条）\n"
+        summary += f"未查询到: {not_found} 条\n"
+        summary += f"跳过: {skipped} 条"
+        if not_found_names:
+            summary += f"\n\n未查询到的姓名:\n"
+            for n in not_found_names:
+                summary += f"  - {n}\n"
+        summary += f"\n文件已保存至: {save_path}"
+
+        QMessageBox.information(self, "处理结果", summary)
 
     def _manual_backup(self):
         if self.is_network_mode:
