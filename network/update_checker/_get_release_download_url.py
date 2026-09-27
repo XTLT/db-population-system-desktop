@@ -15,7 +15,7 @@ def _get_release_download_url(app_type: str = "desktop") -> Optional[str]:
         for asset in assets:
             name = asset.get('name', '')
             if app_type == 'desktop':
-                if name.endswith('.zip') and '人口通' in name:
+                if name.endswith('.zip') and ('人口通' in name or name.startswith('population_')):
                     return asset.get('browser_download_url')
     except Exception:
         pass
