@@ -2,7 +2,7 @@ import os
 import sys
 
 VERSION_URLS = [
-    "https://gitee.com/tension0712/population-system/raw/master/updates/version.json",
+    "https://raw.githubusercontent.com/XTLT/db-population-system/master/updates/version.json",
 ]
 
 
