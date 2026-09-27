@@ -1,0 +1,12 @@
+========================================
+     ڸ     ˿ ͨ     ͻ   ...
+========================================                                                                                                                                                                                                              ڹرճ      ...                                                                                                        ȴ    ļ    ͷ  ...                                                                                                            ڽ  ѹ          ļ  ...                                                                                              Expand-Archive : The path 'D:\ ˿ ͨ\downloads\update.zip' either does not exist or is not a valid file system path.
+At line:1 char:1
++ Expand-Archive -Path 'D:\ ˿ ͨ\downloads\update.zip' -DestinationPath  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (D:\ ˿ ͨ\downloads\update.zip:String) [Expand-Archive], InvalidOperatio
+   nException
+    + FullyQualifiedErrorId : ArchiveCmdletPathNotFound,Expand-Archive
+
+  ѹʧ ܣ    ֶ   ѹ D:\ ˿ ͨ\downloads\update.zip    D:\ ˿ ͨ
+Press any key to continue . . .
