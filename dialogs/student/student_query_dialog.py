@@ -47,13 +47,21 @@ class StudentQueryDialog(QDialog):
         btn_search.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; font-weight: bold; padding: 8px;")
         btn_search.clicked.connect(self._search)
         filter_layout.addWidget(btn_search)
+
+        btn_select_all = QPushButton("全选")
+        btn_select_all.clicked.connect(self._select_all)
+        filter_layout.addWidget(btn_select_all)
+
+        btn_deselect_all = QPushButton("取消全选")
+        btn_deselect_all.clicked.connect(self._deselect_all)
+        filter_layout.addWidget(btn_deselect_all)
         layout.addLayout(filter_layout)
 
         self.table = QTableWidget()
         self.table.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.verticalHeader().setVisible(False)
         layout.addWidget(self.table)
 
@@ -85,7 +93,7 @@ class StudentQueryDialog(QDialog):
             else:
                 students = get_all_students()
 
-        headers = ["姓名", "身份证号", "学校", "年级", "班级", "监护人", "留守儿童", "状态"]
+        headers = ["选择", "姓名", "身份证号", "学校", "年级", "班级", "监护人", "留守儿童", "状态"]
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
         self.table.setRowCount(len(students))
@@ -115,12 +123,16 @@ class StudentQueryDialog(QDialog):
                 student_status = s.student_status
                 grade_display = GRADE_DISPLAY.get(s.grade, s.grade)
             values = [name, id_card, school_name, grade_display, class_name, guardian, is_left_behind, student_status]
+            check_item = QTableWidgetItem()
+            check_item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+            check_item.setCheckState(Qt.CheckState.Unchecked)
+            check_item.setData(Qt.ItemDataRole.UserRole, person_id)
+            check_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.table.setItem(row_idx, 0, check_item)
             for col_idx, val in enumerate(values):
                 item = QTableWidgetItem(str(val) if val else "")
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                if col_idx == 0:
-                    item.setData(Qt.ItemDataRole.UserRole, person_id)
-                self.table.setItem(row_idx, col_idx, item)
+                self.table.setItem(row_idx, col_idx + 1, item)
 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
@@ -157,18 +169,25 @@ class StudentQueryDialog(QDialog):
 
     def _get_selected_person_ids(self):
         selected = []
-        seen_rows = set()
-        for item in self.table.selectedItems():
-            row = item.row()
-            if row in seen_rows:
-                continue
-            seen_rows.add(row)
-            name_item = self.table.item(row, 0)
-            if name_item:
-                pid = name_item.data(Qt.ItemDataRole.UserRole)
+        for row in range(self.table.rowCount()):
+            check_item = self.table.item(row, 0)
+            if check_item and check_item.checkState() == Qt.CheckState.Checked:
+                pid = check_item.data(Qt.ItemDataRole.UserRole)
                 if pid:
                     selected.append(pid)
         return list(set(selected))
+
+    def _select_all(self):
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, 0)
+            if item:
+                item.setCheckState(Qt.CheckState.Checked)
+
+    def _deselect_all(self):
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, 0)
+            if item:
+                item.setCheckState(Qt.CheckState.Unchecked)
 
     def _batch_school(self):
         person_ids = self._get_selected_person_ids()
