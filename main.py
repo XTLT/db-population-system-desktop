@@ -1266,11 +1266,23 @@ class MainWindow(QMainWindow):
         skipped = 0
         not_found_values = []
 
+        formula_count = 0
+
         for row_idx in range(header_row + 1, ws.max_row + 1):
             if progress.wasCanceled():
                 break
 
+            # 双重读取：先试缓存值(data_only)，不可用则回退到普通模式
             raw_val = ws_values.cell(row_idx, match_col).value
+            if raw_val is None or (isinstance(raw_val, str) and raw_val.startswith('#')):
+                # 缓存值为None或错误值(#N/A等)，回退到普通模式
+                raw_val = ws.cell(row_idx, match_col).value
+            if isinstance(raw_val, str) and raw_val.startswith('='):
+                # 公式无法计算，跳过
+                formula_count += 1
+                progress.setValue(row_idx - header_row)
+                continue
+
             match_val = str(raw_val).strip() if raw_val is not None else ''
             if not match_val:
                 skipped += 1
@@ -1337,6 +1349,8 @@ class MainWindow(QMainWindow):
         summary += f"成功填写: {found} 条（其中手动选择: {multi_selected} 条）\n"
         summary += f"未查询到: {not_found} 条\n"
         summary += f"跳过: {skipped} 条"
+        if formula_count:
+            summary += f"\n公式无法读取: {formula_count} 条（请在Excel中打开文件让公式计算后再导入）"
         if not_found_values:
             summary += f"\n\n未查询到的{match_label}:\n"
             for v in not_found_values:
