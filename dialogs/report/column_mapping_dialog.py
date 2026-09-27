@@ -48,7 +48,7 @@ class ColumnMappingDialog(QDialog):
         self.cbo_match.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.cbo_match.addItem("按姓名匹配", MATCH_BY_NAME)
         self.cbo_match.addItem("按身份证号匹配", MATCH_BY_ID_CARD)
-        self.cbo_match.currentDataChanged.connect(self._update_match_combo)
+        self.cbo_match.currentIndexChanged.connect(self._update_match_combo)
         match_row.addWidget(self.cbo_match)
         match_row.addStretch()
         layout.addLayout(match_row)
