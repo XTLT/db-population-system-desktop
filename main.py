@@ -1184,19 +1184,15 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "错误", f"读取Excel文件失败：{e}")
             return
 
-        headers = []
-        for col in range(1, ws.max_column + 1):
-            val = ws.cell(1, col).value
-            headers.append(str(val).strip() if val else "")
-
         from dialogs.report.column_mapping_dialog import ColumnMappingDialog, MATCH_BY_NAME, MATCH_BY_ID_CARD
-        mapping_dialog = ColumnMappingDialog(headers, self)
+        mapping_dialog = ColumnMappingDialog(ws, self)
         if mapping_dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
         match_by = mapping_dialog.match_by
         match_col = mapping_dialog.match_col
         fill_map = mapping_dialog.fill_map
+        header_row = mapping_dialog.header_row
 
         if not fill_map:
             QMessageBox.warning(self, "提示", "请至少选择一列需要填写的数据")
@@ -1208,7 +1204,7 @@ class MainWindow(QMainWindow):
         else:
             from core.database import search_by_name as db_search_by_name, get_session, Person
 
-        total = ws.max_row - 1
+        total = ws.max_row - header_row
         if total <= 0:
             QMessageBox.warning(self, "提示", "文件中没有数据行")
             return
@@ -1227,17 +1223,18 @@ class MainWindow(QMainWindow):
         skipped = 0
         not_found_values = []
 
-        for row_idx in range(2, ws.max_row + 1):
+        for row_idx in range(header_row + 1, ws.max_row + 1):
             if progress.wasCanceled():
                 break
 
-            match_val = str(ws.cell(row_idx, match_col).value or '').strip()
+            raw_val = ws.cell(row_idx, match_col).value
+            match_val = str(raw_val).strip() if raw_val is not None else ''
             if not match_val:
                 skipped += 1
-                progress.setValue(row_idx - 1)
+                progress.setValue(row_idx - header_row)
                 continue
 
-            progress.setLabelText(f"第 {row_idx - 1}/{total} 行: {match_val}")
+            progress.setLabelText(f"第 {row_idx - header_row}/{total} 行: {match_val}")
             QApplication.processEvents()
 
             results = []
@@ -1257,8 +1254,8 @@ class MainWindow(QMainWindow):
                 if is_network:
                     try:
                         data = api_person(match_val)
-                        if isinstance(data, dict) and data.get('person'):
-                            results = [data['person']]
+                        if isinstance(data, dict) and data.get('id'):
+                            results = [data]
                     except Exception:
                         results = []
                 else:
@@ -1296,7 +1293,7 @@ class MainWindow(QMainWindow):
                 else:
                     skipped += 1
 
-            progress.setValue(row_idx - 1)
+            progress.setValue(row_idx - header_row)
 
         progress.setValue(total)
 

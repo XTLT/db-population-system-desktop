@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox,
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QSpinBox,
     QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
     QAbstractItemView, QMessageBox
 )
@@ -24,45 +24,61 @@ MATCH_BY_NAME = 'name'
 MATCH_BY_ID_CARD = 'id_card'
 
 
-class ColumnMappingDialog(QDialog):
-    """选择匹配方式和各列填写内容"""
+def _col_letter(n):
+    """1 → A, 2 → B, 27 → AA"""
+    s = ''
+    while n > 0:
+        n, r = divmod(n - 1, 26)
+        s = chr(65 + r) + s
+    return s
 
-    def __init__(self, headers, parent=None):
+
+class ColumnMappingDialog(QDialog):
+    """选择表头行、匹配方式和各列填写内容"""
+
+    def __init__(self, ws, parent=None):
         super().__init__(parent)
         self.setWindowTitle("列映射设置")
-        self.setMinimumSize(600, 480)
-        self._headers = headers
+        self.setMinimumSize(650, 520)
+        self._ws = ws
+        self._headers = []
         self._field_combos = []
         self._setup_ui()
+        self._on_header_row_changed()
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
 
-        info = QLabel("请设置匹配列和需要填写的数据列：")
+        info = QLabel("请设置表头所在行、匹配方式和需要填写的数据列：")
         info.setFont(QFont(FONT_NAME, FONT_SIZE))
         layout.addWidget(info)
 
-        match_row = QHBoxLayout()
-        match_row.addWidget(QLabel("匹配方式："))
+        row1 = QHBoxLayout()
+        row1.addWidget(QLabel("表头行："))
+        self.spin_header_row = QSpinBox()
+        self.spin_header_row.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.spin_header_row.setMinimum(1)
+        self.spin_header_row.setMaximum(self._ws.max_row)
+        self.spin_header_row.setValue(1)
+        self.spin_header_row.valueChanged.connect(self._on_header_row_changed)
+        row1.addWidget(self.spin_header_row)
+
+        row1.addSpacing(20)
+        row1.addWidget(QLabel("匹配方式："))
         self.cbo_match = QComboBox()
         self.cbo_match.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.cbo_match.addItem("按姓名匹配", MATCH_BY_NAME)
         self.cbo_match.addItem("按身份证号匹配", MATCH_BY_ID_CARD)
-        self.cbo_match.currentIndexChanged.connect(self._update_match_combo)
-        match_row.addWidget(self.cbo_match)
-        match_row.addStretch()
-        layout.addLayout(match_row)
+        self.cbo_match.currentIndexChanged.connect(self._update_field_combos)
+        row1.addWidget(self.cbo_match)
 
-        col_row = QHBoxLayout()
-        col_row.addWidget(QLabel("匹配列："))
+        row1.addSpacing(20)
+        row1.addWidget(QLabel("匹配列："))
         self.cbo_match_col = QComboBox()
         self.cbo_match_col.setFont(QFont(FONT_NAME, FONT_SIZE))
-        for i, h in enumerate(self._headers):
-            display = f"第{i+1}列: {h or '(空)'}"
-            self.cbo_match_col.addItem(display, i + 1)
-        col_row.addWidget(self.cbo_match_col)
-        col_row.addStretch()
-        layout.addLayout(col_row)
+        row1.addWidget(self.cbo_match_col)
+        row1.addStretch()
+        layout.addLayout(row1)
 
         table_label = QLabel("各列填写内容：")
         table_label.setFont(QFont(FONT_NAME, FONT_SIZE))
@@ -73,26 +89,7 @@ class ColumnMappingDialog(QDialog):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["列序号", "列标题", "填写内容"])
-        self.table.setRowCount(len(self._headers))
-
-        for i, h in enumerate(self._headers):
-            idx_item = QTableWidgetItem(f"第{i+1}列")
-            idx_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.table.setItem(i, 0, idx_item)
-
-            header_item = QTableWidgetItem(str(h or "(空)"))
-            header_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.table.setItem(i, 1, header_item)
-
-            combo = QComboBox()
-            combo.setFont(QFont(FONT_NAME, FONT_SIZE))
-            for val, label in FIELD_OPTIONS:
-                combo.addItem(label, val)
-            self._field_combos.append(combo)
-            self.table.setCellWidget(i, 2, combo)
-
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.setHorizontalHeaderLabels(["列号", "表头内容", "填写内容"])
         self.table.verticalHeader().setVisible(False)
         layout.addWidget(self.table)
 
@@ -108,14 +105,54 @@ class ColumnMappingDialog(QDialog):
         btn_row.addWidget(btn_cancel)
         layout.addLayout(btn_row)
 
-    def _update_match_combo(self):
+    def _on_header_row_changed(self):
+        header_row = self.spin_header_row.value()
+        self._headers = []
+        max_col = self._ws.max_column
+        for col in range(1, max_col + 1):
+            val = self._ws.cell(header_row, col).value
+            self._headers.append(str(val).strip() if val is not None else "")
+
+        self.cbo_match_col.blockSignals(True)
+        self.cbo_match_col.clear()
+        for i, h in enumerate(self._headers):
+            letter = _col_letter(i + 1)
+            display = f"{letter}: {h or '(空)'}"
+            self.cbo_match_col.addItem(display, i + 1)
+        self.cbo_match_col.blockSignals(False)
+
+        self.table.setRowCount(len(self._headers))
+        self._field_combos = []
+
+        for i, h in enumerate(self._headers):
+            letter = _col_letter(i + 1)
+            idx_item = QTableWidgetItem(letter)
+            idx_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.table.setItem(i, 0, idx_item)
+
+            header_item = QTableWidgetItem(h or "(空)")
+            header_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.table.setItem(i, 1, header_item)
+
+            combo = QComboBox()
+            combo.setFont(QFont(FONT_NAME, FONT_SIZE))
+            for val, label in FIELD_OPTIONS:
+                combo.addItem(label, val)
+            self._field_combos.append(combo)
+            self.table.setCellWidget(i, 2, combo)
+
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self._update_field_combos()
+
+    def _update_field_combos(self):
         match_by = self.cbo_match.currentData()
         for combo in self._field_combos:
             for i in range(combo.count()):
-                if combo.itemData(i) == match_by:
-                    combo.model().item(i).setEnabled(False)
-                else:
-                    combo.model().item(i).setEnabled(True)
+                combo.model().item(i).setEnabled(combo.itemData(i) != match_by)
+
+    @property
+    def header_row(self):
+        return self.spin_header_row.value()
 
     @property
     def match_by(self):
