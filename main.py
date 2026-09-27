@@ -1179,13 +1179,12 @@ class MainWindow(QMainWindow):
         try:
             import openpyxl
             wb = openpyxl.load_workbook(path)
-            ws = wb.active
         except Exception as e:
             QMessageBox.critical(self, "错误", f"读取Excel文件失败：{e}")
             return
 
         from dialogs.report.column_mapping_dialog import ColumnMappingDialog, MATCH_BY_NAME, MATCH_BY_ID_CARD
-        mapping_dialog = ColumnMappingDialog(ws, self)
+        mapping_dialog = ColumnMappingDialog(wb, self)
         if mapping_dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
@@ -1193,16 +1192,57 @@ class MainWindow(QMainWindow):
         match_col = mapping_dialog.match_col
         fill_map = mapping_dialog.fill_map
         header_row = mapping_dialog.header_row
+        ws = mapping_dialog.ws
 
         if not fill_map:
             QMessageBox.warning(self, "提示", "请至少选择一列需要填写的数据")
             return
 
-        is_network = bool(get_server_url())
-        if is_network:
-            from network.client import api_search, api_person
+        # 一次性加载全部人员数据到内存，本地匹配（宏查询模式）
+        progress = QProgressDialog("正在加载数据库人员数据...", "取消", 0, 0, self)
+        progress.setWindowTitle("批量填写")
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.setValue(0)
+        QApplication.processEvents()
+
+        all_persons = []
+        if get_server_url():
+            from network.client import api_persons_lookup_all
+            try:
+                all_persons = api_persons_lookup_all()
+            except Exception as e:
+                QMessageBox.critical(self, "错误", f"加载服务器数据失败：{e}")
+                return
         else:
-            from core.database import search_by_name as db_search_by_name, get_session, Person
+            from core.database import get_session, Person
+            session = get_session()
+            try:
+                for p in session.query(Person).all():
+                    all_persons.append({
+                        'name': p.name or '', 'id_card': p.id_card or '',
+                        'phone': p.phone or '', 'social_card1': p.social_card1 or '',
+                        'social_card2': p.social_card2 or '', 'social_card3': p.social_card3 or '',
+                        'hu_hao': p.hu_hao or '', 'address': p.address or '',
+                        'relation': p.relation or ''
+                    })
+            finally:
+                session.close()
+
+        progress.cancel()
+
+        if not all_persons:
+            QMessageBox.warning(self, "提示", "数据库中没有人员数据")
+            return
+
+        # 构建查找索引：姓名→人员列表，身份证号→人员
+        name_index = {}
+        id_card_index = {}
+        for p in all_persons:
+            if p['name']:
+                name_index.setdefault(p['name'], []).append(p)
+            if p['id_card']:
+                id_card_index[p['id_card']] = p
 
         total = ws.max_row - header_row
         if total <= 0:
@@ -1237,38 +1277,14 @@ class MainWindow(QMainWindow):
             progress.setLabelText(f"第 {row_idx - header_row}/{total} 行: {match_val}")
             QApplication.processEvents()
 
+            # 本地匹配，零网络请求
             results = []
             if match_by == MATCH_BY_NAME:
-                if is_network:
-                    try:
-                        results = api_search(match_val)
-                    except Exception:
-                        results = []
-                else:
-                    persons = db_search_by_name(match_val)
-                    results = [{'name': p.name, 'id_card': p.id_card or '', 'phone': p.phone or '',
-                                'social_card1': p.social_card1 or '', 'social_card2': p.social_card2 or '',
-                                'social_card3': p.social_card3 or '', 'hu_hao': p.hu_hao or '',
-                                'address': p.address or '', 'relation': p.relation or ''} for p in persons]
+                results = name_index.get(match_val, [])
             else:
-                if is_network:
-                    try:
-                        data = api_person(match_val)
-                        if isinstance(data, dict) and data.get('id'):
-                            results = [data]
-                    except Exception:
-                        results = []
-                else:
-                    session = get_session()
-                    try:
-                        p = session.query(Person).filter(Person.id_card == match_val).first()
-                        if p:
-                            results = [{'name': p.name, 'id_card': p.id_card or '', 'phone': p.phone or '',
-                                        'social_card1': p.social_card1 or '', 'social_card2': p.social_card2 or '',
-                                        'social_card3': p.social_card3 or '', 'hu_hao': p.hu_hao or '',
-                                        'address': p.address or '', 'relation': p.relation or ''}]
-                    finally:
-                        session.close()
+                p = id_card_index.get(match_val)
+                if p:
+                    results = [p]
 
             if len(results) == 0:
                 not_found += 1

@@ -95,6 +95,12 @@ def api_search(name: str) -> list:
     return result.get('results', []) if isinstance(result, dict) else result
 
 
+def api_persons_lookup_all() -> list:
+    """一次性获取所有人员关键字段，用于批量匹配"""
+    result = _request('GET', '/api/persons/lookup-all')
+    return result.get('persons', []) if isinstance(result, dict) else result
+
+
 def api_family(hu_hao: str) -> list:
     result = _request('GET', f'/api/family/{hu_hao}')
     return result.get('members', []) if isinstance(result, dict) else result

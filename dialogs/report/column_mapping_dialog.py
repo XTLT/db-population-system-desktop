@@ -34,31 +34,40 @@ def _col_letter(n):
 
 
 class ColumnMappingDialog(QDialog):
-    """选择表头行、匹配方式和各列填写内容"""
+    """选择Sheet、表头行、匹配方式和各列填写内容"""
 
-    def __init__(self, ws, parent=None):
+    def __init__(self, wb, parent=None):
         super().__init__(parent)
         self.setWindowTitle("列映射设置")
         self.setMinimumSize(650, 520)
-        self._ws = ws
+        self._wb = wb
+        self._ws = wb.active
         self._headers = []
         self._field_combos = []
         self._setup_ui()
-        self._on_header_row_changed()
+        self._on_sheet_changed()
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
 
-        info = QLabel("请设置表头所在行、匹配方式和需要填写的数据列：")
+        info = QLabel("请选择Sheet、表头行、匹配方式和需要填写的数据列：")
         info.setFont(QFont(FONT_NAME, FONT_SIZE))
         layout.addWidget(info)
 
         row1 = QHBoxLayout()
+        row1.addWidget(QLabel("Sheet："))
+        self.cbo_sheet = QComboBox()
+        self.cbo_sheet.setFont(QFont(FONT_NAME, FONT_SIZE))
+        for name in self._wb.sheetnames:
+            self.cbo_sheet.addItem(name)
+        self.cbo_sheet.currentIndexChanged.connect(self._on_sheet_changed)
+        row1.addWidget(self.cbo_sheet)
+
+        row1.addSpacing(20)
         row1.addWidget(QLabel("表头行："))
         self.spin_header_row = QSpinBox()
         self.spin_header_row.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.spin_header_row.setMinimum(1)
-        self.spin_header_row.setMaximum(self._ws.max_row)
         self.spin_header_row.setValue(1)
         self.spin_header_row.valueChanged.connect(self._on_header_row_changed)
         row1.addWidget(self.spin_header_row)
@@ -105,6 +114,12 @@ class ColumnMappingDialog(QDialog):
         btn_row.addWidget(btn_cancel)
         layout.addLayout(btn_row)
 
+    def _on_sheet_changed(self):
+        sheet_name = self.cbo_sheet.currentText()
+        self._ws = self._wb[sheet_name]
+        self.spin_header_row.setMaximum(self._ws.max_row)
+        self._on_header_row_changed()
+
     def _on_header_row_changed(self):
         header_row = self.spin_header_row.value()
         self._headers = []
@@ -149,6 +164,10 @@ class ColumnMappingDialog(QDialog):
         for combo in self._field_combos:
             for i in range(combo.count()):
                 combo.model().item(i).setEnabled(combo.itemData(i) != match_by)
+
+    @property
+    def ws(self):
+        return self._ws
 
     @property
     def header_row(self):
