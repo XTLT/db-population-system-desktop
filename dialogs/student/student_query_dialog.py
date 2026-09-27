@@ -92,6 +92,7 @@ class StudentQueryDialog(QDialog):
 
         for row_idx, s in enumerate(students):
             if isinstance(s, dict):
+                person_id = s.get('person_id', '')
                 name = s.get('name', '')
                 id_card = s.get('id_card', '')
                 school_name = s.get('school_name', '')
@@ -102,6 +103,7 @@ class StudentQueryDialog(QDialog):
                 student_status = s.get('student_status', '')
                 grade_display = GRADE_DISPLAY.get(grade, grade)
             else:
+                person_id = s.person_id
                 person = self._get_person(s.person_id)
                 name = person.name if person else ""
                 id_card = s.id_card
@@ -116,6 +118,8 @@ class StudentQueryDialog(QDialog):
             for col_idx, val in enumerate(values):
                 item = QTableWidgetItem(str(val) if val else "")
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                if col_idx == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, person_id)
                 self.table.setItem(row_idx, col_idx, item)
 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -153,32 +157,17 @@ class StudentQueryDialog(QDialog):
 
     def _get_selected_person_ids(self):
         selected = []
-        if get_server_url():
-            for item in self.table.selectedItems():
-                row = item.row()
-                id_card_item = self.table.item(row, 1)
-                if id_card_item:
-                    try:
-                        from network.client import api_person
-                        person_data = api_person(id_card_item.text())
-                        if person_data:
-                            selected.append(person_data.get('id', ''))
-                    except Exception:
-                        pass
-        else:
-            for item in self.table.selectedItems():
-                row = item.row()
-                id_card_item = self.table.item(row, 1)
-                if id_card_item:
-                    session = get_session()
-                    try:
-                        edu = session.query(StudentEducation).filter(
-                            StudentEducation.id_card == id_card_item.text()
-                        ).first()
-                        if edu:
-                            selected.append(edu.person_id)
-                    finally:
-                        session.close()
+        seen_rows = set()
+        for item in self.table.selectedItems():
+            row = item.row()
+            if row in seen_rows:
+                continue
+            seen_rows.add(row)
+            name_item = self.table.item(row, 0)
+            if name_item:
+                pid = name_item.data(Qt.ItemDataRole.UserRole)
+                if pid:
+                    selected.append(pid)
         return list(set(selected))
 
     def _batch_school(self):
