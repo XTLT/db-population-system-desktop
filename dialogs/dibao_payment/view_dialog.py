@@ -204,16 +204,6 @@ class DibaoViewDialog(QDialog):
                 QMessageBox.warning(self, "提示", "没有数据可导出")
                 return
 
-            dis_map = {}
-            if not self.is_network_mode:
-                from core.database import get_session, Person
-                _s = get_session()
-                try:
-                    dis_map = {pp.id_card: getattr(pp, 'dis_level', '') or ''
-                               for pp in _s.query(Person).all() if pp.id_card}
-                finally:
-                    _s.close()
-
             file_path, _ = QFileDialog.getSaveFileName(
                 self, "导出Excel", f"低保_{datetime.now().strftime('%Y%m%d')}.xlsx",
                 "Excel文件 (*.xlsx)"
@@ -229,7 +219,6 @@ class DibaoViewDialog(QDialog):
                         "费款所属期": p.get('period', ''),
                         "姓名": p.get('name', ''),
                         "身份证号": p.get('id_card', ''),
-                        "残疾等级": p.get('dis_level', ''),
                         "所属乡镇": p.get('town', ''),
                         "所属村": p.get('village', ''),
                         "银行账号": p.get('bank_account', ''),
@@ -243,7 +232,6 @@ class DibaoViewDialog(QDialog):
                         "费款所属期": getattr(p, 'period', ''),
                         "姓名": p.name,
                         "身份证号": _id_card,
-                        "残疾等级": dis_map.get(_id_card, ''),
                         "所属乡镇": getattr(p, 'town', ''),
                         "所属村": getattr(p, 'village', ''),
                         "银行账号": p.bank_account,
