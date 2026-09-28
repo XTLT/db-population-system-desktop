@@ -75,7 +75,17 @@ from ui.main_window import (  # noqa: E402,F401
     _view_pension_insurance,
     _add_household,
     _split_household,
-    _merge_household
+    _merge_household,
+    _import_dibao_payment,
+    _view_dibao_payment,
+    _import_tekun_payment,
+    _view_tekun_payment,
+    _import_disability_care_payment,
+    _view_disability_care_payment,
+    _import_elderly_allowance,
+    _view_elderly_allowance,
+    _generate_disability_care_payment_template,
+    _generate_elderly_allowance_template,
 )
 
 MainWindow.__init__ = _mw_init
@@ -137,6 +147,16 @@ MainWindow._view_pension_insurance = _view_pension_insurance
 MainWindow._add_household = _add_household
 MainWindow._split_household = _split_household
 MainWindow._merge_household = _merge_household
+MainWindow._import_dibao_payment = _import_dibao_payment
+MainWindow._view_dibao_payment = _view_dibao_payment
+MainWindow._import_tekun_payment = _import_tekun_payment
+MainWindow._view_tekun_payment = _view_tekun_payment
+MainWindow._import_disability_care_payment = _import_disability_care_payment
+MainWindow._view_disability_care_payment = _view_disability_care_payment
+MainWindow._import_elderly_allowance = _import_elderly_allowance
+MainWindow._view_elderly_allowance = _view_elderly_allowance
+MainWindow._generate_disability_care_payment_template = _generate_disability_care_payment_template
+MainWindow._generate_elderly_allowance_template = _generate_elderly_allowance_template
 
 
 def main():

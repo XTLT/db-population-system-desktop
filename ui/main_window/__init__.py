@@ -59,6 +59,16 @@ from ._view_pension_insurance import _view_pension_insurance
 from ._add_household import _add_household
 from ._split_household import _split_household
 from ._merge_household import _merge_household
+from ._import_dibao_payment import _import_dibao_payment
+from ._view_dibao_payment import _view_dibao_payment
+from ._import_tekun_payment import _import_tekun_payment
+from ._view_tekun_payment import _view_tekun_payment
+from ._import_disability_care_payment import _import_disability_care_payment
+from ._view_disability_care_payment import _view_disability_care_payment
+from ._import_elderly_allowance import _import_elderly_allowance
+from ._view_elderly_allowance import _view_elderly_allowance
+from ._generate_disability_care_payment_template import _generate_disability_care_payment_template
+from ._generate_elderly_allowance_template import _generate_elderly_allowance_template
 
 __all__ = [
     '__init__',
@@ -120,4 +130,14 @@ __all__ = [
     '_add_household',
     '_split_household',
     '_merge_household',
+    '_import_dibao_payment',
+    '_view_dibao_payment',
+    '_import_tekun_payment',
+    '_view_tekun_payment',
+    '_import_disability_care_payment',
+    '_view_disability_care_payment',
+    '_import_elderly_allowance',
+    '_view_elderly_allowance',
+    '_generate_disability_care_payment_template',
+    '_generate_elderly_allowance_template',
 ]
