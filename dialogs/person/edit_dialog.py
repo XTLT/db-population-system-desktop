@@ -95,7 +95,9 @@ class EditDialog(QDialog):
         self.cbo_is_dead.addItems(["否", "是"])
         self.txt_social1 = QLineEdit()
         self.txt_social2 = QLineEdit()
+        self.txt_social2.setReadOnly(True)
         self.txt_social3 = QLineEdit()
+        self.txt_social3.setReadOnly(True)
         self.cbo_poor_type = QComboBox()
         self.cbo_poor_type.addItems(["", "脱贫户", "脱贫不稳定户", "突发严重困难户", "边缘易致贫户"])
         self.txt_remark = QLineEdit()
@@ -359,8 +361,12 @@ class EditDialog(QDialog):
         self.txt_commercial_forest.setText(getattr(p, 'commercial_forest_area', '') or "")
         self.cbo_is_dead.setCurrentText("是" if p.is_dead == "是" else "否")
         self.txt_social1.setText(p.social_card1 if p.social_card1 != "无" else "")
-        self.txt_social2.setText(p.social_card2 if p.social_card2 != "无" else "")
-        self.txt_social3.setText(p.social_card3 if p.social_card3 != "无" else "")
+        _c2 = p.social_card2 if p.social_card2 and p.social_card2 != "无" else ""
+        _s2 = getattr(p, 'social_card2_source', '') or ''
+        self.txt_social2.setText(_c2 + (f"（{_s2}）" if _s2 else ""))
+        _c3 = p.social_card3 if p.social_card3 and p.social_card3 != "无" else ""
+        _s3 = getattr(p, 'social_card3_source', '') or ''
+        self.txt_social3.setText(_c3 + (f"（{_s3}）" if _s3 else ""))
         poor_val = p.poor_type if p.poor_type != "无" else ""
         idx = self.cbo_poor_type.findText(poor_val)
         if idx >= 0:
@@ -747,8 +753,6 @@ class EditDialog(QDialog):
                 'national_welfare_forest_area': new_national_welfare_forest,
                 'commercial_forest_area': new_commercial_forest,
                 'social_card1': self.txt_social1.text().strip(),
-                'social_card2': self.txt_social2.text().strip(),
-                'social_card3': self.txt_social3.text().strip(),
                 'poor_type': self.cbo_poor_type.currentText(),
                 'remark': self.txt_remark.text().strip(),
                 'disability': self.cbo_disability.currentText(),
@@ -803,8 +807,6 @@ class EditDialog(QDialog):
                 self.person.commercial_forest_change_reason = commercial_forest_reason
                 self.person.commercial_forest_change_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.person.social_card1 = self.txt_social1.text().strip()
-            self.person.social_card2 = self.txt_social2.text().strip()
-            self.person.social_card3 = self.txt_social3.text().strip()
             self.person.poor_type = self.cbo_poor_type.currentText()
             self.person.remark = self.txt_remark.text().strip()
             self.person.disability = self.cbo_disability.currentText()

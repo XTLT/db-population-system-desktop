@@ -60,7 +60,9 @@ class AddDialog(QDialog):
         self.cbo_is_dead.addItems(["否", "是"])
         self.txt_social1 = QLineEdit()
         self.txt_social2 = QLineEdit()
+        self.txt_social2.setReadOnly(True)
         self.txt_social3 = QLineEdit()
+        self.txt_social3.setReadOnly(True)
         self.cbo_poor_type = QComboBox()
         self.cbo_poor_type.addItems(["", "脱贫户", "脱贫不稳定户", "突发严重困难户", "边缘易致贫户"])
         self.txt_remark = QLineEdit()
@@ -192,8 +194,6 @@ class AddDialog(QDialog):
                 'is_dead': self.cbo_is_dead.currentText(),
                 'phone': self.txt_phone.text().strip(),
                 'social_card1': self.txt_social1.text().strip(),
-                'social_card2': self.txt_social2.text().strip(),
-                'social_card3': self.txt_social3.text().strip(),
                 'poor_type': self.cbo_poor_type.currentText(),
                 'remark': self.txt_remark.text().strip(),
                 'disability': self.cbo_disability.currentText(),
@@ -226,8 +226,6 @@ class AddDialog(QDialog):
                 is_dead=self.cbo_is_dead.currentText(),
                 phone=self.txt_phone.text().strip(),
                 social_card1=self.txt_social1.text().strip(),
-                social_card2=self.txt_social2.text().strip(),
-                social_card3=self.txt_social3.text().strip(),
                 poor_type=self.cbo_poor_type.currentText(),
                 remark=self.txt_remark.text().strip(),
                 disability=self.cbo_disability.currentText(),

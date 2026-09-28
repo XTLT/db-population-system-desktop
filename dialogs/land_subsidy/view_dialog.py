@@ -51,7 +51,7 @@ class LandSubsidyViewDialog(QDialog):
         self.table.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        headers = ["补贴年度", "姓名", "身份证号", "确权颁发面积", "补贴面积(亩)", "基础补贴标准(元/亩)",
+        headers = ["补贴年度", "姓名", "身份证号", "残疾等级", "确权颁发面积", "补贴面积(亩)", "基础补贴标准(元/亩)",
                    "油菜面积(亩)", "油菜金额(元)", "补贴总金额(元)", "导入时间"]
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
@@ -130,17 +130,30 @@ class LandSubsidyViewDialog(QDialog):
                 elif search:
                     subsidies = [s for s in subsidies if search in s.name]
 
+            dis_map = {}
+            if not self.is_network_mode:
+                from core.database import get_session, Person
+                _s = get_session()
+                try:
+                    dis_map = {pp.id_card: getattr(pp, 'dis_level', '') or ''
+                               for pp in _s.query(Person).all() if pp.id_card}
+                finally:
+                    _s.close()
+
             self.table.setRowCount(len(subsidies))
             for row_idx, s in enumerate(subsidies):
                 if isinstance(s, dict):
                     values = [s.get('subsidy_year', ''), s.get('name', ''), s.get('id_card', ''),
+                             s.get('dis_level', ''),
                              s.get('certified_area', ''), s.get('subsidy_area', ''),
                              s.get('base_standard', ''), s.get('rape_area', ''),
                              s.get('rape_amount', ''), s.get('total_amount', ''),
                              s.get('import_time', '')]
                     item_id = s.get('id', '')
                 else:
-                    values = [s.subsidy_year, s.name, s.id_card, s.certified_area, s.subsidy_area,
+                    values = [s.subsidy_year, s.name, s.id_card,
+                             dis_map.get(s.id_card, ''),
+                             s.certified_area, s.subsidy_area,
                              s.base_standard, s.rape_area, s.rape_amount, s.total_amount, s.import_time]
                     item_id = s.id
                 for col_idx, val in enumerate(values):
@@ -189,7 +202,7 @@ class LandSubsidyViewDialog(QDialog):
 
         import pandas as pd
         data = []
-        headers = ["补贴年度", "姓名", "身份证号", "确权颁发面积", "补贴面积(亩)", "基础补贴标准(元/亩)",
+        headers = ["补贴年度", "姓名", "身份证号", "残疾等级", "确权颁发面积", "补贴面积(亩)", "基础补贴标准(元/亩)",
                    "油菜面积(亩)", "油菜金额(元)", "补贴总金额(元)", "导入时间"]
         for row in range(self.table.rowCount()):
             row_data = {}
