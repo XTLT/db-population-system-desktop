@@ -3,7 +3,27 @@ import sys
 import shutil
 
 APP_NAME = "人口通"
-APP_VERSION = "0.0.1"
+
+
+def _load_app_version() -> str:
+    """从 updates/version.json 读取桌面端版本号，与发布版本保持一致。"""
+    try:
+        candidates = []
+        if getattr(sys, 'frozen', False):
+            candidates.append(os.path.join(os.path.dirname(sys.executable), 'updates', 'version.json'))
+        else:
+            candidates.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'updates', 'version.json'))
+        for p in candidates:
+            if os.path.exists(p):
+                import json
+                with open(p, encoding='utf-8') as f:
+                    return (json.load(f).get('desktop_version') or '').strip()
+    except Exception:
+        pass
+    return ""
+
+
+APP_VERSION = _load_app_version() or "0.0.1"
 
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)

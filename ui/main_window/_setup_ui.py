@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import QLineEdit, QHBoxLayout, QLabel, QTableWidget, QVBoxL
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from core.config import FONT_NAME, FONT_SIZE
-from core.database import get_person_count
 
 
 def _setup_ui(self):
@@ -54,7 +53,7 @@ def _setup_ui(self):
     self.lbl_version.setStyleSheet("color: #666;")
     status_layout.addWidget(self.lbl_version)
 
-    self.lbl_status = QLabel(f"数据库记录数：{get_person_count()}")
+    self.lbl_status = QLabel("数据库记录数：-")
     self.lbl_status.setFont(QFont(FONT_NAME, 9))
     status_layout.addWidget(self.lbl_status)
     
@@ -68,4 +67,4 @@ def _setup_ui(self):
     
     layout.addLayout(status_layout)
     
-    self._update_status_bar()
+    self._refresh_status()

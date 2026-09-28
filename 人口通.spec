@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('app.ico', '.'), ('window_icon.png', '.'), ('tray_icon.png', '.')],
+    datas=[('app.ico', '.'), ('window_icon.png', '.'), ('tray_icon.png', '.'), ('../updates/version.json', 'updates')],
     hiddenimports=['PyQt6.sip', 'sqlalchemy.dialects.sqlite'],
     hookspath=[],
     hooksconfig={},
