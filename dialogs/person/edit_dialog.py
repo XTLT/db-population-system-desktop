@@ -263,7 +263,7 @@ class EditDialog(QDialog):
         self.date_enrollment.setDate(QDate.currentDate())
 
         self.txt_graduation_date = QLineEdit()
-        self.txt_graduation_date.setPlaceholderText("自动计算，如：2029-06")
+        self.txt_graduation_date.setPlaceholderText("自动计算，如：2029-06-30")
 
         edu_fields = [
             ("学校名称：", self.txt_school),
@@ -329,7 +329,7 @@ class EditDialog(QDialog):
                 try:
                     enroll_year = int(enrollment_date[:4])
                     grad_year = enroll_year + total_years
-                    self.txt_graduation_date.setText(f"{grad_year}-06")
+                    self.txt_graduation_date.setText(f"{grad_year}-06-30")
                 except Exception:
                     pass
 
