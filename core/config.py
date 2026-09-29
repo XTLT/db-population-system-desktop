@@ -10,6 +10,10 @@ def _load_app_version() -> str:
     try:
         candidates = []
         if getattr(sys, 'frozen', False):
+            # PyInstaller onedir：datas 打包到 sys._MEIPASS 下的 updates/
+            meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+            candidates.append(os.path.join(meipass, 'updates', 'version.json'))
+            # 兼容旧布局：exe 同级 updates/
             candidates.append(os.path.join(os.path.dirname(sys.executable), 'updates', 'version.json'))
         else:
             candidates.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'updates', 'version.json'))

@@ -1,5 +1,6 @@
 import sys
 import os
+import signal
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PyQt6.QtCore import QTimer
@@ -166,6 +167,14 @@ def main():
     app = QApplication(sys.argv)
     app.setFont(QFont(FONT_NAME, FONT_SIZE))
     app.setQuitOnLastWindowClosed(False)
+
+    # Ctrl+C (SIGINT) 退出：事件循环运行期间收到中断信号时干净退出
+    signal.signal(signal.SIGINT, lambda *a: QApplication.quit())
+    # Qt C 事件循环期间外部 SIGINT 不会主动回到 Python 解释器，
+    # 用低频定时器周期性回到 Python，使上面的 SIGINT 回调得以执行
+    _sigint_wakeup = QTimer()
+    _sigint_wakeup.start(200)
+    _sigint_wakeup.timeout.connect(lambda: None)
 
     _pending_update = [None]
     _bg_worker_ref = [None]

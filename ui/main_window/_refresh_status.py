@@ -10,5 +10,9 @@ def _refresh_status(self):
         except Exception:
             self.lbl_status.setText("数据库记录数：获取失败")
     else:
-        self.lbl_status.setText(f"数据库记录数：{get_person_count()}")
+        count = get_person_count()
+        if count == 0:
+            self.lbl_status.setText("记录数：0（空库，请导入或连接服务器）")
+        else:
+            self.lbl_status.setText(f"数据库记录数：{count}")
     self._update_status_bar()

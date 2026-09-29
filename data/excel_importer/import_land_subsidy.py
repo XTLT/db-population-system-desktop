@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 from datetime import datetime
 
@@ -6,6 +7,31 @@ from core.database import get_session, Person, LandSubsidy
 from core.utils import safe_str
 from ._read_excel_robust import _read_excel_robust
 from ._backfill_social_card import _backfill_social_card
+
+
+# 列名别名兼容表：同时识别“模板列名”与“导出/旧表短名”
+# key=内部字段，value=可能出现的列名（去掉单位括号后做子串匹配）
+_LAND_FIELD_ALIASES = {
+    "certified_area": ["确权颁证面积", "确权颁发面积"],
+    "subsidy_area":   ["补贴面积"],
+    "base_standard":  ["基础补贴标准"],
+    "rape_area":      ["其中种植油菜面积", "油菜面积"],
+    "rape_amount":    ["其中种植油菜金额", "油菜金额"],
+    "total_amount":   ["补贴总金额"],
+    "card":           ["卡号"],
+}
+
+_UNIT_RE = re.compile(r"[（(][^）)]*[）)]")
+
+
+def _norm_col(name: str) -> str:
+    """去掉列名里的单位括号（如 （亩）/(元/亩)/(元)），便于别名匹配。"""
+    return _UNIT_RE.sub("", str(name)).strip()
+
+
+def _clean_num(val: str) -> str:
+    """去掉数值里可能残留的单位括号。"""
+    return _UNIT_RE.sub("", str(val)).strip()
 
 
 def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callback=None) -> dict:
@@ -29,8 +55,30 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
 
     main_headers = [str(v).strip() for v in df.iloc[header_row].values]
 
+    # 定位“姓名”“身份证号”在表头中的列位置（用于判定下一行是否为真子表头）
+    name_pos = id_pos = -1
+    for i, h in enumerate(main_headers):
+        if h == "姓名":
+            name_pos = i
+        elif h == "身份证号":
+            id_pos = i
+
+    # 探测 header_row 的下一行是否真为子表头：
+    #  - 完全空白行 → 视为两表式的空行占位子表头
+    #  - 该行在“姓名”“身份证号”列下都为空 → 是单位/量词子表头
+    #  - 否则（姓名/身份证号列下已出现人名或证件号）→ 单表头模板，下一行就是首行数据
+    data_start = header_row + 1
     if header_row + 1 < len(df):
-        sub_headers = [str(v).strip() for v in df.iloc[header_row + 1].values]
+        nxt = [str(v).strip() for v in df.iloc[header_row + 1].values]
+        name_val = nxt[name_pos] if 0 <= name_pos < len(nxt) else ""
+        id_val = nxt[id_pos] if 0 <= id_pos < len(nxt) else ""
+        all_blank = all(v == "" for v in nxt)
+        row_looks_like_data = bool(name_val) or bool(id_val)
+        if all_blank or not row_looks_like_data:
+            sub_headers = nxt
+            data_start = header_row + 2
+        else:
+            sub_headers = [""] * len(main_headers)
     else:
         sub_headers = [""] * len(main_headers)
 
@@ -46,8 +94,25 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
         else:
             col_map[i] = f"col_{i}"
 
-    data_df = df.iloc[header_row + 2:].reset_index(drop=True)
+    data_df = df.iloc[data_start:].reset_index(drop=True)
     data_df.columns = [col_map.get(i, f"col_{i}") for i in range(len(col_map))]
+
+    # 按列位置建立 字段->列索引 映射（姓名/身份证号用位置，其余用别名表匹配）
+    field_col = {}
+    if name_pos >= 0:
+        field_col["name"] = name_pos
+    if id_pos >= 0:
+        field_col["id_card"] = id_pos
+    norm_cols = [_norm_col(c) for c in data_df.columns]
+    used_positions = set(field_col.values())
+    for field, aliases in _LAND_FIELD_ALIASES.items():
+        for i, cn in enumerate(norm_cols):
+            if i in used_positions:
+                continue
+            if any(alias in cn for alias in aliases):
+                field_col[field] = i
+                used_positions.add(i)
+                break
 
     total = len(data_df)
     imported = 0
@@ -69,8 +134,14 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
     try:
         for idx, row in data_df.iterrows():
             try:
-                name = safe_str(row.get("姓名", ""))
-                id_card = safe_str(row.get("身份证号", ""))
+                def _cell(key):
+                    pos = field_col.get(key)
+                    if pos is None or pos >= len(row):
+                        return ""
+                    return safe_str(row.iloc[pos])
+
+                name = _cell("name")
+                id_card = _cell("id_card")
 
                 if not name and not id_card:
                     skipped += 1
@@ -82,51 +153,15 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
                     skipped += 1
                     continue
 
-                certified_area = ""
-                for key in row.index:
-                    if "确权颁证面积" in key or "确权颁发面积" in key:
-                        certified_area = safe_str(row.get(key, ""))
-                        break
-
-                subsidy_area = ""
-                for key in row.index:
-                    if "补贴面积" in key:
-                        val = safe_str(row.get(key, ""))
-                        subsidy_area = val.replace("（亩）", "").replace("(亩)", "").strip()
-                        break
-
-                base_standard = ""
-                for key in row.index:
-                    if "基础补贴标准" in key:
-                        val = safe_str(row.get(key, ""))
-                        base_standard = val.replace("（元/亩）", "").replace("(元/亩)", "").strip()
-                        break
-
-                rape_area = ""
-                for key in row.index:
-                    if "其中种植油菜" in key and "面积" in key:
-                        rape_area = safe_str(row.get(key, "")).strip()
-                        break
-
-                rape_amount = ""
-                for key in row.index:
-                    if "其中种植油菜" in key and "金额" in key:
-                        rape_amount = safe_str(row.get(key, "")).strip()
-                        break
-
-                total_amount = ""
-                for key in row.index:
-                    if "补贴总金额" in key:
-                        val = safe_str(row.get(key, ""))
-                        total_amount = val.replace("（元）", "").replace("(元)", "").strip()
-                        break
+                certified_area = _clean_num(_cell("certified_area"))
+                subsidy_area   = _clean_num(_cell("subsidy_area"))
+                base_standard  = _clean_num(_cell("base_standard"))
+                rape_area      = _cell("rape_area").strip()
+                rape_amount    = _cell("rape_amount").strip()
+                total_amount   = _clean_num(_cell("total_amount"))
 
                 if id_card and subsidy_year:
-                    card = ""
-                    for key in row.index:
-                        if "卡号" in key:
-                            card = safe_str(row.get(key, "")).strip()
-                            break
+                    card = _cell("card").strip()
                     person = person_map.get(id_card)
                     if person and card:
                         _backfill_social_card(person, "地力补贴" + subsidy_year, card)
@@ -151,7 +186,7 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
                     progress_callback(int((idx + 1) / total * 100))
             except Exception as e:
                 skipped += 1
-                errors.append(f"行{idx + header_row + 3}: {str(e)}")
+                errors.append(f"行{data_start + idx + 1}: {str(e)}")
 
         session.commit()
     except Exception:
