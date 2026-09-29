@@ -8,7 +8,7 @@ from ._read_excel_robust import _read_excel_robust
 from ._backfill_social_card import _backfill_social_card
 
 
-def import_tekun_payment(file_path: str, progress_callback=None) -> dict:
+def import_tekun_payment(file_path: str, progress_callback=None, period: str = "") -> dict:
     """导入特困数据（本地模式），只导入身份证号在数据库中存在的人员"""
 
     df = _read_excel_robust(file_path, header=0)
@@ -61,7 +61,7 @@ def import_tekun_payment(file_path: str, progress_callback=None) -> dict:
 
                 amount = safe_str(row.get("金额", "")) if "金额" in columns else ""
 
-                period = safe_str(row.get("费款所属期", ""))
+                period = safe_str(row.get("费款所属期", "")) or period
                 if id_card and period:
                     card = safe_str(row.get("卡号", "")).strip()
                     person = person_map.get(id_card)

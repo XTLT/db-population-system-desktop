@@ -1,9 +1,10 @@
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QProgressBar, QFileDialog, QMessageBox
+    QProgressBar, QFileDialog, QLineEdit, QMessageBox
 )
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtGui import QFont
+from datetime import datetime
 
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
 
@@ -13,10 +14,11 @@ class TekunImportWorker(QThread):
     finished = pyqtSignal(dict)
     error = pyqtSignal(str)
 
-    def __init__(self, file_path: str, is_network_mode: bool):
+    def __init__(self, file_path: str, is_network_mode: bool, period: str = ""):
         super().__init__()
         self.file_path = file_path
         self.is_network_mode = is_network_mode
+        self.period = period
 
     def run(self):
         try:
@@ -31,6 +33,9 @@ class TekunImportWorker(QThread):
                 content_type = mimetypes.guess_type(self.file_path)[0] or 'application/octet-stream'
                 body = (
                     f'--{boundary}\r\n'
+                    f'Content-Disposition: form-data; name="period"\r\n\r\n'
+                    f'{self.period}\r\n'
+                    f'--{boundary}\r\n'
                     f'Content-Disposition: form-data; name="file"; filename="{os.path.basename(self.file_path)}"\r\n'
                     f'Content-Type: {content_type}\r\n\r\n'
                 ).encode('utf-8') + file_data + f'\r\n--{boundary}--\r\n'.encode('utf-8')
@@ -39,7 +44,7 @@ class TekunImportWorker(QThread):
                 self.finished.emit(result)
             else:
                 from data.excel_importer import import_tekun_payment
-                result = import_tekun_payment(self.file_path, self.progress.emit)
+                result = import_tekun_payment(self.file_path, self.progress.emit, self.period)
                 self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
@@ -50,7 +55,7 @@ class TekunImportDialog(QDialog):
         super().__init__(parent)
         self.is_network_mode = is_network_mode
         self.setWindowTitle("导入特困数据")
-        self.setFixedSize(450, 250)
+        self.setFixedSize(450, 300)
         self.worker = None
         self._file_path = ""
         self._setup_ui()
@@ -58,6 +63,17 @@ class TekunImportDialog(QDialog):
     def _setup_ui(self):
         layout = QVBoxLayout(self)
         font = QFont(FONT_NAME, FONT_SIZE)
+
+        period_layout = QHBoxLayout()
+        lbl_period = QLabel("费款所属期：")
+        lbl_period.setFont(font)
+        self.txt_period = QLineEdit()
+        self.txt_period.setFont(font)
+        self.txt_period.setPlaceholderText("如：202608")
+        self.txt_period.setText(datetime.now().strftime("%Y%m"))
+        period_layout.addWidget(lbl_period)
+        period_layout.addWidget(self.txt_period)
+        layout.addLayout(period_layout)
 
         file_layout = QHBoxLayout()
         self.lbl_file = QLabel("未选择文件")
@@ -101,9 +117,14 @@ class TekunImportDialog(QDialog):
             QMessageBox.warning(self, "提示", "请先选择Excel文件！")
             return
 
+        period = self.txt_period.text().strip()
+        if not period:
+            QMessageBox.warning(self, "提示", "请输入费款所属期（如202608）！")
+            return
+
         self.lbl_status.setText("正在导入...")
         self.progress_bar.setValue(0)
-        self.worker = TekunImportWorker(self._file_path, self.is_network_mode)
+        self.worker = TekunImportWorker(self._file_path, self.is_network_mode, period)
         self.worker.progress.connect(self._on_progress)
         self.worker.finished.connect(self._on_finished)
         self.worker.error.connect(self._on_error)

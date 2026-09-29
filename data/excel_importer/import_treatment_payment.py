@@ -8,7 +8,7 @@ from ._read_excel_robust import _read_excel_robust
 from ._backfill_social_card import _backfill_social_card
 
 
-def import_treatment_payment(file_path: str, progress_callback=None) -> dict:
+def import_treatment_payment(file_path: str, progress_callback=None, period: str = "") -> dict:
     """导入待遇发放数据，支持三种表格格式
 
     只导入身份证号在数据库中存在的人员
@@ -79,7 +79,7 @@ def import_treatment_payment(file_path: str, progress_callback=None) -> dict:
                 # 根据表格类型提取其他字段
                 town = safe_str(row.get("所属乡镇", ""))
                 village = safe_str(row.get("所属村", ""))
-                period = safe_str(row.get("费款所属期", ""))
+                period = safe_str(row.get("费款所属期", "")) or period
                 payment_status = safe_str(row.get("支付标志", ""))
                 personal_code = safe_str(row.get("个人编号", ""))
                 bank_account = safe_str(row.get("银行账号", ""))

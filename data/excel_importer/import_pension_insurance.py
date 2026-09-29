@@ -8,7 +8,7 @@ from ._read_excel_robust import _read_excel_robust
 from ._backfill_social_card import _backfill_social_card
 
 
-def import_pension_insurance(file_path: str, progress_callback=None) -> dict:
+def import_pension_insurance(file_path: str, progress_callback=None, period: str = "") -> dict:
     """导入养老保险数据
 
     只导入身份证号在数据库中存在的人员
@@ -64,7 +64,7 @@ def import_pension_insurance(file_path: str, progress_callback=None) -> dict:
                     skipped += 1
                     continue
 
-                period = safe_str(row.get("费款所属期", ""))
+                period = safe_str(row.get("费款所属期", "")) or period
                 if id_card and period:
                     card = safe_str(row.get("卡号", "")).strip()
                     person = person_map.get(id_card)
