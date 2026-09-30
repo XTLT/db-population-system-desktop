@@ -28,6 +28,10 @@ def _request(method: str, path: str, data: dict = None) -> dict:
             msg = json.loads(body).get('error', body)
         except Exception:
             msg = body
+        if e.code == 401 and '/login' not in path and '/check_token' not in path and '/status' not in path and '/health' not in path:
+            from ._relogin import _relogin
+            _relogin()
+            raise ConnectionError("登录已过期，请重新登录（登录框已自动弹出）")
         raise ConnectionError(f"服务器错误({e.code}): {msg}")
     except urllib.error.URLError as e:
         raise ConnectionError(f"无法连接服务器: {url}\n{e}")

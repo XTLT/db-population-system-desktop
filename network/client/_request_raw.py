@@ -16,5 +16,16 @@ def _request_raw(method: str, path: str, body: bytes, content_type: str) -> dict
         ctx = _get_ssl_context() if _base.SERVER_URL.startswith('https') else None
         with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
             return json.loads(resp.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='replace')
+        try:
+            msg = json.loads(body).get('error', body)
+        except Exception:
+            msg = body
+        if e.code == 401 and '/login' not in path and '/check_token' not in path and '/status' not in path and '/health' not in path:
+            from ._relogin import _relogin
+            _relogin()
+            raise ConnectionError("登录已过期，请重新登录（登录框已自动弹出）")
+        raise ConnectionError(f"服务器错误({e.code}): {msg}")
     except urllib.error.URLError as e:
-        raise ConnectionError(f"请求失败: {url}\n{e}")
+        raise ConnectionError(f"请求失败: {url}\\n{e}")
