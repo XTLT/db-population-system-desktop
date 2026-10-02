@@ -2,10 +2,14 @@ import os
 from typing import Optional, Tuple
 
 import requests
+import urllib3
 
 from ._base import DOWNLOAD_DIR
 from ._get_release_download_url import _get_release_download_url
 from ._get_server_url_and_token import _get_server_url_and_token
+
+# 自签证书场景下有意使用 verify=False，屏蔽 urllib3 的告警噪音
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def download_update(version_info: dict, progress_callback=None) -> Tuple[Optional[str], str]:
