@@ -187,12 +187,15 @@ def main():
     _bg_worker_ref[0].finished.connect(_on_bg_version_check)
     _bg_worker_ref[0].start()
 
-    from dialogs.connect_dialog import ConnectDialog
-    connect_dialog = ConnectDialog()
-    if not connect_dialog.exec():
-        sys.exit(0)
-
-    server_url = connect_dialog.get_server_url()
+    from dialogs.connect_dialog import ConnectDialog, get_recent_servers
+    # 命令行已传入服务器地址（start_desktop.sh start network <url>）时，
+    # 直接使用，不再弹出连接对话框
+    server_url = (os.environ.get("POPULATION_SERVER_URL") or "").strip()
+    if not server_url:
+        connect_dialog = ConnectDialog()
+        if not connect_dialog.exec():
+            sys.exit(0)
+        server_url = connect_dialog.get_server_url()
 
     current_user = {}
 
