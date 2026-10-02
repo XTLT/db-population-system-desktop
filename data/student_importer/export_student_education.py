@@ -2,6 +2,7 @@ import pandas as pd
 
 from core.config import STUDENT_EDUCATION_COLUMNS
 from core.database import get_session, StudentEducation, Person
+from data.excel_importer import _auto_fit_columns
 
 
 def export_student_education(file_path: str, progress_callback=None) -> bool:
@@ -31,6 +32,7 @@ def export_student_education(file_path: str, progress_callback=None) -> bool:
 
         df = pd.DataFrame(data, columns=["身份证号", "姓名"] + STUDENT_EDUCATION_COLUMNS[1:])
         df.to_excel(file_path, index=False, engine="openpyxl")
+        _auto_fit_columns(file_path)
         return True
     finally:
         session.close()

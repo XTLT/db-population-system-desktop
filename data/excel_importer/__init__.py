@@ -35,6 +35,7 @@ from .delete_disability_care_payment import delete_disability_care_payment
 from .import_elderly_allowance import import_elderly_allowance
 from .get_all_elderly_allowances import get_all_elderly_allowances
 from .delete_elderly_allowance import delete_elderly_allowance
+from ._auto_fit_columns import _auto_fit_columns
 
 __all__ = [
     "backup_database",
@@ -72,4 +73,5 @@ __all__ = [
     "import_elderly_allowance",
     "get_all_elderly_allowances",
     "delete_elderly_allowance",
+    "_auto_fit_columns",
 ]

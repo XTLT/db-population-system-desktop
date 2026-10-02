@@ -200,4 +200,6 @@ class LandSubsidyViewDialog(QDialog):
             data.append(row_data)
         df = pd.DataFrame(data)
         df.to_excel(path, index=False, engine="openpyxl")
+        from data.excel_importer import _auto_fit_columns
+        _auto_fit_columns(path)
         QMessageBox.information(self, "成功", f"数据已导出到：\n{path}")

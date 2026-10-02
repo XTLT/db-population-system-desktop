@@ -266,6 +266,8 @@ class TreatmentPaymentViewDialog(QDialog):
 
             df = pd.DataFrame(data)
             df.to_excel(file_path, index=False)
+            from data.excel_importer import _auto_fit_columns
+            _auto_fit_columns(file_path)
             QMessageBox.information(self, "提示", f"导出成功！\n共 {len(payments)} 条记录")
         except Exception as e:
             QMessageBox.critical(self, "错误", f"导出失败：{e}")

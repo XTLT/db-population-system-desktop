@@ -9,6 +9,7 @@ from data.excel_area_fields import (
     get_commercial_forest_export_value,
 )
 from .query_persons_with_filters import query_persons_with_filters
+from ._auto_fit_columns import _auto_fit_columns
 
 
 def export_excel(file_path: str, progress_callback=None, filters: dict = None) -> bool:
@@ -54,4 +55,6 @@ def export_excel(file_path: str, progress_callback=None, filters: dict = None) -
             progress_callback(int((i + 1) / len(persons) * 100))
     df = pd.DataFrame(data, columns=EXCEL_TEMPLATE_COLUMNS)
     df.to_excel(file_path, index=False, engine="openpyxl")
+    # 自动调整列宽，避免身份证号/地址/备注等长文本显示不全
+    _auto_fit_columns(file_path)
     return True
