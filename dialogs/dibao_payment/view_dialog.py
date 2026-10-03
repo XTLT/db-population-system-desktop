@@ -58,7 +58,10 @@ class DibaoViewDialog(QDialog):
         self.table.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        headers = ["费款所属期", "姓名", "身份证号", "所属村", "银行账号", "金额", "支付标志", "导入来源"]
+        headers = ["费款所属期", "姓名", "身份证号", "村名称", "性别", "和申请人关系",
+                   "共同生活家庭成员", "享受保障人口数", "家庭保障总金额", "家庭最低生活基本保障金",
+                   "家庭特殊困难补助金", "家庭调剂金额", "特殊困难情形", "特殊困难补助金",
+                   "初始享受时间", "始发年月", "导入来源"]
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
         layout.addWidget(self.table)
@@ -111,9 +114,18 @@ class DibaoViewDialog(QDialog):
                     p_name = p.get('name', '')
                     p_id_card = p.get('id_card', '')
                     p_village = p.get('village', '')
-                    p_bank_account = p.get('bank_account', '')
+                    p_gender = p.get('gender', '')
+                    p_relation = p.get('relation', '')
+                    p_family_members = p.get('family_members', '')
+                    p_family_count = p.get('family_count', '')
                     p_amount = p.get('amount', '')
-                    p_payment_status = p.get('payment_status', '')
+                    p_base_amount = p.get('base_amount', '')
+                    p_special_amount = p.get('special_amount', '')
+                    p_adjust_amount = p.get('adjust_amount', '')
+                    p_special_situation = p.get('special_situation', '')
+                    p_special_subsidy = p.get('special_subsidy', '')
+                    p_start_time = p.get('start_time', '')
+                    p_issue_month = p.get('issue_month', '')
                     p_import_source = p.get('import_source', '')
                 else:
                     p_id = p.id
@@ -121,21 +133,31 @@ class DibaoViewDialog(QDialog):
                     p_name = p.name
                     p_id_card = getattr(p, 'id_card', '')
                     p_village = getattr(p, 'village', '')
-                    p_bank_account = p.bank_account
+                    p_gender = getattr(p, 'gender', '')
+                    p_relation = getattr(p, 'relation', '')
+                    p_family_members = getattr(p, 'family_members', '')
+                    p_family_count = getattr(p, 'family_count', '')
                     p_amount = p.amount
-                    p_payment_status = getattr(p, 'payment_status', '')
+                    p_base_amount = getattr(p, 'base_amount', '')
+                    p_special_amount = getattr(p, 'special_amount', '')
+                    p_adjust_amount = getattr(p, 'adjust_amount', '')
+                    p_special_situation = getattr(p, 'special_situation', '')
+                    p_special_subsidy = getattr(p, 'special_subsidy', '')
+                    p_start_time = getattr(p, 'start_time', '')
+                    p_issue_month = getattr(p, 'issue_month', '')
                     p_import_source = getattr(p, 'import_source', '')
 
                 item_name = QTableWidgetItem(p_name)
                 item_name.setData(Qt.ItemDataRole.UserRole, p_id)
-                self.table.setItem(row_idx, 0, QTableWidgetItem(p_period))
-                self.table.setItem(row_idx, 1, item_name)
-                self.table.setItem(row_idx, 2, QTableWidgetItem(p_id_card))
-                self.table.setItem(row_idx, 3, QTableWidgetItem(p_village))
-                self.table.setItem(row_idx, 4, QTableWidgetItem(p_bank_account))
-                self.table.setItem(row_idx, 5, QTableWidgetItem(p_amount))
-                self.table.setItem(row_idx, 6, QTableWidgetItem(p_payment_status))
-                self.table.setItem(row_idx, 7, QTableWidgetItem(p_import_source))
+                values = [p_period, p_name, p_id_card, p_village, p_gender, p_relation,
+                          p_family_members, p_family_count, p_amount, p_base_amount,
+                          p_special_amount, p_adjust_amount, p_special_situation,
+                          p_special_subsidy, p_start_time, p_issue_month, p_import_source]
+                for col, val in enumerate(values):
+                    if col == 1:
+                        self.table.setItem(row_idx, col, item_name)
+                    else:
+                        self.table.setItem(row_idx, col, QTableWidgetItem(val))
 
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         except Exception as e:
@@ -216,27 +238,44 @@ class DibaoViewDialog(QDialog):
             for p in records:
                 if isinstance(p, dict):
                     data.append({
+                        "村名称": p.get('village', ''),
+                        "救助类型": "低保",
+                        "人员姓名": p.get('name', ''),
+                        "人员身份证号": p.get('id_card', ''),
+                        "性别": p.get('gender', ''),
+                        "和申请人关系": p.get('relation', ''),
+                        "共同生活家庭成员": p.get('family_members', ''),
+                        "享受保障人口数": p.get('family_count', ''),
+                        "家庭保障总金额": p.get('amount', ''),
+                        "家庭最低生活基本保障金": p.get('base_amount', ''),
+                        "家庭特殊困难补助金": p.get('special_amount', ''),
+                        "家庭调剂金额": p.get('adjust_amount', ''),
+                        "特殊困难情形（分类施保）": p.get('special_situation', ''),
+                        "特殊困难补助金": p.get('special_subsidy', ''),
+                        "初始享受时间": p.get('start_time', ''),
+                        "始发年月": p.get('issue_month', '') or p.get('period', ''),
                         "费款所属期": p.get('period', ''),
-                        "姓名": p.get('name', ''),
-                        "身份证号": p.get('id_card', ''),
-                        "所属乡镇": p.get('town', ''),
-                        "所属村": p.get('village', ''),
-                        "银行账号": p.get('bank_account', ''),
-                        "金额": p.get('amount', ''),
-                        "支付标志": p.get('payment_status', ''),
                         "导入来源": p.get('import_source', ''),
                     })
                 else:
-                    _id_card = getattr(p, 'id_card', '')
                     data.append({
+                        "村名称": getattr(p, 'village', ''),
+                        "救助类型": "低保",
+                        "人员姓名": p.name,
+                        "人员身份证号": getattr(p, 'id_card', ''),
+                        "性别": getattr(p, 'gender', ''),
+                        "和申请人关系": getattr(p, 'relation', ''),
+                        "共同生活家庭成员": getattr(p, 'family_members', ''),
+                        "享受保障人口数": getattr(p, 'family_count', ''),
+                        "家庭保障总金额": p.amount,
+                        "家庭最低生活基本保障金": getattr(p, 'base_amount', ''),
+                        "家庭特殊困难补助金": getattr(p, 'special_amount', ''),
+                        "家庭调剂金额": getattr(p, 'adjust_amount', ''),
+                        "特殊困难情形（分类施保）": getattr(p, 'special_situation', ''),
+                        "特殊困难补助金": getattr(p, 'special_subsidy', ''),
+                        "初始享受时间": getattr(p, 'start_time', ''),
+                        "始发年月": getattr(p, 'issue_month', '') or getattr(p, 'period', ''),
                         "费款所属期": getattr(p, 'period', ''),
-                        "姓名": p.name,
-                        "身份证号": _id_card,
-                        "所属乡镇": getattr(p, 'town', ''),
-                        "所属村": getattr(p, 'village', ''),
-                        "银行账号": p.bank_account,
-                        "金额": p.amount,
-                        "支付标志": getattr(p, 'payment_status', ''),
                         "导入来源": getattr(p, 'import_source', ''),
                     })
 
