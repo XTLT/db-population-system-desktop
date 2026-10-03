@@ -18,6 +18,9 @@ _LAND_FIELD_ALIASES = {
     "rape_area":      ["其中种植油菜面积", "油菜面积"],
     "rape_amount":    ["其中种植油菜金额", "油菜金额"],
     "total_amount":   ["补贴总金额", "总金额", "补贴金额", "合计金额", "发放金额"],
+    "phone":          ["电话号码", "电话"],
+    "bank_name":      ["金融机构", "开户行", "银行机构"],
+    "land_time":      ["上账时间", "到账时间", "发放时间"],
     "card":           ["卡号"],
 }
 
@@ -46,12 +49,12 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
     header_row = -1
     for idx, row in df.iterrows():
         values = [str(v).strip() for v in row.values]
-        if "姓名" in values and "身份证号" in values:
+        if ("姓名" in values or "户主姓名" in values) and "身份证号" in values:
             header_row = idx
             break
 
     if header_row == -1:
-        return {"imported": 0, "skipped": 0, "errors": ["未找到表头（姓名、身份证号）"], "total": 0, "not_found": []}
+        return {"imported": 0, "skipped": 0, "errors": ["未找到表头（姓名/户主姓名、身份证号）"], "total": 0, "not_found": []}
 
     main_headers = [str(v).strip() for v in df.iloc[header_row].values]
 
@@ -159,6 +162,9 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
                 rape_area      = _cell("rape_area").strip()
                 rape_amount    = _cell("rape_amount").strip()
                 total_amount   = _clean_num(_cell("total_amount"))
+                phone          = _cell("phone").strip()
+                bank_name      = _cell("bank_name").strip()
+                land_time      = _cell("land_time").strip()
 
                 if id_card and subsidy_year:
                     card = _cell("card").strip()
@@ -177,6 +183,9 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
                     rape_area=rape_area,
                     rape_amount=rape_amount,
                     total_amount=total_amount,
+                    phone=phone,
+                    bank_name=bank_name,
+                    land_time=land_time,
                     import_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 )
                 session.add(subsidy)

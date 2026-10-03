@@ -51,8 +51,8 @@ class LandSubsidyViewDialog(QDialog):
         self.table.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        headers = ["补贴年度", "姓名", "身份证号", "确权颁发面积", "补贴面积(亩)", "基础补贴标准(元/亩)",
-                   "油菜面积(亩)", "油菜金额(元)", "补贴总金额(元)", "导入时间"]
+        headers = ["序号", "补贴年度", "户主姓名", "身份证号", "电话号码", "银行账号", "金融机构",
+                   "发放金额", "上账时间", "耕地面积", "耕地标准", "油菜面积", "油菜标准", "油菜金额"]
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
         layout.addWidget(self.table)
@@ -133,16 +133,18 @@ class LandSubsidyViewDialog(QDialog):
             self.table.setRowCount(len(subsidies))
             for row_idx, s in enumerate(subsidies):
                 if isinstance(s, dict):
-                    values = [s.get('subsidy_year', ''), s.get('name', ''), s.get('id_card', ''),
-                             s.get('certified_area', ''), s.get('subsidy_area', ''),
-                             s.get('base_standard', ''), s.get('rape_area', ''),
-                             s.get('rape_amount', ''), s.get('total_amount', ''),
-                             s.get('import_time', '')]
+                    values = [str(row_idx + 1), s.get('year', '') or s.get('subsidy_year', ''),
+                             s.get('name', ''), s.get('id_card', ''),
+                             s.get('phone', ''), '', s.get('bank_name', ''),
+                             s.get('total_amount', ''), s.get('land_time', ''),
+                             s.get('certified_area', ''), s.get('base_standard', ''),
+                             s.get('rape_area', ''), '', s.get('rape_amount', '')]
                     item_id = s.get('id', '')
                 else:
-                    values = [s.subsidy_year, s.name, s.id_card,
-                             s.certified_area, s.subsidy_area,
-                             s.base_standard, s.rape_area, s.rape_amount, s.total_amount, s.import_time]
+                    values = [str(row_idx + 1), s.subsidy_year, s.name, s.id_card,
+                             getattr(s, 'phone', ''), '', getattr(s, 'bank_name', ''),
+                             s.total_amount, getattr(s, 'land_time', ''),
+                             s.certified_area, s.base_standard, s.rape_area, '', s.rape_amount]
                     item_id = s.id
                 for col_idx, val in enumerate(values):
                     item = QTableWidgetItem(str(val) if val else "")
@@ -190,8 +192,8 @@ class LandSubsidyViewDialog(QDialog):
 
         import pandas as pd
         data = []
-        headers = ["补贴年度", "姓名", "身份证号", "残疾等级", "确权颁发面积", "补贴面积(亩)", "基础补贴标准(元/亩)",
-                   "油菜面积(亩)", "油菜金额(元)", "补贴总金额(元)", "导入时间"]
+        headers = ["序号", "补贴年度", "户主姓名", "身份证号", "电话号码", "银行账号", "金融机构",
+                   "发放金额", "上账时间", "耕地面积", "耕地标准", "油菜面积", "油菜标准", "油菜金额"]
         for row in range(self.table.rowCount()):
             row_data = {}
             for col in range(self.table.columnCount()):
