@@ -135,16 +135,16 @@ class LandSubsidyViewDialog(QDialog):
                 if isinstance(s, dict):
                     values = [str(row_idx + 1), s.get('year', '') or s.get('subsidy_year', ''),
                              s.get('name', ''), s.get('id_card', ''),
-                             s.get('phone', ''), '', s.get('bank_name', ''),
+                             s.get('phone', ''), s.get('bank_account', ''), s.get('bank_name', ''),
                              s.get('total_amount', ''), s.get('land_time', ''),
                              s.get('certified_area', ''), s.get('base_standard', ''),
-                             s.get('rape_area', ''), '', s.get('rape_amount', '')]
+                             s.get('rape_area', ''), s.get('rape_standard', ''), s.get('rape_amount', '')]
                     item_id = s.get('id', '')
                 else:
                     values = [str(row_idx + 1), s.subsidy_year, s.name, s.id_card,
-                             getattr(s, 'phone', ''), '', getattr(s, 'bank_name', ''),
+                             getattr(s, 'phone', ''), getattr(s, 'bank_account', ''), getattr(s, 'bank_name', ''),
                              s.total_amount, getattr(s, 'land_time', ''),
-                             s.certified_area, s.base_standard, s.rape_area, '', s.rape_amount]
+                             s.certified_area, s.base_standard, s.rape_area, getattr(s, 'rape_standard', ''), s.rape_amount]
                     item_id = s.id
                 for col_idx, val in enumerate(values):
                     item = QTableWidgetItem(str(val) if val else "")

@@ -318,3 +318,13 @@ def _migrate_db(engine):
             conn.commit()
         except Exception:
             pass
+        try:
+            conn.execute(text("ALTER TABLE land_subsidy ADD COLUMN bank_account VARCHAR DEFAULT ''"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE land_subsidy ADD COLUMN rape_standard VARCHAR DEFAULT ''"))
+            conn.commit()
+        except Exception:
+            pass

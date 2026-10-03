@@ -18,6 +18,8 @@ class LandSubsidy(Base):
     rape_amount = Column(String, default="")
     total_amount = Column(String, default="")
     phone = Column(String, default="")
+    bank_account = Column(String, default="")
     bank_name = Column(String, default="")
     land_time = Column(String, default="")
+    rape_standard = Column(String, default="")
     import_time = Column(String, default="")
