@@ -12,12 +12,12 @@ from ._backfill_social_card import _backfill_social_card
 # 列名别名兼容表：同时识别“模板列名”与“导出/旧表短名”
 # key=内部字段，value=可能出现的列名（去掉单位括号后做子串匹配）
 _LAND_FIELD_ALIASES = {
-    "certified_area": ["确权颁证面积", "确权颁发面积"],
+    "certified_area": ["确权颁证面积", "确权颁发面积", "耕地面积", "土地面积"],
     "subsidy_area":   ["补贴面积"],
-    "base_standard":  ["基础补贴标准"],
+    "base_standard":  ["基础补贴标准", "补贴标准", "基础标准", "耕地标准"],
     "rape_area":      ["其中种植油菜面积", "油菜面积"],
     "rape_amount":    ["其中种植油菜金额", "油菜金额"],
-    "total_amount":   ["补贴总金额"],
+    "total_amount":   ["补贴总金额", "总金额", "补贴金额", "合计金额", "发放金额"],
     "card":           ["卡号"],
 }
 
@@ -58,7 +58,7 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
     # 定位“姓名”“身份证号”在表头中的列位置（用于判定下一行是否为真子表头）
     name_pos = id_pos = -1
     for i, h in enumerate(main_headers):
-        if h == "姓名":
+        if h == "姓名" or h == "户主姓名":
             name_pos = i
         elif h == "身份证号":
             id_pos = i
