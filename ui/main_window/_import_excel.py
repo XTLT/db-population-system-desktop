@@ -30,6 +30,11 @@ def _import_excel(self):
                                   f'multipart/form-data; boundary={boundary}')
             if result.get('imported') is not None:
                 msg = f"导入完成！\n成功：{result.get('imported', 0)}条\n更新：{result.get('updated', 0)}条\n跳过：{result.get('skipped', 0)}条"
+                errors = result.get('errors') or []
+                if errors:
+                    msg += f"\n\n跳过明细（共{len(errors)}条）：\n" + "\n".join(errors[:50])
+                    if len(errors) > 50:
+                        msg += f"\n…共{len(errors)}条，其余见日志"
                 QMessageBox.information(self, "导入结果", msg)
             else:
                 QMessageBox.critical(self, "导入失败", result.get('error', '未知错误'))
