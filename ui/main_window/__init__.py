@@ -45,15 +45,12 @@ from ._generate_student_template import _generate_student_template
 from ._generate_forest_template import _generate_forest_template
 from ._generate_payment_template import _generate_payment_template
 from ._generate_land_subsidy_template import _generate_land_subsidy_template
-from ._generate_treatment_payment_template import _generate_treatment_payment_template
 from ._generate_pension_insurance_template import _generate_pension_insurance_template
 from ._generate_dibao_payment_template import _generate_dibao_payment_template
 from ._generate_tekun_payment_template import _generate_tekun_payment_template
 from ._grade_promotion import _grade_promotion
 from ._import_land_subsidy import _import_land_subsidy
 from ._view_land_subsidy import _view_land_subsidy
-from ._import_treatment_payment import _import_treatment_payment
-from ._view_treatment_payment import _view_treatment_payment
 from ._import_pension_insurance import _import_pension_insurance
 from ._view_pension_insurance import _view_pension_insurance
 from ._add_household import _add_household
@@ -116,15 +113,12 @@ __all__ = [
     '_generate_forest_template',
     '_generate_payment_template',
     '_generate_land_subsidy_template',
-    '_generate_treatment_payment_template',
     '_generate_pension_insurance_template',
     '_generate_dibao_payment_template',
     '_generate_tekun_payment_template',
     '_grade_promotion',
     '_import_land_subsidy',
     '_view_land_subsidy',
-    '_import_treatment_payment',
-    '_view_treatment_payment',
     '_import_pension_insurance',
     '_view_pension_insurance',
     '_add_household',

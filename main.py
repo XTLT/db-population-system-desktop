@@ -63,15 +63,12 @@ from ui.main_window import (  # noqa: E402,F401
     _generate_forest_template,
     _generate_payment_template,
     _generate_land_subsidy_template,
-    _generate_treatment_payment_template,
     _generate_pension_insurance_template,
     _generate_dibao_payment_template,
     _generate_tekun_payment_template,
     _grade_promotion,
     _import_land_subsidy,
     _view_land_subsidy,
-    _import_treatment_payment,
-    _view_treatment_payment,
     _import_pension_insurance,
     _view_pension_insurance,
     _add_household,
@@ -134,15 +131,12 @@ MainWindow._generate_student_template = _generate_student_template
 MainWindow._generate_forest_template = _generate_forest_template
 MainWindow._generate_payment_template = _generate_payment_template
 MainWindow._generate_land_subsidy_template = _generate_land_subsidy_template
-MainWindow._generate_treatment_payment_template = _generate_treatment_payment_template
 MainWindow._generate_pension_insurance_template = _generate_pension_insurance_template
 MainWindow._generate_dibao_payment_template = _generate_dibao_payment_template
 MainWindow._generate_tekun_payment_template = _generate_tekun_payment_template
 MainWindow._grade_promotion = _grade_promotion
 MainWindow._import_land_subsidy = _import_land_subsidy
 MainWindow._view_land_subsidy = _view_land_subsidy
-MainWindow._import_treatment_payment = _import_treatment_payment
-MainWindow._view_treatment_payment = _view_treatment_payment
 MainWindow._import_pension_insurance = _import_pension_insurance
 MainWindow._view_pension_insurance = _view_pension_insurance
 MainWindow._add_household = _add_household

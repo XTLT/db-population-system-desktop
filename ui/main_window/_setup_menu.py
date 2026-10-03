@@ -92,7 +92,7 @@ def _setup_menu(self):
     subsidy_menu.addAction(subsidy_import_action)
     subsidy_menu.addAction(subsidy_view_action)
 
-    treatment_menu = menubar.addMenu("待遇发放")
+    treatment_menu = menubar.addMenu("补贴发放")
 
     dibao_import_action = QAction("导入低保发放", self)
     dibao_import_action.triggered.connect(self._import_dibao_payment)
@@ -145,8 +145,6 @@ def _setup_menu(self):
     tpl_forest.triggered.connect(self._generate_forest_template)
     tpl_subsidy = QAction("地力补贴模板", self)
     tpl_subsidy.triggered.connect(self._generate_land_subsidy_template)
-    tpl_treatment = QAction("待遇发放模板", self)
-    tpl_treatment.triggered.connect(self._generate_treatment_payment_template)
     tpl_pension = QAction("养老保险模板", self)
     tpl_pension.triggered.connect(self._generate_pension_insurance_template)
     tpl_dibao = QAction("低保发放模板", self)
@@ -160,7 +158,6 @@ def _setup_menu(self):
     template_menu.addAction(tpl_student)
     template_menu.addAction(tpl_forest)
     template_menu.addAction(tpl_subsidy)
-    template_menu.addAction(tpl_treatment)
     template_menu.addAction(tpl_pension)
     template_menu.addAction(tpl_dibao)
     template_menu.addAction(tpl_tekun)

@@ -17,9 +17,6 @@ from .import_land_subsidy import import_land_subsidy
 from .get_all_land_subsidies import get_all_land_subsidies
 from .delete_land_subsidy import delete_land_subsidy
 from .get_person_subsidy_total import get_person_subsidy_total
-from .import_treatment_payment import import_treatment_payment
-from .get_all_treatment_payments import get_all_treatment_payments
-from .delete_treatment_payment import delete_treatment_payment
 from .import_pension_insurance import import_pension_insurance
 from .get_all_pension_insurance import get_all_pension_insurance
 from .delete_pension_insurance import delete_pension_insurance
@@ -55,9 +52,6 @@ __all__ = [
     "get_all_land_subsidies",
     "delete_land_subsidy",
     "get_person_subsidy_total",
-    "import_treatment_payment",
-    "get_all_treatment_payments",
-    "delete_treatment_payment",
     "import_pension_insurance",
     "get_all_pension_insurance",
     "delete_pension_insurance",

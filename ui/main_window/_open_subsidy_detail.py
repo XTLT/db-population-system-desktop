@@ -25,7 +25,6 @@ def _open_subsidy_detail(self, id_card: str, name: str):
 
     subsidy_types = [
         ("地力补贴", "land_subsidy"),
-        ("待遇发放", "treatment_payment"),
     ]
 
     for display_name, subsidy_key in subsidy_types:
