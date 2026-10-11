@@ -1,0 +1,15 @@
+{
+  "latest_version": "0.0.4",
+  "version_code": 4,
+  "desktop_version": "0.0.7",
+  "desktop_version_code": 5,
+  "desktop_release_notes": "v0.0.4: 修复桌面端部分bug",
+  "desktop_file_size": 0,
+  "server_version": "0.0.1",
+  "server_version_code": 1,
+  "release_notes": "v0.0.4: 将待遇发放拆分为低保和特困两个独立模块，支持单独按月上传和查询",
+  "download_url": "",
+  "server_download_url": "",
+  "file_size": 66244914,
+  "checksum": ""
+}

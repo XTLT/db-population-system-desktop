@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 数据与运行时文件
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+data/
+uploads/
+backups/
+*.xlsx
+*.xls
+
+# 配置与密钥
+config.yaml
+.env
+*.pem
+*.key
+.token_salt
+certs/*.crt
+certs/*.cer
+
+# 日志
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 构建产物
+*.exe
+*.msi

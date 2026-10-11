@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  python-check:
+    name: Python 语法检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: 全量 py_compile 检查
+        run: |
+          python - <<'EOF'
+          import os, py_compile
+          fail = 0
+          total = 0
+          for dirpath, dirnames, filenames in os.walk('.'):
+              dirnames[:] = [d for d in dirnames if d not in ('venv', '__pycache__', 'build', 'dist', 'node_modules', '.git')]
+              for f in filenames:
+                  if f.endswith('.py'):
+                      p = os.path.join(dirpath, f)
+                      total += 1
+                      try:
+                          py_compile.compile(p, doraise=True)
+                      except Exception as e:
+                          fail += 1
+                          print('FAIL:', p, e)
+          print(f'Python 语法检查 total={total} fail={fail}')
+          if fail:
+              raise SystemExit(1)
+          EOF
+
+  desktop-build:
+    name: 桌面端打包（Windows PyInstaller）
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: 安装依赖
+        run: |
+          pip install -r requirements_desktop.txt pyinstaller
+      - name: PyInstaller 打包
+        run: |
+          pyinstaller --noconfirm 人口通.spec
+      - name: 压缩为 ZIP
+        run: |
+          powershell -NoProfile -Command "Compress-Archive -Path 'dist/人口通' -DestinationPath 'population_latest.zip' -Force"
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-build
+          path: dist/population_*.zip
+          retention-days: 14
+      - name: 发布到 GitHub Releases（保留最新 2 个版本）
+        uses: actions/github-script@v7
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { execSync } = require('child_process');
+            const run = (cmd) => execSync(cmd, { encoding: 'utf-8', shell: 'bash', env: { ...process.env, GH_TOKEN: process.env.GH_TOKEN } });
+            const version = JSON.parse(fs.readFileSync('updates/version.json', 'utf-8')).desktop_version;
+            const tag = 'v' + version;
+            const zipLatest = 'population_latest.zip';
+            const zipFinal = 'population_' + version + '.zip';
+            console.log('版本: ' + version + ' | tag: ' + tag);
+            fs.renameSync(zipLatest, zipFinal);
+            let exists = true;
+            try { run('gh release view ' + tag + ' --json id'); } catch (e) { exists = false; }
+            if (exists) {
+              console.log('tag 已存在，更新资产');
+              try {
+                const assetsRaw = run('gh release view ' + tag + ' --json assets --jq ".assets"');
+                const assetsInfo = JSON.parse(assetsRaw);
+                for (const a of assetsInfo) {
+                  if (a.name.endsWith('.zip') && !a.name.startsWith('population_')) {
+                    console.log('删除错误/旧命名资产: ' + a.name + ' (id=' + a.id + ')');
+                    run('gh api --method DELETE repos/XTLT/db-population-system-desktop/releases/assets/' + a.id);
+                  }
+                }
+              } catch (e) { console.log('资产清理跳过: ' + e.message); }
+              run('gh release upload ' + tag + ' "' + zipFinal + '" --clobber');
+            } else {
+              console.log('创建新 release');
+              run('gh release create ' + tag + ' "' + zipFinal + '" --title "人口通' + version + '" --notes "桌面端自动构建v' + version + '"');
+            }
+            console.log('=== 清理旧版本（只保留最新 2 个） ===');
+            const list = JSON.parse(run('gh release list --json tagName,createdAt --limit 100'));
+            list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            for (const r of list.slice(2)) {
+              console.log('删除旧版本: ' + r.tagName);
+              try { run('gh release delete ' + r.tagName + ' --yes --cleanup-tag'); } catch (e) { console.log('删除失败: ' + e.message); }
+            }
+            console.log('=== 当前 Releases ===');
+            console.log(run('gh release list --limit 5'));
