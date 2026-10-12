@@ -36,7 +36,7 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[dict], str]:
                 latest_code = data.get("server_version_code", data.get("version_code", 0))
 
             if latest_code > current_code:
-                # Has update — get download URL from GitHub releases
+                # Has update — get download URL from Gitee releases
                 download_url = _get_release_download_url(app_type)
                 if download_url:
                     data["download_url"] = download_url
