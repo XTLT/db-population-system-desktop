@@ -33,28 +33,29 @@ def apply_update(filepath: str):
         bat_content = f'''@echo off
 chcp 65001 >nul
 title 自动更新中...
-echo ========================================
-echo   正在更新 人口通 桌面客户端...
-echo ========================================
-echo.
-echo 正在关闭程序...
-taskkill /f /t /im "{exe_name}" >nul 2>&1
-echo 等待文件释放...
+cd /d "%~dp0"
+echo ======================================== > _auto_update.log
+echo   正在更新 人口通 桌面客户端... >> _auto_update.log
+echo ======================================== >> _auto_update.log
+echo [%date% %time%] 开始更新 >> _auto_update.log
+echo 关闭旧进程: {exe_name} >> _auto_update.log
+taskkill /f /t /im "{exe_name}" >> _auto_update.log 2>&1
+echo 等待文件释放... >> _auto_update.log
 timeout /t 2 /nobreak >nul
-
-echo 正在解压更新文件...
-powershell -NoProfile -Command "Expand-Archive -Path '{zip_path}' -DestinationPath '{app_dir}' -Force"
+echo 解压更新包: {zip_path} >> _auto_update.log
+powershell -NoProfile -Command "Expand-Archive -LiteralPath '{zip_path}' -DestinationPath '{app_dir}' -Force" >> _auto_update.log 2>&1
 if errorlevel 1 (
-    echo 解压失败！请手动解压 {zip_path} 到 {app_dir}
+    echo 解压失败！请手动解压 {zip_path} 到 {app_dir}，或查看 _auto_update.log >> _auto_update.log
+    echo 解压失败！请手动解压 {zip_path} 到 {app_dir}，或查看 _auto_update.log
     pause
     exit /b 1
 )
-
-echo.
-echo 更新完成，正在启动程序...
+echo 解压完成，启动程序... >> _auto_update.log
 start "" "{current_exe}"
+echo 清理更新包与脚本... >> _auto_update.log
 timeout /t 3 /nobreak >nul
-del "{zip_path}" >nul 2>&1
+del "{zip_path}" >> _auto_update.log 2>&1
+echo [%date% %time%] 更新完成 >> _auto_update.log
 del "%~f0"
 '''
         with open(bat_path, 'w', encoding='gbk') as f:

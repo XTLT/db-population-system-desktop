@@ -1,4 +1,6 @@
 import json
+import os
+import sys
 from typing import Optional, Tuple
 
 import requests
@@ -9,9 +11,37 @@ from ._check_local_server import _check_local_server
 from ._get_release_download_url import _get_release_download_url
 
 
+def _get_bundled_version_code() -> int:
+    """读取程序内置 updates/version.json 的 desktop_version_code。
+
+    与左下角显示的 APP_VERSION 同源，保证“当前版本”永远与真实程序一致，
+    避免外部 version_config.json 被提前写入新版本号导致误判“已是最新”。
+    """
+    candidates = []
+    if getattr(sys, 'frozen', False):
+        meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+        candidates.append(os.path.join(meipass, 'updates', 'version.json'))
+    else:
+        # 开发模式：network/update_checker/check_update.py -> 项目根/updates/version.json
+        candidates.append(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+            'updates', 'version.json'))
+    for p in candidates:
+        if os.path.exists(p):
+            try:
+                with open(p, encoding='utf-8') as f:
+                    return int(json.load(f).get('desktop_version_code') or 0)
+            except Exception:
+                pass
+    return 0
+
+
 def check_update(app_type: str = "desktop") -> Tuple[Optional[dict], str]:
     config = load_local_config()
-    current_code = config.get("version_code", 1)
+    # 当前版本优先取程序内置版本号（与 APP_VERSION 同源）；
+    # 取不到时才回退外部 version_config.json。
+    bundled_code = _get_bundled_version_code()
+    current_code = bundled_code if bundled_code > 0 else config.get("version_code", 1)
 
     try:
         # Step 1: Check version.json (authoritative for version comparison)

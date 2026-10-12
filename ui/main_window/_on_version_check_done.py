@@ -107,16 +107,18 @@ def _on_version_check_done(self, version_info, error):
 
             ok, err = apply_update(filepath)
             if ok:
-                self._update_status.setText("更新成功，程序即将重启...")
+                self._update_status.setText("更新完成，程序即将自动重启...")
                 self._update_status.setStyleSheet("color: green; font-weight: bold;")
                 self._update_progress.setRange(0, 1)
                 self._update_progress.setValue(1)
                 btn_update.setVisible(False)
-                self._update_btn_close.setText("立即重启")
+                self._update_btn_close.setText("正在自动重启...")
                 self._update_btn_close.setVisible(True)
-                self._update_btn_close.setEnabled(True)
-                self._update_btn_close.clicked.disconnect()
-                self._update_btn_close.clicked.connect(QApplication.quit)
+                self._update_btn_close.setEnabled(False)
+                # bat 已在后台接管（杀进程 -> 解压 -> 启动新版）。
+                # 3 秒后自动退出当前进程，避免“等用户点按钮才退出”导致 bat 无法接管。
+                from PyQt6.QtCore import QTimer
+                QTimer.singleShot(3000, QApplication.quit)
             else:
                 self._update_progress.setRange(0, 1)
                 self._update_progress.setValue(1)
