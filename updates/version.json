@@ -1,15 +1,15 @@
 {
-  "latest_version": "0.0.8",
-  "version_code": 8,
-  "desktop_version": "0.0.8",
-  "desktop_version_code": 8,
-  "desktop_release_notes": "v0.0.8: 修复备份提示延迟、备用域名框焦点、设置合并、多维度对比灰屏、登录态保持",
-  "desktop_file_size": 78010466,
+  "latest_version": "0.0.9",
+  "version_code": 9,
+  "desktop_version": "0.0.9",
+  "desktop_version_code": 9,
+  "desktop_release_notes": "v0.0.9: 新增启动自动检查更新（有更新自动弹窗）；修复备份提示延迟、备用域名框焦点、设置合并、多维度对比灰屏、登录态保持",
+  "desktop_file_size": 0,
   "server_version": "0.0.1",
   "server_version_code": 1,
-  "release_notes": "v0.0.8: 修复备份提示延迟、备用域名框焦点、设置合并、多维度对比灰屏、登录态保持",
+  "release_notes": "v0.0.9: 新增启动自动检查更新（有更新自动弹窗）；修复备份提示延迟、备用域名框焦点、设置合并、多维度对比灰屏、登录态保持",
   "download_url": "",
   "server_download_url": "",
-  "file_size": 78010466,
+  "file_size": 0,
   "checksum": ""
 }

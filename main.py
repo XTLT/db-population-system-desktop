@@ -50,6 +50,7 @@ from ui.main_window import (  # noqa: E402,F401
     _change_profile,
     _show_about,
     _check_for_updates,
+    _auto_check_updates,
     _show_update_dialog,
     _on_version_check_done,
     _check_grade_promotion,
@@ -118,6 +119,7 @@ MainWindow._update_status_bar = _update_status_bar
 MainWindow._change_profile = _change_profile
 MainWindow._show_about = _show_about
 MainWindow._check_for_updates = _check_for_updates
+MainWindow._auto_check_updates = _auto_check_updates
 MainWindow._show_update_dialog = _show_update_dialog
 MainWindow._on_version_check_done = _on_version_check_done
 MainWindow._check_grade_promotion = _check_grade_promotion
@@ -169,17 +171,6 @@ def main():
     _sigint_wakeup = QTimer()
     _sigint_wakeup.start(200)
     _sigint_wakeup.timeout.connect(lambda: None)
-
-    _pending_update = [None]
-    _bg_worker_ref = [None]
-
-    def _on_bg_version_check(result, error):
-        if result and not error:
-            _pending_update[0] = result
-
-    _bg_worker_ref[0] = VersionCheckWorker()
-    _bg_worker_ref[0].finished.connect(_on_bg_version_check)
-    _bg_worker_ref[0].start()
 
     from dialogs.connect_dialog import ConnectDialog, get_recent_servers
     # 命令行已传入服务器地址（start_desktop.sh start network <url>）时，
@@ -287,14 +278,9 @@ def main():
     window = MainWindow(current_user)
     window.show()
 
-    if _pending_update[0]:
-        QTimer.singleShot(500, lambda: window._show_update_dialog(_pending_update[0]))
-    else:
-        def _check_after_bg(result, error):
-            if result and not error:
-                QTimer.singleShot(500, lambda: window._show_update_dialog(result))
-        _bg_worker_ref[0].finished.disconnect(_on_bg_version_check)
-        _bg_worker_ref[0].finished.connect(_check_after_bg)
+    # 启动自动检查更新：此时服务器地址已设置、网络已连通，
+    # 有更新才弹窗提示（无更新/失败静默），延迟 3 秒避免打扰启动
+    QTimer.singleShot(3000, window._auto_check_updates)
 
     sys.exit(app.exec())
 

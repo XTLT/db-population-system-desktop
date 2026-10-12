@@ -32,6 +32,7 @@ from ._update_status_bar import _update_status_bar
 from ._change_profile import _change_profile
 from ._show_about import _show_about
 from ._check_for_updates import _check_for_updates
+from ._auto_check_updates import _auto_check_updates
 from ._show_update_dialog import _show_update_dialog
 from ._on_version_check_done import _on_version_check_done
 from ._check_grade_promotion import _check_grade_promotion
@@ -100,6 +101,7 @@ __all__ = [
     '_change_profile',
     '_show_about',
     '_check_for_updates',
+    '_auto_check_updates',
     '_show_update_dialog',
     '_on_version_check_done',
     '_check_grade_promotion',
