@@ -5,7 +5,7 @@ import requests
 
 def _get_release_download_url(app_type: str = "desktop") -> Optional[str]:
     try:
-        api_url = "https://api.github.com/repos/XTLT/db-population-system/releases/latest"
+        api_url = "https://api.github.com/repos/XTLT/db-population-system-desktop/releases/latest"
         headers = {'User-Agent': 'Mozilla/5.0'}
         resp = requests.get(api_url, headers=headers, timeout=10)
         resp.raise_for_status()
