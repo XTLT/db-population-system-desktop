@@ -26,6 +26,8 @@ class DeletedPerson(Base):
     social_card1 = Column(String, default="")
     social_card2 = Column(String, default="")
     social_card3 = Column(String, default="")
+    social_card2_source = Column(String, default="")
+    social_card3_source = Column(String, default="")
     tekun = Column(String, default="")
     tekun_type = Column(String, default="")
     is_migrated = Column(String, default="否")

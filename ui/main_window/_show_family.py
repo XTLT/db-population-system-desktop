@@ -93,7 +93,9 @@ def _show_family(self, person: Person):
             values = [
                 "", p.name, p.id_card, p.relation, p.address,
                 p.age, p.phone, p.is_dead,
-                p.social_card1, p.social_card2, p.social_card3,
+                p.social_card1,
+                (p.social_card2 or "") + (f"（{getattr(p, 'social_card2_source', '') or ''}）" if p.social_card2 and getattr(p, 'social_card2_source', '') else ""),
+                (p.social_card3 or "") + (f"（{getattr(p, 'social_card3_source', '') or ''}）" if p.social_card3 and getattr(p, 'social_card3_source', '') else ""),
                 p.poor_type, p.remark, p.disability, p.dis_level,
                 p.dibao, p.jisheng,
                 getattr(p, 'tekun', None) or "", getattr(p, 'tekun_type', None) or "",
