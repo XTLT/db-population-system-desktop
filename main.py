@@ -194,6 +194,12 @@ def main():
         else:
             host = _UpdateHost()
             host._show_update_dialog(result)
+            # 主窗口未创建：模态等待用户处理更新（立即更新/暂不更新）。
+            # 否则后续 ConnectDialog.exec() 的应用级模态会禁用本窗口输入，
+            # 导致"立即更新"不可点。
+            dlg = getattr(host, '_update_dialog', None)
+            if dlg is not None:
+                dlg.exec()
 
     _early_worker = VersionCheckWorker()
     _early_worker.finished.connect(_on_early_check)
