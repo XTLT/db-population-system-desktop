@@ -3,10 +3,10 @@ import sys
 
 
 def apply_update(filepath: str):
-    """解压 ZIP 更新包并自动替换整个应用目录后重启。
+    """应用更新包。
 
-    filepath 指向下载的 update.zip。ZIP 包内应包含完整的应用文件
-    （人口通.exe + _internal/ 目录等），解压后直接覆盖当前应用目录。
+    - .exe（Inno 安装包）：杀进程 -> 静默安装 -> 安装器自动启动新版
+    - .zip：解压覆盖整个应用目录
     """
     if not getattr(sys, 'frozen', False):
         return False, "非打包环境，无法自动更新"
@@ -23,6 +23,39 @@ def apply_update(filepath: str):
     if not is_path_safe(current_exe) or not is_path_safe(zip_path) or not is_path_safe(app_dir):
         return False, "安全错误：更新路径包含不安全字符，拒绝自动更新"
 
+    # ===== .exe 安装包更新 =====
+    if zip_path.lower().endswith('.exe'):
+        if sys.platform != 'win32':
+            return False, "仅 Windows 支持安装包更新"
+        bat_path = os.path.join(app_dir, '_auto_update.bat')
+        exe_name = os.path.basename(current_exe)
+        installer = zip_path
+        bat_content = f'''@echo off
+chcp 65001 >nul
+title 自动更新中...
+cd /d "%~dp0"
+echo ======================================== > _auto_update.log
+echo   正在更新 人口通 桌面客户端... >> _auto_update.log
+echo ======================================== >> _auto_update.log
+echo [%date% %time%] 开始更新 >> _auto_update.log
+echo 关闭旧进程: {exe_name} >> _auto_update.log
+taskkill /f /t /im "{exe_name}" >> _auto_update.log 2>&1
+echo 等待文件释放... >> _auto_update.log
+timeout /t 2 /nobreak >nul
+echo 运行安装程序静默安装... >> _auto_update.log
+start "" /wait "{installer}" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART >> _auto_update.log 2>&1
+echo 安装完成 >> _auto_update.log
+del "{installer}" >> _auto_update.log 2>&1
+echo [%date% %time%] 更新完成 >> _auto_update.log
+del "%~f0"
+'''
+        with open(bat_path, 'w', encoding='gbk') as f:
+            f.write(bat_content)
+
+        os.startfile(bat_path)
+        return True, ""
+
+    # ===== .zip 解压更新 =====
     import zipfile
     if not zipfile.is_zipfile(zip_path):
         return False, "下载的文件不是有效的 ZIP 格式"

@@ -12,11 +12,17 @@ def _get_release_download_url(app_type: str = "desktop") -> Optional[str]:
         data = resp.json()
 
         assets = data.get('assets', [])
+        zip_url = None
         for asset in assets:
             name = asset.get('name', '')
             if app_type == 'desktop':
-                if name.endswith('.zip') and ('人口通' in name or name.startswith('population_')):
+                # 优先 .exe 安装包（可静默安装覆盖更新）；找不到再回退 .zip
+                if name.endswith('.exe') and ('人口通' in name or name.startswith('population_')):
                     return asset.get('browser_download_url')
+                if name.endswith('.zip') and ('人口通' in name or name.startswith('population_')):
+                    zip_url = asset.get('browser_download_url')
+        if zip_url:
+            return zip_url
     except Exception:
         pass
     return None

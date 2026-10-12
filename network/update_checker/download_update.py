@@ -19,14 +19,19 @@ def download_update(version_info: dict, progress_callback=None) -> Tuple[Optiona
     if version_info.get("server_download_url") and version_info["server_download_url"] != version_info.get("download_url"):
         urls.append(version_info["server_download_url"])
 
+    # 优先 Gitee Release 中的 .exe 安装包（静默安装覆盖更新最可靠），其次 .zip
     release_url = _get_release_download_url("desktop")
-    if release_url and release_url not in urls:
-        urls.append(release_url)
+    if release_url:
+        urls.insert(0, release_url)
 
     if not urls:
         return None, "未找到下载链接"
 
-    filename = "update.zip"
+    # 文件名按下载链接后缀决定：.exe 走安装包更新，.zip 走解压更新
+    if release_url and '.exe' in release_url.split('?')[0].lower():
+        filename = "update_setup.exe"
+    else:
+        filename = "update.zip"
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     filepath = os.path.join(DOWNLOAD_DIR, filename)
 
