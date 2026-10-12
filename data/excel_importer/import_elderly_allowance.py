@@ -4,29 +4,31 @@ from datetime import datetime
 
 from core.database import get_session, Person, ElderlyAllowance
 from core.utils import safe_str
-from ._read_excel_robust import _read_excel_robust
+from ._read_excel_robust import _read_excel_with_header
 from ._backfill_social_card import _backfill_social_card
+from data.excel_payment_templates import ELDERLY_ALLOWANCE_COLUMNS
 
 
 def import_elderly_allowance(file_path: str, progress_callback=None, period: str = "") -> dict:
     """导入高龄补贴数据（本地模式），只导入身份证号在数据库中存在的人员"""
 
-    df = _read_excel_robust(file_path, header=0)
+    df = _read_excel_with_header(file_path, ELDERLY_ALLOWANCE_COLUMNS)
     df = df.fillna("")
 
     columns = list(df.columns)
     file_name = os.path.basename(file_path)
 
     if "姓名" not in columns:
-        return {"imported": 0, "skipped": 0, "errors": ["未找到姓名列"], "total": 0, "not_found": []}
+        return {"imported": 0, "skipped": 0, "errors": ["未找到姓名列（请使用最新模板）"], "total": 0, "not_found": []}
 
+    # 新模板列名为"身份证号"，旧格式回退"公民身份证号码"→"身份证号码"
     id_card_col = None
-    if "公民身份证号码" in columns:
-        id_card_col = "公民身份证号码"
-    elif "身份证号" in columns:
-        id_card_col = "身份证号"
-    elif "身份证号码" in columns:
-        id_card_col = "身份证号码"
+    for c in ("身份证号", "公民身份证号码", "身份证号码"):
+        if c in columns:
+            id_card_col = c
+            break
+    if not id_card_col:
+        return {"imported": 0, "skipped": 0, "errors": ["未找到身份证号列（请使用最新模板）"], "total": 0, "not_found": []}
 
     total = len(df)
     imported = 0
@@ -52,21 +54,21 @@ def import_elderly_allowance(file_path: str, progress_callback=None, period: str
                     skipped += 1
                     continue
 
-                id_card = safe_str(row.get(id_card_col, "")) if id_card_col else ""
+                id_card = safe_str(row.get(id_card_col, ""))
 
                 if id_card and id_card not in existing_id_cards:
                     not_found.append(f"{name}({id_card})")
                     skipped += 1
                     continue
 
-                amount = safe_str(row.get("金额", "")) if "金额" in columns else ""
+                amount = safe_str(row.get("补贴金额", "")) or safe_str(row.get("金额", ""))
 
-                period = safe_str(row.get("费款所属期", "")) or period
-                if id_card and period:
+                period_value = safe_str(row.get("费款所属期", "")) or period
+                if id_card and period_value:
                     card = safe_str(row.get("卡号", "")).strip()
                     person = person_map.get(id_card)
                     if person and card:
-                        _backfill_social_card(person, "高龄补贴" + period, card)
+                        _backfill_social_card(person, "高龄补贴" + period_value, card)
 
                 record = ElderlyAllowance(
                     id=f"ea_{secrets.token_hex(8)}",
@@ -74,13 +76,21 @@ def import_elderly_allowance(file_path: str, progress_callback=None, period: str
                     id_card=id_card,
                     town=safe_str(row.get("所属乡镇", "")),
                     village=safe_str(row.get("所属村", "")),
-                    period=safe_str(row.get("费款所属期", "")),
+                    period=period_value,
                     payment_status=safe_str(row.get("支付标志", "")),
                     personal_code=safe_str(row.get("个人编号", "")),
-                    bank_account=safe_str(row.get("银行账号", "")),
+                    bank_account=safe_str(row.get("卡号", "")) or safe_str(row.get("折号", "")) or safe_str(row.get("银行账号", "")),
                     amount=amount,
                     relation=safe_str(row.get("和申请人关系", "")),
                     fail_reason=safe_str(row.get("失败原因", "")),
+                    phone=safe_str(row.get("手机号", "")),
+                    fold_no=safe_str(row.get("折号", "")),
+                    bank_name=safe_str(row.get("开户行", "")),
+                    area_address=safe_str(row.get("区划地址", "")),
+                    agent_manage=safe_str(row.get("代持代管", "")),
+                    householder_name=safe_str(row.get("户主姓名", "")),
+                    householder_id_card=safe_str(row.get("户主身份证号", "")),
+                    remark=safe_str(row.get("备注", "")),
                     import_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     import_source=file_name,
                 )
