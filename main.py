@@ -172,6 +172,33 @@ def main():
     _sigint_wakeup.start(200)
     _sigint_wakeup.timeout.connect(lambda: None)
 
+    # ---- 启动第一时间检查更新（在连接/登录之前，后台线程）----
+    # 检查完成发现新版本时：若主窗口尚未创建，用轻量宿主直接弹窗
+    # （模态，用户可先"立即更新"，更新重启后只需登录一次）；若已进入
+    # 主窗口则用主窗口承载。无更新/失败静默。
+    class _UpdateHost:
+        pass
+
+    _UpdateHost._show_update_dialog = MainWindow._show_update_dialog
+    _UpdateHost._on_version_check_done = MainWindow._on_version_check_done
+
+    _window_ref = [None]
+    _early_check_done = [False]
+
+    def _on_early_check(result, error):
+        if not (result and not error):
+            return
+        _early_check_done[0] = True
+        if _window_ref[0] is not None:
+            _window_ref[0]._show_update_dialog(result)
+        else:
+            host = _UpdateHost()
+            host._show_update_dialog(result)
+
+    _early_worker = VersionCheckWorker()
+    _early_worker.finished.connect(_on_early_check)
+    _early_worker.start()
+
     from dialogs.connect_dialog import ConnectDialog, get_recent_servers
     # 命令行已传入服务器地址（start_desktop.sh start network <url>）时，
     # 直接使用，不再弹出连接对话框
@@ -276,11 +303,8 @@ def main():
             session.close()
 
     window = MainWindow(current_user)
+    _window_ref[0] = window
     window.show()
-
-    # 启动自动检查更新：此时服务器地址已设置、网络已连通，
-    # 有更新才弹窗提示（无更新/失败静默），延迟 3 秒避免打扰启动
-    QTimer.singleShot(3000, window._auto_check_updates)
 
     sys.exit(app.exec())
 

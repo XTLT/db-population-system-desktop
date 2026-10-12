@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QVBoxLayout, QTextEdit, QHBoxLayout, QDialog, QLabel, QProgressBar, QPushButton
+from PyQt6.QtWidgets import QVBoxLayout, QTextEdit, QHBoxLayout, QDialog, QLabel, QProgressBar, QPushButton, QWidget
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from core.config import FONT_NAME
@@ -13,7 +13,9 @@ def _show_update_dialog(self, version_info):
         self._update_dialog.activateWindow()
         return
 
-    self._update_dialog = QDialog(self)
+    # 支持在 MainWindow 创建前（登录/连接阶段）由轻量宿主触发弹窗
+    parent = self if isinstance(self, QWidget) else None
+    self._update_dialog = QDialog(parent)
     self._update_dialog.setWindowTitle("检查更新")
     self._update_dialog.setFixedSize(480, 320)
     self._update_dialog.setWindowFlags(self._update_dialog.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
