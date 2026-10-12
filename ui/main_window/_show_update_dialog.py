@@ -8,7 +8,7 @@ from .workers import VersionCheckWorker
 def _show_update_dialog(self, version_info):
                  
 
-    if self._update_dialog:
+    if getattr(self, '_update_dialog', None):
         self._update_dialog.raise_()
         self._update_dialog.activateWindow()
         return
