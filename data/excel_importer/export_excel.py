@@ -39,6 +39,7 @@ def export_excel(file_path: str, progress_callback=None, filters: dict = None) -
             "脱贫户或监测户": p.poor_type,
             "残疾": p.disability,
             "残疾等级": p.dis_level,
+            "残疾类型": p.disability_type or "",
             "低保": p.dibao,
             "是否计生家庭": p.jisheng,
             "特困供养": getattr(p, 'tekun', '') or "",
