@@ -16,6 +16,7 @@ FIELD_OPTIONS = [
     ('age', '年龄'),
     ('phone', '电话'),
     ('address', '地址'),
+    ('group_name', '小组'),
     ('relation', '与户主关系'),
     ('is_dead', '是否死亡'),
     ('remark', '备注'),

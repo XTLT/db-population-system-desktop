@@ -13,7 +13,7 @@ def _show_family(self, person: Person):
     self.name_label.setStyleSheet("color: #006633; font-weight: bold; background-color: #DDF7DD; padding: 8px; border: 1px solid #00994C;")
 
     headers = [
-        "匹配序号", "家庭人员姓名", "身份证号码", "与户主关系", "本户地址", "年龄",
+        "匹配序号", "家庭人员姓名", "身份证号码", "与户主关系", "本户地址", "小组", "年龄",
         "电话号码", "是否死亡", "社保卡号1", "社保卡号2", "社保卡号3",
         "脱贫户或监测户", "备注", "残疾", "残疾等级", "低保", "是否计生家庭",
         "特困供养", "供养类型", "土地面积", "地方公益林", "国家公益林", "非国有天然商品林",
@@ -52,11 +52,11 @@ def _show_family(self, person: Person):
         all_persons.extend(family)
 
     empty_cols = [
-        (8, 'social_card1'), (9, 'social_card2'), (10, 'social_card3'),
-        (11, 'poor_type'), (12, 'remark'), (13, 'disability'),
-        (14, 'dis_level'), (15, 'dibao'), (16, 'jisheng'),
-        (17, 'tekun'), (18, 'tekun_type'), (19, 'land_area'),
-        (20, 'local_welfare_forest_area'), (21, 'national_welfare_forest_area'), (22, 'commercial_forest_area')
+        (5, 'group_name'), (9, 'social_card1'), (10, 'social_card2'), (11, 'social_card3'),
+        (12, 'poor_type'), (13, 'remark'), (14, 'disability'),
+        (15, 'dis_level'), (16, 'dibao'), (17, 'jisheng'),
+        (18, 'tekun'), (19, 'tekun_type'), (20, 'land_area'),
+        (21, 'local_welfare_forest_area'), (22, 'national_welfare_forest_area'), (23, 'commercial_forest_area')
     ]
     for col_idx, field in empty_cols:
         if not any(getattr(p, field, None) and getattr(p, field) != "无" for p in all_persons):
@@ -92,7 +92,7 @@ def _show_family(self, person: Person):
 
             values = [
                 "", p.name, p.id_card, p.relation, p.address,
-                p.age, p.phone, p.is_dead,
+                getattr(p, 'group_name', '') or "", p.age, p.phone, p.is_dead,
                 p.social_card1,
                 (p.social_card2 or "") + (f"（{getattr(p, 'social_card2_source', '') or ''}）" if p.social_card2 and getattr(p, 'social_card2_source', '') else ""),
                 (p.social_card3 or "") + (f"（{getattr(p, 'social_card3_source', '') or ''}）" if p.social_card3 and getattr(p, 'social_card3_source', '') else ""),
@@ -117,7 +117,7 @@ def _show_family(self, person: Person):
                 else:
                     item = QTableWidgetItem(str(val) if val else "")
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    if col_idx == 23 and val:
+                    if col_idx == 24 and val:
                         item.setForeground(QColor(0, 102, 0))
                         item.setFont(QFont(FONT_NAME, FONT_SIZE, QFont.Weight.Bold))
                     if is_dead:
