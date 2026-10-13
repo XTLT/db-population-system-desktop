@@ -80,6 +80,7 @@ class EditDialog(QDialog):
         self.txt_relation = QLineEdit()
         self.txt_address = QLineEdit()
         self.txt_address.setEnabled(False)
+        self.txt_group_name = QLineEdit()
         self.txt_age = QLineEdit()
         self.txt_age.setReadOnly(True)
         self.txt_phone = QLineEdit()
@@ -138,6 +139,7 @@ class EditDialog(QDialog):
             ("身份证号：", self.txt_id_card),
             ("与户主关系：", self.txt_relation),
             ("地址：", self.txt_address),
+            ("小组：", self.txt_group_name),
             ("年龄：", self.txt_age),
             ("电话号码：", self.txt_phone),
             ("土地面积：", self.txt_land_area),
@@ -353,6 +355,7 @@ class EditDialog(QDialog):
         self.txt_id_card.setText(p.id_card)
         self.txt_relation.setText(p.relation)
         self.txt_address.setText(p.address)
+        self.txt_group_name.setText(getattr(p, 'group_name', '') or "")
         self.txt_age.setText(p.age)
         self.txt_phone.setText(p.phone if p.phone != "无" else "")
         self.txt_land_area.setText(getattr(p, 'land_area', '') or "")
@@ -746,6 +749,7 @@ class EditDialog(QDialog):
                 'age': age,
                 'relation': self.txt_relation.text().strip(),
                 'address': self.txt_address.text().strip(),
+                'group_name': self.txt_group_name.text().strip(),
                 'phone': self.txt_phone.text().strip(),
                 'is_dead': self.cbo_is_dead.currentText(),
                 'land_area': new_land_area,
@@ -784,6 +788,7 @@ class EditDialog(QDialog):
             self.person.age = age
             self.person.relation = self.txt_relation.text().strip()
             self.person.address = self.txt_address.text().strip()
+            self.person.group_name = self.txt_group_name.text().strip()
             self.person.phone = self.txt_phone.text().strip()
             self.person.is_dead = self.cbo_is_dead.currentText()
             self.person.land_area = new_land_area

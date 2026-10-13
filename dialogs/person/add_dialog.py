@@ -30,6 +30,9 @@ class AddDialog(QDialog):
                         self.txt_address.setEnabled(True)
                         self.txt_address.setText(addr.strip())
                         self.txt_address.setEnabled(False)
+                        grp = m.get('group_name', '') if isinstance(m, dict) else getattr(m, 'group_name', '')
+                        if grp and grp.strip():
+                            self.txt_group_name.setText(grp.strip())
                         return
             except Exception:
                 pass
@@ -41,6 +44,9 @@ class AddDialog(QDialog):
                     self.txt_address.setEnabled(True)
                     self.txt_address.setText(m.address.strip())
                     self.txt_address.setEnabled(False)
+                    grp = getattr(m, 'group_name', '') or ''
+                    if grp and grp.strip():
+                        self.txt_group_name.setText(grp.strip())
                     return
 
     def _setup_ui(self):
@@ -53,6 +59,7 @@ class AddDialog(QDialog):
         self.txt_relation = QLineEdit()
         self.txt_address = QLineEdit()
         self.txt_address.setEnabled(False)
+        self.txt_group_name = QLineEdit()
         self.txt_age = QLineEdit()
         self.txt_age.setReadOnly(True)
         self.txt_phone = QLineEdit()
@@ -103,6 +110,7 @@ class AddDialog(QDialog):
             ("身份证号：", self.txt_id_card),
             ("与户主关系：", self.txt_relation),
             ("地址：", self.txt_address),
+            ("小组：", self.txt_group_name),
             ("年龄：", self.txt_age),
             ("电话号码：", self.txt_phone),
             ("是否死亡：", self.cbo_is_dead),
@@ -190,6 +198,7 @@ class AddDialog(QDialog):
                 'name': name,
                 'age': age,
                 'address': self.txt_address.text().strip(),
+                'group_name': self.txt_group_name.text().strip(),
                 'relation': self.txt_relation.text().strip(),
                 'is_dead': self.cbo_is_dead.currentText(),
                 'phone': self.txt_phone.text().strip(),
@@ -222,6 +231,7 @@ class AddDialog(QDialog):
                 name=name,
                 age=age,
                 address=self.txt_address.text().strip(),
+                group_name=self.txt_group_name.text().strip(),
                 relation=self.txt_relation.text().strip(),
                 is_dead=self.cbo_is_dead.currentText(),
                 phone=self.txt_phone.text().strip(),
