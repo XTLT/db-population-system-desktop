@@ -43,6 +43,7 @@ from ._student_query import _student_query
 from ._import_student_education import _import_student_education
 from ._export_student_education import _export_student_education
 from ._generate_student_template import _generate_student_template
+from ._generate_person_template import _generate_person_template
 from ._generate_forest_template import _generate_forest_template
 from ._generate_payment_template import _generate_payment_template
 from ._generate_land_subsidy_template import _generate_land_subsidy_template
@@ -112,6 +113,7 @@ __all__ = [
     '_import_student_education',
     '_export_student_education',
     '_generate_student_template',
+    '_generate_person_template',
     '_generate_forest_template',
     '_generate_payment_template',
     '_generate_land_subsidy_template',
