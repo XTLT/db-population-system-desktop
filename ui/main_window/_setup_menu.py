@@ -139,6 +139,8 @@ def _setup_menu(self):
     pension_menu.addAction(ea_view_action)
 
     template_menu = menubar.addMenu("下载模板")
+    tpl_person = QAction("人口信息导入模板", self)
+    tpl_person.triggered.connect(self._generate_person_template)
     tpl_student = QAction("就读信息模板", self)
     tpl_student.triggered.connect(self._generate_student_template)
     tpl_forest = QAction("林地面积模板", self)
@@ -155,6 +157,7 @@ def _setup_menu(self):
     tpl_dcp.triggered.connect(self._generate_disability_care_payment_template)
     tpl_ea = QAction("高龄补贴模板", self)
     tpl_ea.triggered.connect(self._generate_elderly_allowance_template)
+    template_menu.addAction(tpl_person)
     template_menu.addAction(tpl_student)
     template_menu.addAction(tpl_forest)
     template_menu.addAction(tpl_subsidy)

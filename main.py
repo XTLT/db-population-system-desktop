@@ -61,6 +61,7 @@ from ui.main_window import (  # noqa: E402,F401
     _import_student_education,
     _export_student_education,
     _generate_student_template,
+    _generate_person_template,
     _generate_forest_template,
     _generate_payment_template,
     _generate_land_subsidy_template,
@@ -130,6 +131,7 @@ MainWindow._student_query = _student_query
 MainWindow._import_student_education = _import_student_education
 MainWindow._export_student_education = _export_student_education
 MainWindow._generate_student_template = _generate_student_template
+MainWindow._generate_person_template = _generate_person_template
 MainWindow._generate_forest_template = _generate_forest_template
 MainWindow._generate_payment_template = _generate_payment_template
 MainWindow._generate_land_subsidy_template = _generate_land_subsidy_template
