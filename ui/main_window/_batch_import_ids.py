@@ -57,16 +57,12 @@ def _batch_import_ids(self):
             return
     else:
         from core.database import get_session, Person
+        # 与 server lookup-all 对齐：覆盖人员表全部业务字段（不含主键 id）
+        person_fields = [c.key for c in Person.__table__.columns if c.key != 'id']
         session = get_session()
         try:
             for p in session.query(Person).all():
-                all_persons.append({
-                    'name': p.name or '', 'id_card': p.id_card or '',
-                    'phone': p.phone or '', 'social_card1': p.social_card1 or '',
-                    'social_card2': p.social_card2 or '', 'social_card3': p.social_card3 or '',
-                    'hu_hao': p.hu_hao or '', 'address': p.address or '',
-                    'relation': p.relation or ''
-                })
+                all_persons.append({f: (getattr(p, f) or '') for f in person_fields})
         finally:
             session.close()
 
