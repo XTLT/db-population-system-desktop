@@ -58,12 +58,12 @@ class DibaoViewDialog(QDialog):
         self.table.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        headers = ["费款所属期", "姓名", "身份证号", "村名称", "性别", "和申请人关系",
+        self.headers = ["费款所属期", "姓名", "身份证号", "村名称", "性别", "和申请人关系",
                    "共同生活家庭成员", "享受保障人口数", "家庭保障总金额", "家庭最低生活基本保障金",
                    "家庭特殊困难补助金", "家庭调剂金额", "特殊困难情形", "特殊困难补助金",
                    "初始享受时间", "始发年月", "导入来源"]
-        self.table.setColumnCount(len(headers))
-        self.table.setHorizontalHeaderLabels(headers)
+        self.table.setColumnCount(len(self.headers))
+        self.table.setHorizontalHeaderLabels(self.headers)
         layout.addWidget(self.table)
 
         btn_layout = QHBoxLayout()
@@ -106,6 +106,7 @@ class DibaoViewDialog(QDialog):
                 from data.excel_importer import get_all_dibao_payments
                 records = get_all_dibao_payments(period, id_card)
 
+            self.table.setUpdatesEnabled(False)
             self.table.setRowCount(len(records))
             for row_idx, p in enumerate(records):
                 if isinstance(p, dict):
@@ -159,8 +160,12 @@ class DibaoViewDialog(QDialog):
                     else:
                         self.table.setItem(row_idx, col, QTableWidgetItem(val))
 
-            self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+            self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            for col_idx, h in enumerate(self.headers):
+                self.table.setColumnWidth(col_idx, min(max(len(h) * 18 + 30, 70), 200))
+            self.table.setUpdatesEnabled(True)
         except Exception as e:
+            self.table.setUpdatesEnabled(True)
             print(f"加载数据失败: {e}")
 
     def _do_delete(self):

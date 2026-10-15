@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView,
     QComboBox, QLineEdit, QMessageBox, QFileDialog
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 from datetime import datetime
 
@@ -19,6 +19,10 @@ class LandSubsidyViewDialog(QDialog):
         self.setWindowTitle("地力补贴数据")
         self.setFixedSize(1000, 600)
         self._setup_ui()
+        self._search_timer = QTimer(self)
+        self._search_timer.setSingleShot(True)
+        self._search_timer.setInterval(300)
+        self._search_timer.timeout.connect(self._load_data)
         try:
             self._load_years()
             self._load_data()
@@ -51,10 +55,10 @@ class LandSubsidyViewDialog(QDialog):
         self.table.setFont(QFont(FONT_NAME, FONT_SIZE))
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        headers = ["序号", "补贴年度", "户主姓名", "身份证号", "电话号码", "银行账号", "金融机构",
+        self.headers = ["序号", "补贴年度", "户主姓名", "身份证号", "电话号码", "银行账号", "金融机构",
                    "发放金额", "上账时间", "耕地面积", "耕地标准", "油菜面积", "油菜标准", "油菜金额"]
-        self.table.setColumnCount(len(headers))
-        self.table.setHorizontalHeaderLabels(headers)
+        self.table.setColumnCount(len(self.headers))
+        self.table.setHorizontalHeaderLabels(self.headers)
         layout.addWidget(self.table)
 
         btn_layout = QHBoxLayout()
@@ -71,8 +75,8 @@ class LandSubsidyViewDialog(QDialog):
         btn_layout.addWidget(btn_close)
         layout.addLayout(btn_layout)
 
-        self.cmb_year.currentTextChanged.connect(lambda: self._load_data())
-        self.txt_search.textChanged.connect(lambda: self._load_data())
+        self.cmb_year.currentTextChanged.connect(lambda: self._search_timer.start())
+        self.txt_search.textChanged.connect(lambda: self._search_timer.start())
         btn_delete.clicked.connect(self._do_delete)
         btn_export.clicked.connect(self._do_export)
         btn_close.clicked.connect(self.reject)
@@ -130,6 +134,7 @@ class LandSubsidyViewDialog(QDialog):
                 elif search:
                     subsidies = [s for s in subsidies if search in s.name]
 
+            self.table.setUpdatesEnabled(False)
             self.table.setRowCount(len(subsidies))
             for row_idx, s in enumerate(subsidies):
                 if isinstance(s, dict):
@@ -152,9 +157,13 @@ class LandSubsidyViewDialog(QDialog):
                     item.setData(Qt.ItemDataRole.UserRole, item_id)
                     self.table.setItem(row_idx, col_idx, item)
 
-            self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+            self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             self.table.horizontalHeader().setStretchLastSection(True)
+            for col_idx, h in enumerate(self.headers):
+                self.table.setColumnWidth(col_idx, min(max(len(h) * 18 + 30, 70), 200))
+            self.table.setUpdatesEnabled(True)
         except Exception as e:
+            self.table.setUpdatesEnabled(True)
             print(f"加载数据失败: {e}")
 
     def _do_delete(self):
