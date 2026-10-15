@@ -161,6 +161,8 @@ class ConnectDialog(QDialog):
         recent = get_recent_servers()
         if recent:
             self.cmb_server.addItems(recent)
+            # 自动填入最近一次成功输入的服务器地址，旧地址保留在下拉历史中
+            self.cmb_server.setEditText(recent[0])
         
         layout.addWidget(self.cmb_server)
 
