@@ -30,8 +30,9 @@ def apply_update(filepath: str):
         bat_path = os.path.join(app_dir, '_auto_update.bat')
         exe_name = os.path.basename(current_exe)
         installer = zip_path
+        # bat 以 GBK 编码写入，cmd 默认代码页(936)即可正确解析中文路径；
+        # 因此不能写 chcp 65001（会把 GBK 字节按 UTF-8 解析导致中文路径乱码）
         bat_content = f'''@echo off
-chcp 65001 >nul
 title 自动更新中...
 cd /d "%~dp0"
 echo ======================================== > _auto_update.log
@@ -63,8 +64,9 @@ del "%~f0"
     if sys.platform == 'win32':
         bat_path = os.path.join(app_dir, '_auto_update.bat')
         exe_name = os.path.basename(current_exe)
+        # bat 以 GBK 编码写入，cmd 默认代码页(936)即可正确解析中文路径；
+        # 因此不能写 chcp 65001（会把 GBK 字节按 UTF-8 解析导致中文路径乱码）
         bat_content = f'''@echo off
-chcp 65001 >nul
 title 自动更新中...
 cd /d "%~dp0"
 echo ======================================== > _auto_update.log

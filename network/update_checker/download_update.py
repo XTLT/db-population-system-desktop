@@ -28,7 +28,13 @@ def download_update(version_info: dict, progress_callback=None) -> Tuple[Optiona
         return None, "未找到下载链接"
 
     # 文件名按下载链接后缀决定：.exe 走安装包更新，.zip 走解压更新
-    if release_url and '.exe' in release_url.split('?')[0].lower():
+    # 只要任一候选源是 .exe 就按安装包处理（优先找 exe，找不到才用 zip）
+    exe_url = None
+    for u in urls:
+        if '.exe' in u.split('?')[0].lower():
+            exe_url = u
+            break
+    if exe_url:
         filename = "update_setup.exe"
     else:
         filename = "update.zip"
@@ -60,14 +66,25 @@ def download_update(version_info: dict, progress_callback=None) -> Tuple[Optiona
                         if progress_callback:
                             progress_callback(downloaded, total)
 
-            if downloaded > 0:
-                return filepath, ""
-            else:
+            if downloaded <= 0:
                 last_error = "下载文件为空"
                 if os.path.exists(filepath):
                     os.remove(filepath)
                 continue
 
+            # 校验文件头，防止下载到 HTML 错误页/损坏文件
+            with open(filepath, 'rb') as f:
+                head = f.read(4)
+            if filename.endswith('.exe') and not head.startswith(b'MZ'):
+                last_error = "下载内容不是有效的 EXE 文件"
+                os.remove(filepath)
+                continue
+            if filename.endswith('.zip') and not head.startswith(b'PK'):
+                last_error = "下载内容不是有效的 ZIP 文件"
+                os.remove(filepath)
+                continue
+
+            return filepath, ""
         except requests.exceptions.RequestException as e:
             last_error = str(e)
             if os.path.exists(filepath):
