@@ -18,7 +18,10 @@ def _show_update_dialog(self, version_info):
     self._update_dialog = QDialog(parent)
     self._update_dialog.setWindowTitle("检查更新")
     self._update_dialog.setFixedSize(480, 320)
-    self._update_dialog.setWindowFlags(self._update_dialog.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
+    flags = self._update_dialog.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint
+    # 启动阶段登录窗口可能已先显示为模态，更新窗口必须置顶才能被点按
+    flags |= Qt.WindowType.WindowStaysOnTopHint
+    self._update_dialog.setWindowFlags(flags)
     self._update_btn_now = None
     self._update_dialog.finished.connect(lambda: (setattr(self, '_update_dialog', None), setattr(self, '_update_btn_now', None)))
     layout = QVBoxLayout(self._update_dialog)
@@ -48,6 +51,8 @@ def _show_update_dialog(self, version_info):
     layout.addLayout(btn_layout)
 
     self._update_dialog.show()
+    self._update_dialog.raise_()
+    self._update_dialog.activateWindow()
 
     if version_info:
         self._on_version_check_done(version_info, "")

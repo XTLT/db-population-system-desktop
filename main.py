@@ -201,6 +201,9 @@ def main():
             # 导致"立即更新"不可点。
             dlg = getattr(host, '_update_dialog', None)
             if dlg is not None:
+                # 登录窗口可能已先显示为模态，先置顶激活再进入模态循环
+                dlg.raise_()
+                dlg.activateWindow()
                 dlg.exec()
 
     _early_worker = VersionCheckWorker()
