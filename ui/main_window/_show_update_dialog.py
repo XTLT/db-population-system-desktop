@@ -13,14 +13,17 @@ def _show_update_dialog(self, version_info):
         self._update_dialog.activateWindow()
         return
 
-    # 支持在 MainWindow 创建前（登录/连接阶段）由轻量宿主触发弹窗
-    parent = self if isinstance(self, QWidget) else None
+    # 一律独立顶层窗口（不挂 parent），避免被连接/登录窗口的
+    # 应用级模态禁用输入导致"立即更新"点不动。
+    parent = None
     self._update_dialog = QDialog(parent)
     self._update_dialog.setWindowTitle("检查更新")
     self._update_dialog.setFixedSize(480, 320)
+    self._update_dialog.setModal(False)
     flags = self._update_dialog.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint
     # 启动阶段登录窗口可能已先显示为模态，更新窗口必须置顶才能被点按
     flags |= Qt.WindowType.WindowStaysOnTopHint
+    flags |= Qt.WindowType.Dialog
     self._update_dialog.setWindowFlags(flags)
     self._update_btn_now = None
     self._update_dialog.finished.connect(lambda: (setattr(self, '_update_dialog', None), setattr(self, '_update_btn_now', None)))

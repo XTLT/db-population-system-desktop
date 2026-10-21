@@ -5,8 +5,8 @@ from .workers import DownloadWorker
 
 
 def _on_version_check_done(self, version_info, error):
-    self._update_progress.setRange(0, 1)
-    self._update_progress.setValue(1)
+    # 检查完成显示不定态进度（"100%"只会在下载真正完成时出现，避免误导）
+    self._update_progress.setRange(0, 0)
 
     if error:
         self._update_status.setText("检查更新失败")
@@ -83,6 +83,7 @@ def _on_version_check_done(self, version_info, error):
                 self._update_info.setVisible(True)
                 self._update_info.setText(error)
                 btn_update.setText("下载失败")
+                btn_update.setEnabled(True)  # 恢复可点，允许重试
                 self._update_btn_close.setEnabled(True)
                 return
 
@@ -99,6 +100,7 @@ def _on_version_check_done(self, version_info, error):
                 self._update_info.setText("下载文件验证失败，请重新下载。")
                 os.remove(filepath)
                 btn_update.setText("验证失败")
+                btn_update.setEnabled(True)  # 恢复可点，允许重试
                 self._update_btn_close.setEnabled(True)
                 return
 

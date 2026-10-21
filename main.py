@@ -259,19 +259,22 @@ def main():
         _early_check_done[0] = True
         if _window_ref[0] is not None:
             _window_ref[0]._show_update_dialog(result)
+            _continue_startup()
         else:
             host = _UpdateHost()
             host._show_update_dialog(result)
-            # 主窗口未创建：模态等待用户处理更新（立即更新/暂不更新）。
-            # 否则后续 ConnectDialog.exec() 的应用级模态会禁用本窗口输入，
-            # 导致"立即更新"不可点。
             dlg = getattr(host, '_update_dialog', None)
             if dlg is not None:
-                # 登录窗口可能已先显示为模态，先置顶激活再进入模态循环
+                # 非模态 + 独立置顶窗口：按钮始终可点，与 ConnectDialog.exec()
+                # 的应用级模态互斥问题彻底消除。用户处理完（立即更新 / 暂不更新 /
+                # 直接关闭）后由 finished 信号驱动继续启动流程。
+                dlg.setModal(False)
+                dlg.show()
                 dlg.raise_()
                 dlg.activateWindow()
-                dlg.exec()
-        _continue_startup()
+                dlg.finished.connect(lambda *_: _continue_startup())
+            else:
+                _continue_startup()
 
     _early_worker = VersionCheckWorker()
     _early_worker.finished.connect(_on_early_check)
