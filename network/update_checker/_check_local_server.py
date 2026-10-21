@@ -5,6 +5,7 @@ import requests
 import urllib3
 
 from ._get_server_url_and_token import _get_server_url_and_token
+from ..client._base import get_client_cert_args
 
 # 自签证书场景下有意使用 verify=False，屏蔽 urllib3 的告警噪音
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -27,7 +28,10 @@ def _check_local_server(app_type: str, current_code: int) -> Optional[Dict]:
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
 
-        resp = requests.get(url, params=params, headers=headers, timeout=10, verify=False)
+        resp = requests.get(
+            url, params=params, headers=headers, timeout=10, verify=False,
+            cert=get_client_cert_args(),
+        )
         resp.raise_for_status()
         data = resp.json()
 

@@ -7,6 +7,7 @@ import urllib3
 from ._base import DOWNLOAD_DIR
 from ._get_release_download_url import _get_release_download_url
 from ._get_server_url_and_token import _get_server_url_and_token
+from ..client._base import get_client_cert_args
 
 # 自签证书场景下有意使用 verify=False，屏蔽 urllib3 的告警噪音
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -49,10 +50,18 @@ def download_update(version_info: dict, progress_callback=None) -> Tuple[Optiona
             }
 
             server_url, token = _get_server_url_and_token()
-            if server_url and url.startswith(server_url) and token:
-                headers["Authorization"] = f"Bearer {token}"
+            is_server_url = server_url and url.startswith(server_url)
+            cert_args = None
+            if is_server_url:
+                if token:
+                    headers["Authorization"] = f"Bearer {token}"
+                # 服务器直连（mTLS）：必须出示客户端证书，否则 stunnel 拒绝握手
+                cert_args = get_client_cert_args()
 
-            resp = requests.get(url, stream=True, timeout=300, allow_redirects=True, headers=headers, verify=False)
+            resp = requests.get(
+                url, stream=True, timeout=300, allow_redirects=True,
+                headers=headers, verify=False, cert=cert_args,
+            )
             resp.raise_for_status()
 
             total = int(resp.headers.get('content-length', 0))
