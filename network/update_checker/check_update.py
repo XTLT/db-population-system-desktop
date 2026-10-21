@@ -44,7 +44,12 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[dict], str]:
     current_code = bundled_code if bundled_code > 0 else config.get("version_code", 1)
 
     try:
-        # Step 1: Check version.json (authoritative for version comparison)
+        # Step 1: 服务器主源优先（更新包只发布到自建服务器，不再推送 Gitee/GitHub）
+        local_result = _check_local_server(app_type, current_code)
+        if local_result:
+            return local_result, ""
+
+        # Step 2: Gitee 兜底（仅兼容仍在使用旧 Gitee 更新源的版本；新更新包不再推送）
         data = None
         last_error = None
         import time
@@ -73,11 +78,6 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[dict], str]:
                 return data, ""
             else:
                 return None, ""
-
-        # Step 2: Fall back to local server check
-        local_result = _check_local_server(app_type, current_code)
-        if local_result:
-            return local_result, ""
 
         if last_error:
             return None, f"所有更新源均无法访问: {last_error}"

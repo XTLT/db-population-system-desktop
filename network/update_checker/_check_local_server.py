@@ -39,6 +39,9 @@ def _check_local_server(app_type: str, current_code: int) -> Optional[Dict]:
             download_url = data.get("download_url", "")
             if download_url and not download_url.startswith("http"):
                 data["download_url"] = f"{server_url}{download_url}"
+            # 服务器主源返回 sha256，映射到客户端校验字段 checksum
+            if data.get("sha256"):
+                data["checksum"] = data.get("sha256")
             return data
     except Exception:
         pass
