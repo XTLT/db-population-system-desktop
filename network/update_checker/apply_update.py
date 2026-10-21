@@ -40,7 +40,8 @@ echo   正在更新 人口通 桌面客户端... >> _auto_update.log
 echo ======================================== >> _auto_update.log
 echo [%date% %time%] 开始更新 >> _auto_update.log
 echo 关闭旧进程: {exe_name} >> _auto_update.log
-taskkill /f /t /im "{exe_name}" >> _auto_update.log 2>&1
+rem 注意：不能用 /t（杀进程树会把本 bat 一起杀掉，安装步骤永远不会执行）
+taskkill /f /im "{exe_name}" >> _auto_update.log 2>&1
 echo 等待文件释放... >> _auto_update.log
 timeout /t 2 /nobreak >nul
 echo 运行安装程序静默安装... >> _auto_update.log
@@ -74,7 +75,8 @@ echo   正在更新 人口通 桌面客户端... >> _auto_update.log
 echo ======================================== >> _auto_update.log
 echo [%date% %time%] 开始更新 >> _auto_update.log
 echo 关闭旧进程: {exe_name} >> _auto_update.log
-taskkill /f /t /im "{exe_name}" >> _auto_update.log 2>&1
+rem 注意：不能用 /t（杀进程树会把本 bat 一起杀掉，安装步骤永远不会执行）
+taskkill /f /im "{exe_name}" >> _auto_update.log 2>&1
 echo 等待文件释放... >> _auto_update.log
 timeout /t 2 /nobreak >nul
 echo 解压更新包: {zip_path} >> _auto_update.log
