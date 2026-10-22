@@ -47,7 +47,9 @@ def _show_update_dialog(self, version_info):
 
     btn_layout = QHBoxLayout()
     self._update_btn_close = QPushButton("关闭")
-    self._update_btn_close.clicked.connect(self._update_dialog.close)
+    # 用 reject 而非 close：reject -> done -> finished 信号必发，
+    # 保证"暂不更新"一定能驱动启动流程继续（close 在个别环境可能不触发 finished）
+    self._update_btn_close.clicked.connect(self._update_dialog.reject)
     self._update_btn_close.setVisible(False)
     btn_layout.addStretch()
     btn_layout.addWidget(self._update_btn_close)
