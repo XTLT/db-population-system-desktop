@@ -10,6 +10,7 @@ from core.database import add_person
 from core.utils import calculate_age
 from core.database import Person
 from network.client import get_server_url
+from dialogs.person.relation_list import RELATIONS
 class AddDialog(QDialog):
     def __init__(self, hu_hao: str, parent=None):
         super().__init__(parent)
@@ -56,7 +57,10 @@ class AddDialog(QDialog):
 
         self.txt_name = QLineEdit()
         self.txt_id_card = QLineEdit()
-        self.txt_relation = QLineEdit()
+        self.txt_relation = QComboBox()
+        self.txt_relation.setEditable(True)
+        self.txt_relation.addItems(RELATIONS)
+        self.txt_relation.setCurrentText("")
         self.txt_address = QLineEdit()
         self.txt_address.setEnabled(False)
         self.txt_group_name = QLineEdit()
@@ -199,7 +203,7 @@ class AddDialog(QDialog):
                 'age': age,
                 'address': self.txt_address.text().strip(),
                 'group_name': self.txt_group_name.text().strip(),
-                'relation': self.txt_relation.text().strip(),
+                'relation': self.txt_relation.currentText().strip(),
                 'is_dead': self.cbo_is_dead.currentText(),
                 'phone': self.txt_phone.text().strip(),
                 'social_card1': self.txt_social1.text().strip(),
@@ -232,7 +236,7 @@ class AddDialog(QDialog):
                 age=age,
                 address=self.txt_address.text().strip(),
                 group_name=self.txt_group_name.text().strip(),
-                relation=self.txt_relation.text().strip(),
+                relation=self.txt_relation.currentText().strip(),
                 is_dead=self.cbo_is_dead.currentText(),
                 phone=self.txt_phone.text().strip(),
                 social_card1=self.txt_social1.text().strip(),

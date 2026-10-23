@@ -19,6 +19,7 @@ from core.database import (
 )
 from data.photo_manager import save_photo, delete_photo, get_photo_path, get_photo_status
 from network.client import get_server_url
+from dialogs.person.relation_list import RELATIONS
 
 
 class EditDialog(QDialog):
@@ -77,7 +78,10 @@ class EditDialog(QDialog):
 
         self.txt_name = QLineEdit()
         self.txt_id_card = QLineEdit()
-        self.txt_relation = QLineEdit()
+        self.txt_relation = QComboBox()
+        self.txt_relation.setEditable(True)
+        self.txt_relation.addItems(RELATIONS)
+        self.txt_relation.setCurrentText("")
         self.txt_address = QLineEdit()
         self.txt_address.setEnabled(False)
         self.txt_group_name = QLineEdit()
@@ -353,7 +357,7 @@ class EditDialog(QDialog):
         p = self.person
         self.txt_name.setText(p.name)
         self.txt_id_card.setText(p.id_card)
-        self.txt_relation.setText(p.relation)
+        self.txt_relation.setCurrentText(p.relation)
         self.txt_address.setText(p.address)
         self.txt_group_name.setText(getattr(p, 'group_name', '') or "")
         self.txt_age.setText(p.age)
@@ -747,7 +751,7 @@ class EditDialog(QDialog):
                 'name': name,
                 'id_card': id_card,
                 'age': age,
-                'relation': self.txt_relation.text().strip(),
+                'relation': self.txt_relation.currentText().strip(),
                 'address': self.txt_address.text().strip(),
                 'group_name': self.txt_group_name.text().strip(),
                 'phone': self.txt_phone.text().strip(),
@@ -786,7 +790,7 @@ class EditDialog(QDialog):
             self.person.name = name
             self.person.id_card = id_card
             self.person.age = age
-            self.person.relation = self.txt_relation.text().strip()
+            self.person.relation = self.txt_relation.currentText().strip()
             self.person.address = self.txt_address.text().strip()
             self.person.group_name = self.txt_group_name.text().strip()
             self.person.phone = self.txt_phone.text().strip()
