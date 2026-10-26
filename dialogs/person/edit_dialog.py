@@ -461,8 +461,32 @@ class EditDialog(QDialog):
                     self.txt_graduation_date.setText(edu_data.get('graduation_date', ''))
             except Exception:
                 pass
+            # 联网模式：从服务器读取就读历史记录并显示
             self.history_table.setColumnCount(0)
             self.history_table.setRowCount(0)
+            try:
+                from network.client import api_get_education_history
+                history = api_get_education_history(self.person.id)
+                headers = ["日期", "学校", "年级", "班级", "状态", "原因"]
+                self.history_table.setColumnCount(len(headers))
+                self.history_table.setHorizontalHeaderLabels(headers)
+                self.history_table.setRowCount(len(history))
+                for row_idx, h in enumerate(history):
+                    values = [
+                        h.get('change_date', ''),
+                        h.get('school_name', ''),
+                        h.get('grade', ''),
+                        h.get('class_name', ''),
+                        h.get('student_status', ''),
+                        h.get('change_reason', ''),
+                    ]
+                    for col_idx, val in enumerate(values):
+                        item = QTableWidgetItem(str(val) if val else "")
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.history_table.setItem(row_idx, col_idx, item)
+                self.history_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            except Exception:
+                pass
         else:
             edu = get_student_education(self.person.id)
             if edu:
