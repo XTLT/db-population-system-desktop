@@ -18,6 +18,7 @@ from .api_person import api_person
 from .api_add_person import api_add_person
 from .api_update_education import api_update_education
 from .api_get_education_history import api_get_education_history
+from .api_delete_education_history import api_delete_education_history
 from .api_deleted_persons import api_deleted_persons
 from .api_recover_person import api_recover_person
 from .api_students_search import api_students_search
@@ -64,6 +65,7 @@ __all__ = [
     "api_add_person",
     "api_update_education",
     "api_get_education_history",
+    "api_delete_education_history",
     "api_deleted_persons",
     "api_recover_person",
     "api_students_search",

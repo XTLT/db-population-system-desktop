@@ -59,6 +59,7 @@ from .functions.get_student_education import get_student_education
 from .functions.save_student_education import save_student_education
 from .functions.delete_student_education import delete_student_education
 from .functions.get_education_history import get_education_history
+from .functions.delete_education_history import delete_education_history
 from .functions.get_all_students import get_all_students
 from .functions.search_students import search_students
 from .functions.batch_update_school import batch_update_school
@@ -120,6 +121,7 @@ __all__ = [
     "save_student_education",
     "delete_student_education",
     "get_education_history",
+    "delete_education_history",
     "get_all_students",
     "search_students",
     "batch_update_school",
