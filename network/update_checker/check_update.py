@@ -47,9 +47,13 @@ def check_update(app_type: str = "desktop") -> Tuple[Optional[dict], str]:
         # 服务器不可达时直接报错重试，绝不再回退 Gitee——Gitee 上可能是旧版本包，
         # 引导装回旧包会重新引入旧 bug（历史事故 A13）。
         local_result = _check_local_server(app_type, current_code)
-        if local_result:
+        if local_result is None:
+            # 服务器不可达/异常
+            return None, "无法连接更新服务器，请检查网络后重试"
+        if local_result.get("has_update"):
             return local_result, ""
-        return None, "无法连接更新服务器，请检查网络后重试"
+        # 服务器可达且已是最新版本：返回空信息，由上层显示“当前已是最新版本”
+        return None, ""
 
     except requests.exceptions.RequestException as e:
         return None, f"检查更新失败: {e}"

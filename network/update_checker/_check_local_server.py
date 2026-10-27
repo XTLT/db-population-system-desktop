@@ -12,7 +12,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def _check_local_server(app_type: str, current_code: int) -> Optional[Dict]:
-    """Fallback: query local server's /api/update/check endpoint."""
+    """Query local server's /api/update/check endpoint.
+
+    返回三种状态：
+    - 有更新：返回包含 has_update=True 的 dict
+    - 已是最新（服务器可达）：返回 {"has_update": False}
+    - 服务器不可达/异常：返回 None
+    """
     server_url, token = _get_server_url_and_token()
     if not server_url:
         return None
@@ -43,6 +49,8 @@ def _check_local_server(app_type: str, current_code: int) -> Optional[Dict]:
             if data.get("sha256"):
                 data["checksum"] = data.get("sha256")
             return data
+        # 服务器可达但没有更新：与“不可达”区分开，上层显示“当前已是最新版本”
+        return {"has_update": False}
     except Exception:
         pass
     return None
