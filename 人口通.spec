@@ -10,7 +10,7 @@ import os
 # venv_build 是仓库内打包专用虚拟环境；找不到时跳过（保持原行为）。
 # ============================================================
 _QT6_DIR = os.path.join(
-    SPECPATH,
+    r'D:\luybqi\split\db-population-system-desktop',
     'venv_build', 'Lib', 'site-packages', 'PyQt6', 'Qt6',
 )
 _QT_BIN = os.path.join(_QT6_DIR, 'bin')
