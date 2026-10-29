@@ -24,6 +24,7 @@ from ._show_report_logs import _show_report_logs
 from ._view_change_log import _view_change_log
 from ._show_report_logs_dialog import _show_report_logs_dialog
 from ._batch_import_ids import _batch_import_ids
+from ._fill_masked_id_cards import _fill_masked_id_cards
 from ._manual_backup import _manual_backup
 from ._auto_backup import _auto_backup
 from ._do_backup import _do_backup
@@ -94,6 +95,7 @@ __all__ = [
     '_view_change_log',
     '_show_report_logs_dialog',
     '_batch_import_ids',
+    '_fill_masked_id_cards',
     '_manual_backup',
     '_auto_backup',
     '_do_backup',

@@ -107,6 +107,7 @@ from ui.main_window import (  # noqa: E402,F401
     _view_change_log,
     _show_report_logs_dialog,
     _batch_import_ids,
+    _fill_masked_id_cards,
     _manual_backup,
     _auto_backup,
     _do_backup,
@@ -177,6 +178,7 @@ MainWindow._show_report_logs = _show_report_logs
 MainWindow._view_change_log = _view_change_log
 MainWindow._show_report_logs_dialog = _show_report_logs_dialog
 MainWindow._batch_import_ids = _batch_import_ids
+MainWindow._fill_masked_id_cards = _fill_masked_id_cards
 MainWindow._manual_backup = _manual_backup
 MainWindow._auto_backup = _auto_backup
 MainWindow._do_backup = _do_backup
