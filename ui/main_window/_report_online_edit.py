@@ -75,12 +75,10 @@ def _report_online_edit(self):
             QMessageBox.warning(dialog, "提示", "请选择一个报表")
             return
         report_id = table.item(row, 0).data(Qt.ItemDataRole.UserRole)
-        from network.client import get_token
-        server_url = get_server_url()
-        token = get_token()
-        edit_url = f"{server_url}/api/reports/{report_id}/edit?token={token}"
-        import webbrowser
-        webbrowser.open(edit_url)
+        report_name = table.item(row, 0).text()
+        from ui.main_window._report_online_edit_dialog import ReportEditDialog
+        dlg = ReportEditDialog(report_id, report_name, dialog)
+        dlg.exec()
 
     btn_open.clicked.connect(do_open)
     btn_close.clicked.connect(dialog.reject)
