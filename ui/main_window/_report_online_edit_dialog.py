@@ -45,6 +45,12 @@ class ReportEditDialog(QDialog):
         self._loading = False           # 加载中标志（切换时防重入）
         self.setWindowTitle(f"在线编辑 - {report_name}")
         self.resize(1100, 660)
+        # 支持最大化/最小化（默认 QDialog 标题栏无这两个按钮）
+        self.setWindowFlags(
+            self.windowFlags()
+            | Qt.WindowType.WindowMaximizeButtonHint
+            | Qt.WindowType.WindowMinimizeButtonHint
+        )
         self._build_ui()
         self._bind_shortcuts()
         self._load_data()
