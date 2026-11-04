@@ -17,6 +17,7 @@ from core.database import (
     get_student_education, save_student_education, delete_student_education,
     get_education_history, get_family_members, Person, StudentEducation
 )
+from core.utils.validators import validate_id_card, validate_phone
 from data.photo_manager import save_photo, delete_photo, get_photo_path, get_photo_status
 from network.client import get_server_url
 from dialogs.person.relation_list import RELATIONS
@@ -748,6 +749,15 @@ class EditDialog(QDialog):
             return
         if not id_card:
             QMessageBox.warning(self, "提示", "身份证号不能为空！")
+            return
+        ok, msg = validate_id_card(id_card)
+        if not ok:
+            QMessageBox.warning(self, "提示", msg)
+            return
+        phone = self.txt_phone.text().strip()
+        ok, msg = validate_phone(phone)
+        if not ok:
+            QMessageBox.warning(self, "提示", msg)
             return
         age = self.txt_age.text().strip()
         if age and not age.isdigit():

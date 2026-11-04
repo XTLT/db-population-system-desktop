@@ -8,6 +8,7 @@ from PyQt6.QtGui import QFont
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
 from core.database import add_person
 from core.utils import calculate_age
+from core.utils.validators import validate_id_card, validate_phone
 from core.database import Person
 from network.client import get_server_url
 from dialogs.person.relation_list import RELATIONS
@@ -189,6 +190,15 @@ class AddDialog(QDialog):
             return
         if not id_card:
             QMessageBox.warning(self, "提示", "身份证号不能为空！")
+            return
+        ok, msg = validate_id_card(id_card)
+        if not ok:
+            QMessageBox.warning(self, "提示", msg)
+            return
+        phone = self.txt_phone.text().strip()
+        ok, msg = validate_phone(phone)
+        if not ok:
+            QMessageBox.warning(self, "提示", msg)
             return
         age = self.txt_age.text().strip()
         if age and not age.isdigit():
