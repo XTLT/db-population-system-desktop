@@ -2,10 +2,11 @@
 
 替代原 webbrowser.open 方式（浏览器缺客户端证书会报 ERR_BAD_SSL_CLIENT_AUTH_CERT）。
 数据流：
-  GET  /api/reports/<id>/data   → {headers, rows}（Bearer token）
-  POST /api/reports/<id>/save   → {success}（Bearer token）
+  GET  /api/reports/<id>/data[?sheet=<name>]   → {sheet_name, sheets, headers, rows}（Bearer token）
+  POST /api/reports/<id>/save                  → {success}（Bearer token，JSON 带 sheet 字段）
 
-编辑器能力（v0.0.39）：
+编辑器能力（v0.0.40）：
+  - 多工作表切换（工具栏下拉；切换前若有未保存修改会提示，保存时写回对应工作表）
   - 双击/按键编辑单元格
   - 批量插入行 / 删除行（多选）
   - 批量插入列 / 删除列（多选）
@@ -18,7 +19,7 @@ import copy
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QMessageBox, QHeaderView, QAbstractItemView,
-    QLineEdit, QGroupBox, QApplication,
+    QLineEdit, QGroupBox, QApplication, QComboBox,
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QKeySequence, QShortcut
@@ -39,6 +40,9 @@ class ReportEditDialog(QDialog):
         self._modified = False
         self._suppress_change = False   # 内部填充/恢复时屏蔽 itemChanged
         self._last_find_row = -1        # 查找游标
+        self._sheets = []               # 服务端返回的工作表列表
+        self._current_sheet = ''        # 当前工作表名
+        self._loading = False           # 加载中标志（切换时防重入）
         self.setWindowTitle(f"在线编辑 - {report_name}")
         self.resize(1100, 660)
         self._build_ui()
@@ -51,6 +55,13 @@ class ReportEditDialog(QDialog):
 
         # 工具栏
         toolbar = QHBoxLayout()
+        toolbar.addWidget(QLabel("工作表："))
+        self.combo_sheet = QComboBox()
+        self.combo_sheet.setFixedWidth(160)
+        self.combo_sheet.setToolTip("切换当前编辑的工作表（多工作表报表）")
+        self.combo_sheet.currentTextChanged.connect(self._on_sheet_changed)
+        toolbar.addWidget(self.combo_sheet)
+        toolbar.addSpacing(10)
         for text, tip, slot in (
             ("插入行", "在选中行上方插入行（多选插入多行，无选中在末尾追加）", self._insert_rows),
             ("删除行", "删除选中的行（支持多行）", self._delete_rows),
@@ -130,29 +141,68 @@ class ReportEditDialog(QDialog):
         QShortcut(QKeySequence("Ctrl+F"), self, activated=lambda: self.ed_find.setFocus())
 
     # ---------- 数据加载 ----------
-    def _load_data(self):
+    def _load_data(self, sheet=None):
+        self._loading = True
         try:
-            from network.client import _request
-            data = _request('GET', f'/api/reports/{self.report_id}/data')
-        except Exception as e:
-            QMessageBox.critical(self, "错误", f"获取报表数据失败：{e}")
-            self.reject()
-            return
-        headers = data.get('headers', []) or []
-        rows = data.get('rows', []) or []
-        if not headers:
-            headers = [''] * max((len(r) for r in rows), default=0)
-        self._suppress_change = True
-        try:
-            self._fill_table(headers, rows)
+            try:
+                from network.client import _request
+                path = f'/api/reports/{self.report_id}/data'
+                if sheet:
+                    from urllib.parse import quote
+                    path += f'?sheet={quote(sheet)}'
+                data = _request('GET', path)
+            except Exception as e:
+                QMessageBox.critical(self, "错误", f"获取报表数据失败：{e}")
+                self.reject()
+                return
+            headers = data.get('headers', []) or []
+            rows = data.get('rows', []) or []
+            if not headers:
+                headers = [''] * max((len(r) for r in rows), default=0)
+            self._suppress_change = True
+            try:
+                self._fill_table(headers, rows)
+            finally:
+                self._suppress_change = False
+            # 工作表列表
+            self._sheets = data.get('sheets', []) or []
+            self._current_sheet = data.get('sheet_name', '') or (self._sheets[0] if self._sheets else '')
+            self.combo_sheet.blockSignals(True)
+            self.combo_sheet.clear()
+            self.combo_sheet.addItems(self._sheets)
+            if self._current_sheet in self._sheets:
+                self.combo_sheet.setCurrentText(self._current_sheet)
+            self.combo_sheet.setEnabled(len(self._sheets) > 1)
+            self.combo_sheet.blockSignals(False)
+            self._undo_stack.clear()
+            self._redo_stack.clear()
+            self._modified = False
+            self.btn_save.setStyleSheet(
+                f"background-color: {BTN_ADD_COLOR}; color: white; font-weight: bold; padding: 5px 18px;"
+            )
+            sheet_txt = f"工作表「{self._current_sheet}」" if self._current_sheet else ""
+            self.lbl_status.setText(
+                f"{sheet_txt} 已加载 {len(rows)} 行 × {len(headers)} 列（双击编辑；可增删行列/撤销重做/查找替换，完成后点保存）"
+            )
         finally:
-            self._suppress_change = False
-        self._undo_stack.clear()
-        self._redo_stack.clear()
-        self._modified = False
-        self.lbl_status.setText(
-            f"已加载 {len(rows)} 行 × {len(headers)} 列（双击编辑；可增删行列/撤销重做/查找替换，完成后点保存）"
-        )
+            self._loading = False
+
+    def _on_sheet_changed(self, name):
+        if self._loading or not name or name == self._current_sheet:
+            return
+        if self._modified:
+            ret = QMessageBox.question(
+                self, "未保存修改",
+                f"当前工作表「{self._current_sheet}」有未保存的修改，切换后将丢失这些修改。\n\n确定要切换到「{name}」吗？",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if ret != QMessageBox.StandardButton.Yes:
+                self.combo_sheet.blockSignals(True)
+                self.combo_sheet.setCurrentText(self._current_sheet)
+                self.combo_sheet.blockSignals(False)
+                return
+        self._load_data(sheet=name)
 
     def _fill_table(self, headers, rows):
         self.table.setColumnCount(len(headers))
@@ -391,8 +441,10 @@ class ReportEditDialog(QDialog):
         self.lbl_status.setText("正在保存...")
         try:
             from network.client import _request
-            _request('POST', f'/api/reports/{self.report_id}/save',
-                     data={'headers': headers, 'rows': rows})
+            payload = {'headers': headers, 'rows': rows}
+            if self._current_sheet:
+                payload['sheet'] = self._current_sheet
+            _request('POST', f'/api/reports/{self.report_id}/save', data=payload)
         except Exception as e:
             self.btn_save.setEnabled(True)
             self.lbl_status.setText("保存失败")
@@ -403,8 +455,8 @@ class ReportEditDialog(QDialog):
             f"background-color: {BTN_ADD_COLOR}; color: white; font-weight: bold; padding: 5px 18px;"
         )
         self._modified = False
-        self.lbl_status.setText(f"保存成功（{len(rows)} 行 × {len(headers)} 列）")
-        QMessageBox.information(self, "提示", f"保存成功（{len(rows)} 行 × {len(headers)} 列）")
+        self.lbl_status.setText(f"保存成功（工作表「{self._current_sheet}」，{len(rows)} 行 × {len(headers)} 列）")
+        QMessageBox.information(self, "提示", f"保存成功（工作表「{self._current_sheet}」，{len(rows)} 行 × {len(headers)} 列）")
 
     # ---------- 关闭拦截 ----------
     def reject(self):
