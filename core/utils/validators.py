@@ -27,13 +27,11 @@ def validate_id_card(id_card):
 
 
 def validate_phone(phone):
-    """校验电话：可空；11 位手机号 ^1[3-9]\\d{9}$；固话区号 0 开头 ^0\\d{2,3}-?\\d{7,8}$（10-12 位）。
+    """校验电话：可空；仅 11 位手机号 ^1[3-9]\\d{9}$（不校验座机，业务上只录手机号）。
     返回 (ok, msg)，不通过时 msg 为用户可读提示。"""
     phone = (phone or '').strip()
     if not phone:
         return True, ""
     if len(phone) == 11 and re.match(r'^1[3-9]\d{9}$', phone):
-        return True, ""
-    if re.match(r'^0\d{2,3}-?\d{7,8}$', phone):
         return True, ""
     return False, "电话号码不对！"

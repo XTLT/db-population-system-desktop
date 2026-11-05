@@ -759,6 +759,11 @@ class EditDialog(QDialog):
         if not ok:
             QMessageBox.warning(self, "提示", msg)
             return
+        guardian_phone = self.txt_guardian_phone.text().strip()
+        ok, msg = validate_phone(guardian_phone)
+        if not ok:
+            QMessageBox.warning(self, "提示", "监护人电话不对！")
+            return
         age = self.txt_age.text().strip()
         if age and not age.isdigit():
             QMessageBox.warning(self, "提示", "年龄必须是数字！")
