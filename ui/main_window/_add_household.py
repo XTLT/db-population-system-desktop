@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QLineEdit, QDialog, QLabel, QHBoxLayout, QMessageBox
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from core.config import FONT_NAME, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
-from core.utils.validators import validate_id_card, validate_phone
+from core.utils.validators import validate_id_card, validate_phone, install_digit_filter
 
 
 def _add_household(self):
@@ -35,10 +35,12 @@ def _add_household(self):
     form.addRow("户主姓名：", txt_name)
     txt_idcard = QLineEdit()
     txt_idcard.setPlaceholderText("身份证号")
+    install_digit_filter(txt_idcard, allow_x=True)
     form.addRow("身份证号：", txt_idcard)
     txt_address = QLineEdit()
     form.addRow("地址：", txt_address)
     txt_phone = QLineEdit()
+    install_digit_filter(txt_phone)
     form.addRow("电话：", txt_phone)
     txt_land = QLineEdit()
     txt_land.setPlaceholderText("亩")

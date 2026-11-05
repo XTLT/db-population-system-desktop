@@ -17,7 +17,7 @@ from core.database import (
     get_student_education, save_student_education, delete_student_education,
     get_education_history, get_family_members, Person, StudentEducation
 )
-from core.utils.validators import validate_id_card, validate_phone
+from core.utils.validators import validate_id_card, validate_phone, install_digit_filter
 from data.photo_manager import save_photo, delete_photo, get_photo_path, get_photo_status
 from network.client import get_server_url
 from dialogs.person.relation_list import RELATIONS
@@ -79,6 +79,7 @@ class EditDialog(QDialog):
 
         self.txt_name = QLineEdit()
         self.txt_id_card = QLineEdit()
+        install_digit_filter(self.txt_id_card, allow_x=True)
         self.txt_relation = QComboBox()
         self.txt_relation.setEditable(True)
         self.txt_relation.addItems(RELATIONS)
@@ -89,6 +90,7 @@ class EditDialog(QDialog):
         self.txt_age = QLineEdit()
         self.txt_age.setReadOnly(True)
         self.txt_phone = QLineEdit()
+        install_digit_filter(self.txt_phone)
         self.txt_land_area = QLineEdit()
         self.txt_land_area.setPlaceholderText("亩")
         self.txt_local_welfare_forest = QLineEdit()
@@ -259,6 +261,7 @@ class EditDialog(QDialog):
         self.cbo_guardian.currentIndexChanged.connect(self._on_guardian_changed)
 
         self.txt_guardian_phone = QLineEdit()
+        install_digit_filter(self.txt_guardian_phone)
         self.txt_guardian_phone.setPlaceholderText("监护人电话")
 
         self.cbo_is_left_behind = QComboBox()

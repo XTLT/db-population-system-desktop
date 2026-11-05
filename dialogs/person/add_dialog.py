@@ -8,7 +8,7 @@ from PyQt6.QtGui import QFont
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
 from core.database import add_person
 from core.utils import calculate_age
-from core.utils.validators import validate_id_card, validate_phone
+from core.utils.validators import validate_id_card, validate_phone, install_digit_filter
 from core.database import Person
 from network.client import get_server_url
 from dialogs.person.relation_list import RELATIONS
@@ -58,6 +58,7 @@ class AddDialog(QDialog):
 
         self.txt_name = QLineEdit()
         self.txt_id_card = QLineEdit()
+        install_digit_filter(self.txt_id_card, allow_x=True)
         self.txt_relation = QComboBox()
         self.txt_relation.setEditable(True)
         self.txt_relation.addItems(RELATIONS)
@@ -68,6 +69,7 @@ class AddDialog(QDialog):
         self.txt_age = QLineEdit()
         self.txt_age.setReadOnly(True)
         self.txt_phone = QLineEdit()
+        install_digit_filter(self.txt_phone)
         self.cbo_is_dead = QComboBox()
         self.cbo_is_dead.addItems(["否", "是"])
         self.txt_social1 = QLineEdit()

@@ -5,11 +5,32 @@ import re
 from datetime import date
 
 
+def clean_digits(text, allow_x=False):
+    """把输入清洗成纯号码：去掉空格、横杠等一切非号码字符（允许的话保留 X/x 并转大写）。
+    用于身份证、电话号码这类编码字段，粘贴带空格的号码也能自动纠正。"""
+    allowed = '0123456789Xx' if allow_x else '0123456789'
+    cleaned = ''.join(ch for ch in (text or '') if ch in allowed)
+    return cleaned.replace('x', 'X') if allow_x else cleaned
+
+
+def install_digit_filter(line_edit, allow_x=False):
+    """给 QLineEdit 挂即时清洗：非法字符（含空格）一输入/一粘贴就被删掉，
+    用户看到的始终是干净号码，不会等到点保存才报错。"""
+    def _clean(text):
+        cleaned = clean_digits(text, allow_x)
+        if cleaned != text:
+            pos = line_edit.cursorPosition()
+            line_edit.setText(cleaned)
+            line_edit.setCursorPosition(min(pos, len(cleaned)))
+
+    line_edit.textChanged.connect(_clean)
+
+
 def validate_id_card(id_card):
     """校验身份证号：必须 18 位（前 17 位数字 + 校验位，最后一位可为 X），
     且出生年月日必须合法（与服务端 utils/common/validate_id_card.py 同一口径）。
     返回 (ok, msg)，不通过时 msg 为用户可读提示。"""
-    id_card = (id_card or '').strip().upper()
+    id_card = re.sub(r'\s+', '', id_card or '').upper()
     if not id_card:
         return False, "身份证号码不对！"
     if len(id_card) != 18:
@@ -52,7 +73,7 @@ def validate_id_card(id_card):
 def validate_phone(phone):
     """校验电话：可空；仅 11 位手机号 ^1[3-9]\\d{9}$（不校验座机，业务上只录手机号）。
     返回 (ok, msg)，不通过时 msg 为用户可读提示。"""
-    phone = (phone or '').strip()
+    phone = re.sub(r'\s+', '', phone or '')
     if not phone:
         return True, ""
     if len(phone) == 11 and re.match(r'^1[3-9]\d{9}$', phone):
