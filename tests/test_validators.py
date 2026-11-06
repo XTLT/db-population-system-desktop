@@ -33,7 +33,7 @@ from core.utils.validators import (  # noqa: E402
 WEIGHTS = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
 CHECK_CODES = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2']
 
-PHONE_ERR = "电话号码格式无效，请输入11位手机号或座机号码"
+PHONE_ERR = "电话号码格式无效，请输入11位手机号"
 
 
 def make_id(prefix17):
