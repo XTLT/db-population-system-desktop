@@ -15,6 +15,7 @@
 注意：install_digit_filter 依赖 QLineEdit，需要 QApplication，不在本文件测试。
 """
 
+import json
 import os
 import sys
 import unittest
@@ -155,6 +156,42 @@ class TestCleanDigits(unittest.TestCase):
     def test_none_input(self):
         self.assertEqual(clean_digits(None, True), '')
         self.assertEqual(clean_digits(None, False), '')
+
+
+VECTOR_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'vectors', 'validation_vectors.json')
+
+
+class TestSharedVectors(unittest.TestCase):
+    """三端共享向量 validation_vectors.json 的逐条比对。
+
+    权威源在 server 仓库 tests/vectors/，由 sync_vectors.py 复制到本目录，
+    三份 sha256 必须一致。任一端口径漂移，三端各自这一组就会红。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        with open(VECTOR_FILE, encoding='utf-8') as f:
+            cls.doc = json.load(f)
+
+    def test_id_card_vectors(self):
+        self.assertTrue(self.doc['id_card'], '身份证向量为空')
+        for case in self.doc['id_card']:
+            with self.subTest(note=case['note'], value=case['input']):
+                self.assertEqual(
+                    validate_id_card(case['input']),
+                    (case['valid'], case['msg']),
+                    case['note'],
+                )
+
+    def test_phone_vectors(self):
+        self.assertTrue(self.doc['phone'], '电话向量为空')
+        for case in self.doc['phone']:
+            with self.subTest(note=case['note'], value=case['input']):
+                self.assertEqual(
+                    validate_phone(case['input']),
+                    (case['valid'], case['msg']),
+                    case['note'],
+                )
 
 
 if __name__ == '__main__':
