@@ -4,11 +4,13 @@
 运行方式（在 desktop 仓库根目录）：
     venv_build\\Scripts\\python.exe -m unittest discover -s tests -v
 
+口径基准：server 的 utils/common/validate_id_card.py、validate_phone.py。
+本测试与 mobile 的 test/utils/validators_test.dart 使用同一批用例、同一套提示文案。
+
 覆盖范围：
-    - validate_id_card：18 位 + 校验位 + 出生日期合法，15 位一律拒绝
-    - validate_phone：仅 11 位手机号（^1[3-9]\\d{9}$），空值放行，座机拒绝
+    - validate_id_card：去所有空白后 18 位 + 校验位 + 出生日期合法，15 位一律拒绝
+    - validate_phone：剔掉 "-" 与空白后仅 11 位手机号，空值放行，座机拒绝
     - clean_digits：身份证/电话录入时的即时清洗（空格、横杠、字母）
-    - 校验函数自身的空白容错（粘贴带空格的号码也能通过）
 
 注意：install_digit_filter 依赖 QLineEdit，需要 QApplication，不在本文件测试。
 """
@@ -31,8 +33,7 @@ from core.utils.validators import (  # noqa: E402
 WEIGHTS = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
 CHECK_CODES = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2']
 
-ID_ERR = "身份证号码不对！"
-PHONE_ERR = "电话号码不对！"
+PHONE_ERR = "电话号码格式无效，请输入11位手机号或座机号码"
 
 
 def make_id(prefix17):
@@ -49,10 +50,10 @@ class TestValidateIdCard(unittest.TestCase):
     def assert_ok(self, value):
         self.assertEqual(validate_id_card(value), (True, ""))
 
-    def assert_bad(self, value):
-        ok, msg = validate_id_card(value)
+    def assert_bad(self, value, msg):
+        ok, actual = validate_id_card(value)
         self.assertFalse(ok, f"{value!r} 应被判为非法")
-        self.assertEqual(msg, ID_ERR)
+        self.assertEqual(actual, msg, f"{value!r} 的提示文案与基准不一致")
 
     def test_valid_18_digit(self):
         self.assert_ok(make_id('52032519900101123'))
@@ -61,32 +62,37 @@ class TestValidateIdCard(unittest.TestCase):
 
     def test_15_digit_rejected(self):
         # 方案二：15 位不再支持录入
-        self.assert_bad('110105491231002')
-        self.assert_bad('520325900101123')
+        self.assert_bad('110105491231002', "身份证号必须为18位")
+        self.assert_bad('520325900101123', "身份证号必须为18位")
 
     def test_wrong_check_digit(self):
         valid = make_id('52032519900101123')
         wrong = valid[:-1] + ('0' if valid[-1] != '0' else '1')
-        self.assert_bad(wrong)
+        self.assert_bad(wrong, "身份证号校验位错误")
 
     def test_birth_date_invalid_but_check_digit_ok(self):
         # 这些号码校验位都正确，专门验证出生日期分支
-        self.assert_bad(make_id('52032519901301123'))  # 13 月
-        self.assert_bad(make_id('52032519900001123'))  # 00 月
-        self.assert_bad(make_id('52032519900230123'))  # 2 月 30 日
-        self.assert_bad(make_id('52032519900229123'))  # 平年 2 月 29 日
-        self.assert_bad(make_id('52032519900431123'))  # 4 月 31 日
-        self.assert_bad(make_id('52032519900100123'))  # 0 日
-        self.assert_bad(make_id('52032518000101123'))  # 年份 1800（早于 1900）
-        self.assert_bad(make_id('52032520990101123'))  # 年份 2099（未来）
+        self.assert_bad(make_id('52032519901301123'), "身份证号出生月份无效")  # 13 月
+        self.assert_bad(make_id('52032519900001123'), "身份证号出生月份无效")  # 00 月
+        self.assert_bad(make_id('52032519900230123'), "身份证号出生日期无效")  # 2 月 30 日
+        self.assert_bad(make_id('52032519900229123'), "身份证号出生日期无效")  # 平年 2 月 29
+        self.assert_bad(make_id('52032519900431123'), "身份证号出生日期无效")  # 4 月 31 日
+        self.assert_bad(make_id('52032519900100123'), "身份证号出生日期无效")  # 0 日
+        self.assert_bad(make_id('52032518000101123'), "身份证号出生年份无效")  # 1800 年
+        self.assert_bad(make_id('52032520990101123'), "身份证号出生年份无效")  # 2099 年
+
+    def test_empty_after_clean(self):
+        # 空值判断发生在清洗之后：全空格、制表符、换行都算空
+        self.assert_bad('', "身份证号不能为空")
+        self.assert_bad(None, "身份证号不能为空")
+        self.assert_bad('     ', "身份证号不能为空")
+        self.assert_bad('\t\n ', "身份证号不能为空")
 
     def test_format_errors(self):
-        self.assert_bad('')
-        self.assert_bad(None)
-        self.assert_bad('52032519900101123A')  # 末位 A
-        self.assert_bad('5203A519900101123')  # 前 17 位含字母
-        self.assert_bad(make_id('52032519900101123')[:17])  # 17 位
-        self.assert_bad(make_id('52032519900101123') + '1')  # 19 位
+        self.assert_bad('52032519900101123A', "身份证号最后一位必须为数字或X")
+        self.assert_bad('5203A5199001011234', "身份证号前17位必须为数字")
+        self.assert_bad(make_id('52032519900101123')[:17], "身份证号必须为18位")
+        self.assert_bad(make_id('52032519900101123') + '1', "身份证号必须为18位")
 
     def test_whitespace_tolerated(self):
         # 520325199001011235 的校验位已核对为 5，去掉空白后合法
@@ -104,6 +110,7 @@ class TestValidatePhone(unittest.TestCase):
         self.assertEqual(validate_phone(''), (True, ""))
         self.assertEqual(validate_phone(None), (True, ""))
         self.assertEqual(validate_phone('   '), (True, ""))
+        self.assertEqual(validate_phone('\t\n'), (True, ""))
 
     def test_mobile_valid(self):
         for p in ('13800138000', '15012345678', '19912345678', '13456789012'):
@@ -115,7 +122,7 @@ class TestValidatePhone(unittest.TestCase):
             self.assertEqual(validate_phone(p), (False, PHONE_ERR), p)
 
     def test_landline_rejected(self):
-        # 业务上只录手机号，座机不再放行
+        # 清洗会剔掉横杠，但剔完仍不符合手机号规则，照样拒
         for p in ('010-12345678', '0755-87654321', '08511234567', '0851-12345678'):
             self.assertEqual(validate_phone(p), (False, PHONE_ERR), p)
 
@@ -124,9 +131,9 @@ class TestValidatePhone(unittest.TestCase):
         self.assertEqual(validate_phone('138 0013 8000'), (True, ""))
         self.assertEqual(validate_phone('138\t0013\t8000'), (True, ""))
 
-    def test_hyphon_still_rejected(self):
-        # 校验层不做横杠容错，横杠应由输入框清洗拦住
-        self.assertEqual(validate_phone('138-0013-8000'), (False, PHONE_ERR))
+    def test_hyphon_tolerated(self):
+        # 口径变更：清洗阶段会剔除 "-"，号码本身合法就放行
+        self.assertEqual(validate_phone('138-0013-8000'), (True, ""))
 
 
 class TestCleanDigits(unittest.TestCase):
