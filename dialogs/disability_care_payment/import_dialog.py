@@ -7,6 +7,7 @@ from PyQt6.QtGui import QFont
 from datetime import datetime
 
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
+from .._import_precheck import confirm_precheck
 
 
 class DisabilityCareImportWorker(QThread):
@@ -14,10 +15,11 @@ class DisabilityCareImportWorker(QThread):
     finished = pyqtSignal(dict)
     error = pyqtSignal(str)
 
-    def __init__(self, file_path: str, is_network_mode: bool, period: str = ""):
+    def __init__(self, file_path: str, is_network_mode: bool, period: str = "", dry_run: bool = False):
         super().__init__()
         self.file_path = file_path
         self.is_network_mode = is_network_mode
+        self.dry_run = dry_run
         self.period = period
 
     def run(self):
@@ -36,6 +38,9 @@ class DisabilityCareImportWorker(QThread):
                     f'Content-Disposition: form-data; name="period"\r\n\r\n'
                     f'{self.period}\r\n'
                     f'--{boundary}\r\n'
+                    f'Content-Disposition: form-data; name="dry_run"\r\n\r\n'
+                    f'{1 if self.dry_run else 0}\r\n'
+                    f'--{boundary}\r\n'
                     f'Content-Disposition: form-data; name="file"; filename="{os.path.basename(self.file_path)}"\r\n'
                     f'Content-Type: {content_type}\r\n\r\n'
                 ).encode('utf-8') + file_data + f'\r\n--{boundary}--\r\n'.encode('utf-8')
@@ -44,7 +49,7 @@ class DisabilityCareImportWorker(QThread):
                 self.finished.emit(result)
             else:
                 from data.excel_importer import import_disability_care_payment
-                result = import_disability_care_payment(self.file_path, self.progress.emit, self.period)
+                result = import_disability_care_payment(self.file_path, self.progress.emit, self.period, dry_run=self.dry_run)
                 self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
@@ -112,6 +117,13 @@ class DisabilityCareImportDialog(QDialog):
             self._file_path = path
             self.lbl_file.setText(path)
 
+    def _run_import(self, dry_run):
+        self.worker = DisabilityCareImportWorker(self._file_path, self.is_network_mode, self._period, dry_run=dry_run)
+        self.worker.progress.connect(self._on_progress)
+        self.worker.finished.connect(self._on_finished)
+        self.worker.error.connect(self._on_error)
+        self.worker.start()
+
     def _start_import(self):
         if not self._file_path:
             QMessageBox.warning(self, "提示", "请先选择Excel文件！")
@@ -123,17 +135,21 @@ class DisabilityCareImportDialog(QDialog):
             return
 
         self.lbl_status.setText("正在导入...")
+        self._period = period
+        self.lbl_status.setText("正在预检...")
         self.progress_bar.setValue(0)
-        self.worker = DisabilityCareImportWorker(self._file_path, self.is_network_mode, period)
-        self.worker.progress.connect(self._on_progress)
-        self.worker.finished.connect(self._on_finished)
-        self.worker.error.connect(self._on_error)
-        self.worker.start()
+        self._run_import(True)
 
     def _on_progress(self, value):
         self.progress_bar.setValue(value)
 
     def _on_finished(self, result):
+        if result.get("dry_run"):
+            if not confirm_precheck(self, result):
+                self.lbl_status.setText("已取消导入")
+                return
+            self._run_import(False)
+            return
         msg = f"导入完成！\n成功：{result.get('imported', 0)}条\n跳过：{result.get('skipped', 0)}条"
         if result.get("errors"):
             msg += f"\n错误：{len(result['errors'])}条\n" + "\n".join(result["errors"][:5])

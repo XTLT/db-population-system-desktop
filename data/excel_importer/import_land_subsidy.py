@@ -39,7 +39,7 @@ def _clean_num(val: str) -> str:
     return _UNIT_RE.sub("", str(val)).strip()
 
 
-def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callback=None) -> dict:
+def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callback=None, dry_run: bool = False) -> dict:
     """导入地力补贴数据
 
     只导入身份证号在数据库中存在的人员
@@ -233,11 +233,14 @@ def import_land_subsidy(file_path: str, subsidy_year: str = "", progress_callbac
                 skipped += 1
                 errors.append(f"行{data_start + idx + 1}: {str(e)}")
 
-        session.commit()
+        if dry_run:
+            session.rollback()
+        else:
+            session.commit()
     except Exception:
         session.rollback()
         raise
     finally:
         session.close()
 
-    return {"imported": imported, "updated": updated, "skipped": skipped, "errors": errors, "total": total, "not_found": not_found}
+    return {"imported": imported, "updated": updated, "skipped": skipped, "errors": errors, "total": total, "not_found": not_found, "dry_run": dry_run}

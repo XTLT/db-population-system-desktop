@@ -7,6 +7,7 @@ from PyQt6.QtGui import QFont
 from datetime import datetime
 
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
+from .._import_precheck import confirm_precheck
 
 
 class LandSubsidyImportWorker(QThread):
@@ -14,11 +15,12 @@ class LandSubsidyImportWorker(QThread):
     finished = pyqtSignal(dict)
     error = pyqtSignal(str)
 
-    def __init__(self, file_path: str, subsidy_year: str, is_network_mode: bool):
+    def __init__(self, file_path: str, subsidy_year: str, is_network_mode: bool, dry_run: bool = False):
         super().__init__()
         self.file_path = file_path
         self.subsidy_year = subsidy_year
         self.is_network_mode = is_network_mode
+        self.dry_run = dry_run
 
     def run(self):
         try:
@@ -36,6 +38,9 @@ class LandSubsidyImportWorker(QThread):
                     f'Content-Disposition: form-data; name="subsidy_year"\r\n\r\n'
                     f'{self.subsidy_year}\r\n'
                     f'--{boundary}\r\n'
+                    f'Content-Disposition: form-data; name="dry_run"\r\n\r\n'
+                    f'{1 if self.dry_run else 0}\r\n'
+                    f'--{boundary}\r\n'
                     f'Content-Disposition: form-data; name="file"; filename="{os.path.basename(self.file_path)}"\r\n'
                     f'Content-Type: {content_type}\r\n\r\n'
                 ).encode('utf-8') + file_data + f'\r\n--{boundary}--\r\n'.encode('utf-8')
@@ -44,7 +49,7 @@ class LandSubsidyImportWorker(QThread):
                 self.finished.emit(result)
             else:
                 from data.excel_importer import import_land_subsidy
-                result = import_land_subsidy(self.file_path, self.subsidy_year, self.progress.emit)
+                result = import_land_subsidy(self.file_path, self.subsidy_year, self.progress.emit, dry_run=self.dry_run)
                 self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
@@ -112,6 +117,13 @@ class LandSubsidyImportDialog(QDialog):
             self._file_path = path
             self.lbl_file.setText(path)
 
+    def _run_import(self, dry_run):
+        self.worker = LandSubsidyImportWorker(self._file_path, self._year, self.is_network_mode, dry_run=dry_run)
+        self.worker.progress.connect(self._on_progress)
+        self.worker.finished.connect(self._on_finished)
+        self.worker.error.connect(self._on_error)
+        self.worker.start()
+
     def _start_import(self):
         if not self._file_path:
             QMessageBox.warning(self, "提示", "请先选择Excel文件！")
@@ -122,17 +134,21 @@ class LandSubsidyImportDialog(QDialog):
             year = str(datetime.now().year)
 
         self.lbl_status.setText("正在导入...")
+        self._year = year
+        self.lbl_status.setText("正在预检...")
         self.progress_bar.setValue(0)
-        self.worker = LandSubsidyImportWorker(self._file_path, year, self.is_network_mode)
-        self.worker.progress.connect(self._on_progress)
-        self.worker.finished.connect(self._on_finished)
-        self.worker.error.connect(self._on_error)
-        self.worker.start()
+        self._run_import(True)
 
     def _on_progress(self, value):
         self.progress_bar.setValue(value)
 
     def _on_finished(self, result):
+        if result.get("dry_run"):
+            if not confirm_precheck(self, result):
+                self.lbl_status.setText("已取消导入")
+                return
+            self._run_import(False)
+            return
         msg = f"导入完成！\n成功：{result.get('imported', 0)}条\n跳过：{result.get('skipped', 0)}条"
         if result.get("errors"):
             msg += f"\n错误：{len(result['errors'])}条\n" + "\n".join(result["errors"][:5])
