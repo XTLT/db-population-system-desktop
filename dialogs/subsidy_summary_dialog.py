@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QMessageBox,
     QPushButton,
