@@ -1,10 +1,11 @@
 import json
 
 from . import _base
+from ._base import _encode_path
 
 
 def _request_raw(method: str, path: str, body: bytes, content_type: str) -> dict:
-    url = f"{_base.SERVER_URL}{path}"
+    url = f"{_base.SERVER_URL}{_encode_path(path)}"
     headers = {'Content-Type': content_type}
     if _base.TOKEN:
         headers['Authorization'] = f'Bearer {_base.TOKEN}'

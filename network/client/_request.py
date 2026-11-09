@@ -1,10 +1,11 @@
 import json
 
 from . import _base
+from ._base import _encode_path
 
 
 def _request(method: str, path: str, data: dict = None) -> dict:
-    url = f"{_base.SERVER_URL}{path}"
+    url = f"{_base.SERVER_URL}{_encode_path(path)}"
     body = None
     headers = {}
     if data:

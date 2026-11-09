@@ -3,11 +3,11 @@ import urllib.request
 import urllib.error
 
 from . import _base
-from ._base import _get_ssl_context
+from ._base import _encode_path, _get_ssl_context
 
 
 def api_download_photo(person_id: str, save_path: str) -> bool:
-    url = f"{_base.SERVER_URL}/api/person/{person_id}/photo"
+    url = f"{_base.SERVER_URL}{_encode_path(f'/api/person/{person_id}/photo')}"
     req = urllib.request.Request(url, method='GET')
     if _base.TOKEN:
         req.add_header('Authorization', f'Bearer {_base.TOKEN}')

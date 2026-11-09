@@ -4,11 +4,11 @@ import urllib.parse
 import urllib.error
 
 from . import _base
-from ._base import _get_ssl_context
+from ._base import _encode_path, _get_ssl_context
 
 
 def api_delete_photo_on_server(person_id: str, photo_type: str = "身份证") -> dict:
-    url = f"{_base.SERVER_URL}/api/person/{person_id}/photo?photo_type={urllib.parse.quote(photo_type)}"
+    url = f"{_base.SERVER_URL}{_encode_path(f'/api/person/{person_id}/photo?photo_type={urllib.parse.quote(photo_type)}')}"
     req = urllib.request.Request(url, method='DELETE')
     if _base.TOKEN:
         req.add_header('Authorization', f'Bearer {_base.TOKEN}')

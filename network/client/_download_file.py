@@ -2,11 +2,11 @@ import urllib.request
 import urllib.error
 
 from . import _base
-from ._base import _get_ssl_context
+from ._base import _encode_path, _get_ssl_context
 
 
 def _download_file(path: str, save_path: str):
-    url = f"{_base.SERVER_URL}{path}"
+    url = f"{_base.SERVER_URL}{_encode_path(path)}"
     req = urllib.request.Request(url, method='GET')
     if _base.TOKEN:
         req.add_header('Authorization', f'Bearer {_base.TOKEN}')

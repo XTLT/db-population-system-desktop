@@ -5,11 +5,11 @@ import urllib.request
 import urllib.error
 
 from . import _base
-from ._base import _get_ssl_context
+from ._base import _encode_path, _get_ssl_context
 
 
 def api_upload_photo(person_id: str, file_path: str, photo_type: str = "身份证") -> dict:
-    url = f"{_base.SERVER_URL}/api/person/{person_id}/photo"
+    url = f"{_base.SERVER_URL}{_encode_path(f'/api/person/{person_id}/photo')}"
     boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW'
     content_type = mimetypes.guess_type(file_path)[0] or 'image/jpeg'
 
