@@ -117,6 +117,8 @@ def _show_family(self, person: Person):
                 else:
                     item = QTableWidgetItem(str(val) if val else "")
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    if col_idx == 0 and getattr(p, 'id', None):
+                        item.setData(Qt.ItemDataRole.UserRole, p.id)
                     if col_idx == 23 and val:
                         item.setForeground(QColor(0, 102, 0))
                         item.setFont(QFont(FONT_NAME, FONT_SIZE, QFont.Weight.Bold))
