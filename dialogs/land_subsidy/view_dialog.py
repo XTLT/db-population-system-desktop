@@ -159,8 +159,17 @@ class LandSubsidyViewDialog(QDialog):
 
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
             self.table.horizontalHeader().setStretchLastSection(True)
+            # 列宽按“表头 + 实际数据”取大计算；身份证号、银行账号等长号码列放宽上限
+            fm = self.table.fontMetrics()
+            wide_cols = {"身份证号", "银行账号", "卡号"}
             for col_idx, h in enumerate(self.headers):
-                self.table.setColumnWidth(col_idx, min(max(len(h) * 18 + 30, 70), 200))
+                longest = fm.horizontalAdvance(h)
+                for row in range(min(self.table.rowCount(), 200)):
+                    item = self.table.item(row, col_idx)
+                    if item is not None:
+                        longest = max(longest, fm.horizontalAdvance(item.text()))
+                cap = 300 if h in wide_cols else 200
+                self.table.setColumnWidth(col_idx, min(max(longest + 26, 70), cap))
             self.table.setUpdatesEnabled(True)
         except Exception as e:
             self.table.setUpdatesEnabled(True)

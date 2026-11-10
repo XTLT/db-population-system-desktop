@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from datetime import datetime
+from urllib.parse import urlencode
 
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
 
@@ -46,11 +47,15 @@ class DibaoViewDialog(QDialog):
         btn_search.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; padding: 6px 16px;")
         btn_search.clicked.connect(self._load_data)
 
+        self.lbl_count = QLabel("")
+        self.lbl_count.setFont(QFont(FONT_NAME, FONT_SIZE))
+
         filter_layout.addWidget(lbl_period)
         filter_layout.addWidget(self.txt_period)
         filter_layout.addWidget(lbl_id_card)
         filter_layout.addWidget(self.txt_id_card)
         filter_layout.addWidget(btn_search)
+        filter_layout.addWidget(self.lbl_count)
         filter_layout.addStretch()
         layout.addLayout(filter_layout)
 
@@ -61,7 +66,7 @@ class DibaoViewDialog(QDialog):
         self.headers = ["费款所属期", "姓名", "身份证号", "村名称", "性别", "和申请人关系",
                    "共同生活家庭成员", "享受保障人口数", "家庭保障总金额", "家庭最低生活基本保障金",
                    "家庭特殊困难补助金", "家庭调剂金额", "特殊困难情形", "特殊困难补助金",
-                   "初始享受时间", "始发年月", "导入来源"]
+                   "初始享受时间", "始发年月", "导入来源", "银行账号"]
         self.table.setColumnCount(len(self.headers))
         self.table.setHorizontalHeaderLabels(self.headers)
         layout.addWidget(self.table)
@@ -92,16 +97,20 @@ class DibaoViewDialog(QDialog):
             if self.is_network_mode:
                 try:
                     from network.client import _request
-                    params = {}
+                    query = []
                     if period:
-                        params['period'] = period
+                        query.append(('period', period))
                     if id_card:
-                        params['id_card'] = id_card
-                    data = _request('GET', '/api/dibao_payment', params)
-                    records = data.get('records', [])
+                        query.append(('id_card', id_card))
+                    path = '/api/dibao_payment'
+                    if query:
+                        path += '?' + urlencode(query)
+                    data = _request('GET', path)
+                    records = data.get('records', []) or []
                 except Exception as e:
-                    print(f"网络获取数据失败: {e}")
-                    records = []
+                    self.lbl_count.setText("查询失败")
+                    QMessageBox.critical(self, "错误", f"查询失败：{e}")
+                    return
             else:
                 from data.excel_importer import get_all_dibao_payments
                 records = get_all_dibao_payments(period, id_card)
@@ -128,6 +137,7 @@ class DibaoViewDialog(QDialog):
                     p_start_time = p.get('start_time', '')
                     p_issue_month = p.get('issue_month', '')
                     p_import_source = p.get('import_source', '')
+                    p_bank_account = p.get('bank_account', '')
                 else:
                     p_id = p.id
                     p_period = getattr(p, 'period', '')
@@ -147,13 +157,15 @@ class DibaoViewDialog(QDialog):
                     p_start_time = getattr(p, 'start_time', '')
                     p_issue_month = getattr(p, 'issue_month', '')
                     p_import_source = getattr(p, 'import_source', '')
+                    p_bank_account = getattr(p, 'bank_account', '')
 
                 item_name = QTableWidgetItem(p_name)
                 item_name.setData(Qt.ItemDataRole.UserRole, p_id)
                 values = [p_period, p_name, p_id_card, p_village, p_gender, p_relation,
                           p_family_members, p_family_count, p_amount, p_base_amount,
                           p_special_amount, p_adjust_amount, p_special_situation,
-                          p_special_subsidy, p_start_time, p_issue_month, p_import_source]
+                          p_special_subsidy, p_start_time, p_issue_month, p_import_source,
+                          p_bank_account]
                 for col, val in enumerate(values):
                     if col == 1:
                         self.table.setItem(row_idx, col, item_name)
@@ -161,12 +173,23 @@ class DibaoViewDialog(QDialog):
                         self.table.setItem(row_idx, col, QTableWidgetItem(val))
 
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            # 列宽按“表头 + 实际数据”取大计算；身份证号、银行账号等长号码列放宽上限
+            fm = self.table.fontMetrics()
+            wide_cols = {"身份证号", "银行账号"}
             for col_idx, h in enumerate(self.headers):
-                self.table.setColumnWidth(col_idx, min(max(len(h) * 18 + 30, 70), 200))
+                longest = fm.horizontalAdvance(h)
+                for row in range(min(self.table.rowCount(), 200)):
+                    it = self.table.item(row, col_idx)
+                    if it is not None:
+                        longest = max(longest, fm.horizontalAdvance(it.text()))
+                cap = 300 if h in wide_cols else 200
+                self.table.setColumnWidth(col_idx, min(max(longest + 26, 70), cap))
             self.table.setUpdatesEnabled(True)
+            self.lbl_count.setText(f"共 {len(records)} 条")
         except Exception as e:
             self.table.setUpdatesEnabled(True)
-            print(f"加载数据失败: {e}")
+            self.lbl_count.setText("查询失败")
+            QMessageBox.critical(self, "错误", f"加载数据失败：{e}")
 
     def _do_delete(self):
         selected = self.table.selectedItems()
@@ -216,13 +239,16 @@ class DibaoViewDialog(QDialog):
 
             if self.is_network_mode:
                 from network.client import _request
-                params = {}
+                query = []
                 if period:
-                    params['period'] = period
+                    query.append(('period', period))
                 if id_card:
-                    params['id_card'] = id_card
-                data = _request('GET', '/api/dibao_payment', params)
-                records = data.get('records', [])
+                    query.append(('id_card', id_card))
+                path = '/api/dibao_payment'
+                if query:
+                    path += '?' + urlencode(query)
+                data = _request('GET', path)
+                records = data.get('records', []) or []
             else:
                 from data.excel_importer import get_all_dibao_payments
                 records = get_all_dibao_payments(period, id_card)
@@ -261,6 +287,7 @@ class DibaoViewDialog(QDialog):
                         "始发年月": p.get('issue_month', '') or p.get('period', ''),
                         "费款所属期": p.get('period', ''),
                         "导入来源": p.get('import_source', ''),
+                        "银行账号": p.get('bank_account', ''),
                     })
                 else:
                     data.append({
@@ -282,6 +309,7 @@ class DibaoViewDialog(QDialog):
                         "始发年月": getattr(p, 'issue_month', '') or getattr(p, 'period', ''),
                         "费款所属期": getattr(p, 'period', ''),
                         "导入来源": getattr(p, 'import_source', ''),
+                        "银行账号": getattr(p, 'bank_account', ''),
                     })
 
             df = pd.DataFrame(data)

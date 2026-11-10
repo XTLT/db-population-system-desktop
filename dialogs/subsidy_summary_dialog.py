@@ -27,7 +27,7 @@ _LOCAL_MODULES = (
     ("tekun_payment", "特困供养", "period", "amount"),
 )
 
-_HEADERS = ["补贴类型", "期间", "金额（元）", "发放状态", "村", "备注"]
+_HEADERS = ["补贴类型", "期间", "金额（元）", "卡号", "发放状态", "村", "备注"]
 
 
 def _to_amount(value) -> float:
@@ -71,6 +71,8 @@ class SubsidySummaryDialog(QDialog):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        # 卡号列固定宽度，按最长卡号动态计算，避免 19 位账号被挤压截断
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
         layout.addWidget(self.table)
 
         btn_layout = QHBoxLayout()
@@ -136,6 +138,7 @@ class SubsidySummaryDialog(QDialog):
                         "label": label,
                         "period": period,
                         "amount": amount,
+                        "bank_account": getattr(r, "bank_account", "") or "",
                         "payment_status": getattr(r, "payment_status", "") or "",
                         "fail_reason": getattr(r, "fail_reason", "") or "",
                         "village": getattr(r, "village", "") or "",
@@ -173,6 +176,7 @@ class SubsidySummaryDialog(QDialog):
                 r.get("label", ""),
                 r.get("period", ""),
                 r.get("amount", ""),
+                r.get("bank_account", ""),
                 r.get("payment_status", ""),
                 r.get("village", ""),
                 r.get("fail_reason", "") or r.get("town", ""),
@@ -182,3 +186,11 @@ class SubsidySummaryDialog(QDialog):
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.table.setItem(row_idx, col_idx, item)
         self.table.setUpdatesEnabled(True)
+
+        # 卡号列宽度：按最长卡号 + 左右留白，保证 19 位账号完整可见
+        fm = self.table.fontMetrics()
+        widest = max(
+            [fm.horizontalAdvance(str(r.get("bank_account", "") or "")) for r in records] or [0]
+        )
+        want = max(fm.horizontalAdvance("卡号"), widest) + 36
+        self.table.setColumnWidth(3, want)

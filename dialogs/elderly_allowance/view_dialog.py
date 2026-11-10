@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from datetime import datetime
+from urllib.parse import urlencode
 
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
 
@@ -46,11 +47,15 @@ class ElderlyAllowanceViewDialog(QDialog):
         btn_search.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; padding: 6px 16px;")
         btn_search.clicked.connect(self._load_data)
 
+        self.lbl_count = QLabel("")
+        self.lbl_count.setFont(QFont(FONT_NAME, FONT_SIZE))
+
         filter_layout.addWidget(lbl_period)
         filter_layout.addWidget(self.txt_period)
         filter_layout.addWidget(lbl_id_card)
         filter_layout.addWidget(self.txt_id_card)
         filter_layout.addWidget(btn_search)
+        filter_layout.addWidget(self.lbl_count)
         filter_layout.addStretch()
         layout.addLayout(filter_layout)
 
@@ -89,16 +94,20 @@ class ElderlyAllowanceViewDialog(QDialog):
             if self.is_network_mode:
                 try:
                     from network.client import _request
-                    params = {}
+                    query = []
                     if period:
-                        params['period'] = period
+                        query.append(('period', period))
                     if id_card:
-                        params['id_card'] = id_card
-                    data = _request('GET', '/api/elderly_allowance', params)
-                    records = data.get('records', [])
+                        query.append(('id_card', id_card))
+                    path = '/api/elderly_allowance'
+                    if query:
+                        path += '?' + urlencode(query)
+                    data = _request('GET', path)
+                    records = data.get('records', []) or []
                 except Exception as e:
-                    print(f"网络获取数据失败: {e}")
-                    records = []
+                    self.lbl_count.setText("查询失败")
+                    QMessageBox.critical(self, "错误", f"查询失败：{e}")
+                    return
             else:
                 from data.excel_importer import get_all_elderly_allowances
                 records = get_all_elderly_allowances(period, id_card)
@@ -139,12 +148,23 @@ class ElderlyAllowanceViewDialog(QDialog):
                 self.table.setItem(row_idx, 7, QTableWidgetItem(p_import_source))
 
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            # 列宽按“表头 + 实际数据”取大计算；身份证号、银行账号等长号码列放宽上限
+            fm = self.table.fontMetrics()
+            wide_cols = {"身份证号", "银行账号", "卡号"}
             for col_idx, h in enumerate(self.headers):
-                self.table.setColumnWidth(col_idx, min(max(len(h) * 18 + 30, 70), 200))
+                longest = fm.horizontalAdvance(h)
+                for row in range(min(self.table.rowCount(), 200)):
+                    item = self.table.item(row, col_idx)
+                    if item is not None:
+                        longest = max(longest, fm.horizontalAdvance(item.text()))
+                cap = 300 if h in wide_cols else 200
+                self.table.setColumnWidth(col_idx, min(max(longest + 26, 70), cap))
             self.table.setUpdatesEnabled(True)
+            self.lbl_count.setText(f"共 {len(records)} 条")
         except Exception as e:
             self.table.setUpdatesEnabled(True)
-            print(f"加载数据失败: {e}")
+            self.lbl_count.setText("查询失败")
+            QMessageBox.critical(self, "错误", f"加载数据失败：{e}")
 
     def _do_delete(self):
         selected = self.table.selectedItems()
@@ -194,13 +214,16 @@ class ElderlyAllowanceViewDialog(QDialog):
 
             if self.is_network_mode:
                 from network.client import _request
-                params = {}
+                query = []
                 if period:
-                    params['period'] = period
+                    query.append(('period', period))
                 if id_card:
-                    params['id_card'] = id_card
-                data = _request('GET', '/api/elderly_allowance', params)
-                records = data.get('records', [])
+                    query.append(('id_card', id_card))
+                path = '/api/elderly_allowance'
+                if query:
+                    path += '?' + urlencode(query)
+                data = _request('GET', path)
+                records = data.get('records', []) or []
             else:
                 from data.excel_importer import get_all_elderly_allowances
                 records = get_all_elderly_allowances(period, id_card)
