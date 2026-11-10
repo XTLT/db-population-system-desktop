@@ -76,7 +76,6 @@ def _report_online_edit(self):
         btn_delete = QPushButton("删除选中报表")
         btn_delete.setStyleSheet("background-color: #CC0000; color: white; padding: 8px 20px;")
         btn_delete.setToolTip("仅管理员可见：删除上传的报表文件（不可恢复）")
-        btn_delete.clicked.connect(do_delete)
         btn_layout.addWidget(btn_delete)
     btn_layout.addWidget(btn_close)
     layout.addLayout(btn_layout)
@@ -127,6 +126,8 @@ def _report_online_edit(self):
             return
 
     btn_open.clicked.connect(do_open)
+    if is_admin:
+        btn_delete.clicked.connect(do_delete)
     btn_close.clicked.connect(dialog.reject)
     table.doubleClicked.connect(do_open)
     dialog.exec()
