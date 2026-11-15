@@ -27,7 +27,7 @@ _LOCAL_MODULES = (
     ("tekun_payment", "特困供养", "period", "amount"),
 )
 
-_HEADERS = ["补贴类型", "期间", "金额（元）", "卡号", "发放状态", "村", "备注"]
+_HEADERS = ["补贴类型", "期间", "金额（元）", "银行账号", "发放状态", "村", "备注"]
 
 
 def _to_amount(value) -> float:
@@ -71,7 +71,7 @@ class SubsidySummaryDialog(QDialog):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # 卡号列固定宽度，按最长卡号动态计算，避免 19 位账号被挤压截断
+        # 银行账号列固定宽度，按最长账号动态计算，避免 19 位号码被挤压截断
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
         layout.addWidget(self.table)
 
@@ -187,10 +187,10 @@ class SubsidySummaryDialog(QDialog):
                 self.table.setItem(row_idx, col_idx, item)
         self.table.setUpdatesEnabled(True)
 
-        # 卡号列宽度：按最长卡号 + 左右留白，保证 19 位账号完整可见
+        # 银行账号列宽度：按最长账号 + 左右留白，保证 19 位账号完整可见
         fm = self.table.fontMetrics()
         widest = max(
             [fm.horizontalAdvance(str(r.get("bank_account", "") or "")) for r in records] or [0]
         )
-        want = max(fm.horizontalAdvance("卡号"), widest) + 36
+        want = max(fm.horizontalAdvance("银行账号"), widest) + 36
         self.table.setColumnWidth(3, want)
