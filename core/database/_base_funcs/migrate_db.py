@@ -221,3 +221,9 @@ def migrate_db(engine):
                 conn.commit()
             except Exception:
                 pass
+        # 小组（2026-11-20：模型早已有该列，旧库缺失会让主窗口查询直接报 no such column）
+        try:
+            conn.execute(text("ALTER TABLE persons ADD COLUMN group_name VARCHAR DEFAULT ''"))
+            conn.commit()
+        except Exception:
+            pass
