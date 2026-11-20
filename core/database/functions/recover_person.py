@@ -17,6 +17,7 @@ def recover_person(deleted_id: str):
                 address=deleted.address,
                 relation=deleted.relation,
                 is_dead=deleted.is_dead,
+                death_date=deleted.death_date,
                 phone=deleted.phone,
                 remark=deleted.remark,
                 poor_type=deleted.poor_type,

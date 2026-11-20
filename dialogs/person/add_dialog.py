@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit,
-    QComboBox, QPushButton, QLabel, QMessageBox
+    QComboBox, QPushButton, QLabel, QMessageBox, QDateEdit
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QDate
 from PyQt6.QtGui import QFont
 
 from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
@@ -72,6 +72,19 @@ class AddDialog(QDialog):
         install_digit_filter(self.txt_phone)
         self.cbo_is_dead = QComboBox()
         self.cbo_is_dead.addItems(["否", "是"])
+        self.cbo_is_dead.currentTextChanged.connect(self._on_is_dead_changed)
+        # 死亡时间：选"是"后出现，新增时选"是"必须填写
+        self.dte_death_date = QDateEdit()
+        self.dte_death_date.setCalendarPopup(True)
+        self.dte_death_date.setDisplayFormat("yyyy-MM-dd")
+        self.dte_death_date.setSpecialValueText("未填写")
+        self.dte_death_date.setMinimumDate(QDate(1900, 1, 1))
+        self.dte_death_date.setDate(QDate(1900, 1, 1))
+        self.lbl_death_date = QLabel("死亡时间：")
+        self.lbl_death_date.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.lbl_death_date.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_death_date.setVisible(False)
+        self.dte_death_date.setVisible(False)
         self.txt_social1 = QLineEdit()
         self.txt_social2 = QLineEdit()
         self.txt_social2.setReadOnly(True)
@@ -135,6 +148,7 @@ class AddDialog(QDialog):
             label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             form.addRow(label, widget)
 
+        form.addRow(self.lbl_death_date, self.dte_death_date)
         form.addRow(self.cbo_disability_type_label, self.cbo_disability_type)
         form.addRow(self.cbo_dis_level_label, self.cbo_dis_level)
 
@@ -172,6 +186,21 @@ class AddDialog(QDialog):
         if age:
             self.txt_age.setText(age)
 
+    def _on_is_dead_changed(self, text):
+        """选"是"时才显示死亡时间行。"""
+        if not hasattr(self, 'lbl_death_date'):
+            return
+        visible = text == "是"
+        self.lbl_death_date.setVisible(visible)
+        self.dte_death_date.setVisible(visible)
+
+    def _death_date_value(self):
+        """返回 YYYY-MM-DD；日期停在最小值（1900-01-01）表示未填写。"""
+        d = self.dte_death_date.date()
+        if d == QDate(1900, 1, 1):
+            return ""
+        return d.toString("yyyy-MM-dd")
+
     def _on_disability_changed(self, text):
         is_disabled = (text == "是")
         self.cbo_disability_type.setVisible(is_disabled)
@@ -207,6 +236,12 @@ class AddDialog(QDialog):
             QMessageBox.warning(self, "提示", "年龄必须是数字！")
             return
 
+        new_is_dead = self.cbo_is_dead.currentText()
+        death_date_value = self._death_date_value()
+        if new_is_dead == '是' and not death_date_value:
+            QMessageBox.warning(self, "提示", "改为死亡时必须填写死亡时间！")
+            return
+
         if get_server_url():
             data = {
                 'hu_hao': self.hu_hao,
@@ -216,7 +251,8 @@ class AddDialog(QDialog):
                 'address': self.txt_address.text().strip(),
                 'group_name': self.txt_group_name.text().strip(),
                 'relation': self.txt_relation.currentText().strip(),
-                'is_dead': self.cbo_is_dead.currentText(),
+                'is_dead': new_is_dead,
+                'death_date': death_date_value,
                 'phone': self.txt_phone.text().strip(),
                 'social_card1': self.txt_social1.text().strip(),
                 'poor_type': self.cbo_poor_type.currentText(),
@@ -249,7 +285,8 @@ class AddDialog(QDialog):
                 address=self.txt_address.text().strip(),
                 group_name=self.txt_group_name.text().strip(),
                 relation=self.txt_relation.currentText().strip(),
-                is_dead=self.cbo_is_dead.currentText(),
+                is_dead=new_is_dead,
+                death_date=death_date_value,
                 phone=self.txt_phone.text().strip(),
                 social_card1=self.txt_social1.text().strip(),
                 poor_type=self.cbo_poor_type.currentText(),

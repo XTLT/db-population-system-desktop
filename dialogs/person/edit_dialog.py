@@ -101,6 +101,19 @@ class EditDialog(QDialog):
         self.txt_commercial_forest.setPlaceholderText("亩")
         self.cbo_is_dead = QComboBox()
         self.cbo_is_dead.addItems(["否", "是"])
+        self.cbo_is_dead.currentTextChanged.connect(self._on_is_dead_changed)
+        # 死亡时间：选"是"后出现；由非死亡改为死亡时必填（存量已死亡人员不强制）
+        self.dte_death_date = QDateEdit()
+        self.dte_death_date.setCalendarPopup(True)
+        self.dte_death_date.setDisplayFormat("yyyy-MM-dd")
+        self.dte_death_date.setSpecialValueText("未填写")
+        self.dte_death_date.setMinimumDate(QDate(1900, 1, 1))
+        self.dte_death_date.setDate(QDate(1900, 1, 1))
+        self.lbl_death_date = QLabel("死亡时间：")
+        self.lbl_death_date.setFont(QFont(FONT_NAME, FONT_SIZE))
+        self.lbl_death_date.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_death_date.setVisible(False)
+        self.dte_death_date.setVisible(False)
         self.txt_social1 = QLineEdit()
         self.txt_social2 = QLineEdit()
         self.txt_social2.setReadOnly(True)
@@ -168,6 +181,7 @@ class EditDialog(QDialog):
             label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             form.addRow(label, widget)
 
+        form.addRow(self.lbl_death_date, self.dte_death_date)
         form.addRow(self.cbo_disability_type_label, self.cbo_disability_type)
         form.addRow(self.cbo_dis_level_label, self.cbo_dis_level)
 
@@ -390,6 +404,21 @@ class EditDialog(QDialog):
                 except Exception:
                     pass
 
+    def _on_is_dead_changed(self, text):
+        """选"是"时才显示死亡时间行。"""
+        if not hasattr(self, 'lbl_death_date'):
+            return
+        visible = text == "是"
+        self.lbl_death_date.setVisible(visible)
+        self.dte_death_date.setVisible(visible)
+
+    def _death_date_value(self):
+        """返回 YYYY-MM-DD；日期停在最小值（1900-01-01）表示未填写。"""
+        d = self.dte_death_date.date()
+        if d == QDate(1900, 1, 1):
+            return ""
+        return d.toString("yyyy-MM-dd")
+
     def _on_disability_changed(self, text):
         is_disabled = (text == "是")
         self.cbo_disability_type.setVisible(is_disabled)
@@ -416,6 +445,10 @@ class EditDialog(QDialog):
         self.txt_national_welfare_forest.setText(getattr(p, 'national_welfare_forest_area', '') or "")
         self.txt_commercial_forest.setText(getattr(p, 'commercial_forest_area', '') or "")
         self.cbo_is_dead.setCurrentText("是" if p.is_dead == "是" else "否")
+        _death = getattr(p, 'death_date', '') or ''
+        _qdeath = QDate.fromString(_death, "yyyy-MM-dd")
+        self.dte_death_date.setDate(_qdeath if _qdeath.isValid() else QDate(1900, 1, 1))
+        self._on_is_dead_changed(self.cbo_is_dead.currentText())
         self.txt_social1.setText(p.social_card1 if p.social_card1 != "无" else "")
         _c2 = p.social_card2 if p.social_card2 and p.social_card2 != "无" else ""
         _s2 = getattr(p, 'social_card2_source', '') or ''
@@ -836,6 +869,13 @@ class EditDialog(QDialog):
                 return
             commercial_forest_reason = commercial_forest_reason.strip()
 
+        new_is_dead = self.cbo_is_dead.currentText()
+        old_is_dead = getattr(self.person, 'is_dead', '') or '否'
+        death_date_value = self._death_date_value()
+        if new_is_dead == '是' and old_is_dead != '是' and not death_date_value:
+            QMessageBox.warning(self, "提示", "改为死亡时必须填写死亡时间！")
+            return
+
         if get_server_url():
             from network.client import api_update_person
             data = {
@@ -846,7 +886,8 @@ class EditDialog(QDialog):
                 'address': self.txt_address.text().strip(),
                 'group_name': self.txt_group_name.text().strip(),
                 'phone': self.txt_phone.text().strip(),
-                'is_dead': self.cbo_is_dead.currentText(),
+                'is_dead': new_is_dead,
+                'death_date': death_date_value,
                 'land_area': new_land_area,
                 'local_welfare_forest_area': new_local_welfare_forest,
                 'national_welfare_forest_area': new_national_welfare_forest,
@@ -885,7 +926,8 @@ class EditDialog(QDialog):
             self.person.address = self.txt_address.text().strip()
             self.person.group_name = self.txt_group_name.text().strip()
             self.person.phone = self.txt_phone.text().strip()
-            self.person.is_dead = self.cbo_is_dead.currentText()
+            self.person.is_dead = new_is_dead
+            self.person.death_date = death_date_value
             self.person.land_area = new_land_area
             if land_changed:
                 from datetime import datetime
