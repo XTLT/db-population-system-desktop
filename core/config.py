@@ -1,75 +1,32 @@
-import os
-import sys
-import shutil
+# -*- coding: utf-8 -*-
+"""桌面端配置常量。
 
-APP_NAME = "人口通"
+函数实现已拆到 config_funcs/（版本号读取、旧目录迁移、目录创建），
+本文件保留常量并在 import 时完成旧配置迁移，外部
+`from core.config import ...` 的引用不受影响。
+"""
 
+from .config_funcs.paths import (  # noqa: F401
+    APP_NAME,
+    BASE_DIR,
+    PROJECT_ROOT,
+    APPDATA_DIR,
+    _OLD_APP_NAME,
+    _OLD_APPDATA_DIR,
+    DB_PATH,
+    PHOTOS_DIR,
+    BACKUP_DIR,
+    LOG_DIR,
+    CERT_DIR,
+)
+from .config_funcs.load_app_version import load_app_version
+from .config_funcs.migrate_old_appdata import migrate_old_appdata
+from .config_funcs.ensure_dirs import ensure_dirs  # noqa: F401
 
-def _load_app_version() -> str:
-    """从 updates/version.json 读取桌面端版本号，与发布版本保持一致。"""
-    try:
-        candidates = []
-        if getattr(sys, 'frozen', False):
-            # PyInstaller onedir：datas 打包到 sys._MEIPASS 下的 updates/
-            meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-            candidates.append(os.path.join(meipass, 'updates', 'version.json'))
-            # 兼容旧布局：exe 同级 updates/
-            candidates.append(os.path.join(os.path.dirname(sys.executable), 'updates', 'version.json'))
-        else:
-            candidates.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'updates', 'version.json'))
-        for p in candidates:
-            if os.path.exists(p):
-                import json
-                with open(p, encoding='utf-8') as f:
-                    return (json.load(f).get('desktop_version') or '').strip()
-    except Exception:
-        pass
-    return ""
+APP_VERSION = load_app_version() or "0.0.1"
 
-
-APP_VERSION = _load_app_version() or "0.0.1"
-
-if getattr(sys, 'frozen', False):
-    BASE_DIR = os.path.dirname(sys.executable)
-else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-                    
-if sys.platform == "win32":
-    APPDATA_DIR = os.path.join(os.environ.get("APPDATA", BASE_DIR), APP_NAME)
-else:
-    APPDATA_DIR = os.path.join(os.path.expanduser("~"), ".config", APP_NAME)
-
-_OLD_APP_NAME = "人口信息查询系统"
-if sys.platform == "win32":
-    _OLD_APPDATA_DIR = os.path.join(os.environ.get("APPDATA", BASE_DIR), _OLD_APP_NAME)
-else:
-    _OLD_APPDATA_DIR = os.path.join(os.path.expanduser("~"), ".config", _OLD_APP_NAME)
-
-
-def _migrate_old_appdata():
-    """从旧应用名目录迁移配置文件到新目录（仅升级时执行一次）。"""
-    if not os.path.isdir(_OLD_APPDATA_DIR):
-        return
-    os.makedirs(APPDATA_DIR, exist_ok=True)
-    for item in os.listdir(_OLD_APPDATA_DIR):
-        src = os.path.join(_OLD_APPDATA_DIR, item)
-        dst = os.path.join(APPDATA_DIR, item)
-        if os.path.exists(dst):
-            continue
-        if os.path.isfile(src):
-            shutil.copy2(src, dst)
-        elif os.path.isdir(src):
-            shutil.copytree(src, dst)
-
-
-_migrate_old_appdata()
-
-DB_PATH = os.path.join(BASE_DIR, "population.db")
-PHOTOS_DIR = os.path.join(BASE_DIR, "Photos")
-BACKUP_DIR = os.path.join(BASE_DIR, "backups")
-LOG_DIR = os.path.join(BASE_DIR, "logs")
-CERT_DIR = os.path.join(BASE_DIR, "certs")
+# 旧应用名目录迁移，import 时执行一次（与原实现时机一致）
+migrate_old_appdata()
 
 BACKUP_RETENTION_DAYS = 60
 BACKUP_SCHEDULE_DAY = 4
@@ -185,10 +142,3 @@ BTN_CANCEL_COLOR = "#C8C8C8"
 
 FONT_NAME = "微软雅黑"
 FONT_SIZE = 10
-
-
-def ensure_dirs():
-    os.makedirs(PHOTOS_DIR, exist_ok=True)
-    os.makedirs(BACKUP_DIR, exist_ok=True)
-    os.makedirs(LOG_DIR, exist_ok=True)
-    os.makedirs(CERT_DIR, exist_ok=True)
