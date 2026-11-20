@@ -1,224 +1,58 @@
-from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QSpinBox,
-    QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
-    QAbstractItemView, QMessageBox
-)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+"""column_mapping_dialog（已按一方法一文件拆分，本文件只做总装与兼容导出）。"""
 
-from core.config import FONT_NAME, FONT_SIZE, BTN_SAVE_COLOR, BTN_CANCEL_COLOR
+from .column_mapping_dialog_parts._imports import *
+from .column_mapping_dialog_parts._consts import *
+from .column_mapping_dialog_parts.funcs import *
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import ColumnMappingDialog
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import fill_map_mixin as _m_fill_map_mixin
+_m_fill_map_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_fill_map_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_fill_map_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_fill_map_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import header_row_mixin as _m_header_row_mixin
+_m_header_row_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_header_row_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_header_row_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_header_row_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import m_init_mixin as _m_m_init_mixin
+_m_m_init_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_m_init_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_m_init_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_m_init_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import match_by_mixin as _m_match_by_mixin
+_m_match_by_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_match_by_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_match_by_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_match_by_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import match_col_mixin as _m_match_col_mixin
+_m_match_col_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_match_col_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_match_col_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_match_col_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import on_header_row_changed_mixin as _m_on_header_row_changed_mixin
+_m_on_header_row_changed_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_on_header_row_changed_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_on_header_row_changed_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_on_header_row_changed_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import on_sheet_changed_mixin as _m_on_sheet_changed_mixin
+_m_on_sheet_changed_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_on_sheet_changed_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_on_sheet_changed_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_on_sheet_changed_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import setup_ui_mixin as _m_setup_ui_mixin
+_m_setup_ui_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_setup_ui_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_setup_ui_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_setup_ui_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import update_field_combos_mixin as _m_update_field_combos_mixin
+_m_update_field_combos_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_update_field_combos_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_update_field_combos_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_update_field_combos_mixin._col_letter = _col_letter
+from .column_mapping_dialog_parts.column_mapping_dialog_methods import ws_mixin as _m_ws_mixin
+_m_ws_mixin.FIELD_OPTIONS = FIELD_OPTIONS
+_m_ws_mixin.MATCH_BY_ID_CARD = MATCH_BY_ID_CARD
+_m_ws_mixin.MATCH_BY_NAME = MATCH_BY_NAME
+_m_ws_mixin._col_letter = _col_letter
 
-FIELD_OPTIONS = [
-    ('', '不填写'),
-    ('name', '姓名'),
-    ('id_card', '身份证号'),
-    ('hu_hao', '户号'),
-    ('age', '年龄'),
-    ('phone', '电话'),
-    ('address', '地址'),
-    ('group_name', '小组'),
-    ('relation', '与户主关系'),
-    ('is_dead', '是否死亡'),
-    ('remark', '备注'),
-    ('poor_type', '困难类型'),
-    ('disability', '是否残疾'),
-    ('disability_type', '残疾类型'),
-    ('dis_level', '残疾等级'),
-    ('dibao', '低保'),
-    ('tekun', '特困'),
-    ('tekun_type', '特困类型'),
-    ('jisheng', '计生'),
-    ('social_card1', '社保卡1'),
-    ('social_card2', '社保卡2'),
-    ('social_card3', '社保卡3'),
-    ('social_card2_source', '社保卡2来源'),
-    ('social_card3_source', '社保卡3来源'),
-    ('is_migrated', '是否迁移'),
-    ('migration_date', '迁移日期'),
-    ('migration_place', '迁移地点'),
-    ('migration_reason', '迁移原因'),
-    ('updated_at', '更新时间'),
-    ('land_area', '土地面积'),
-    ('land_area_change_reason', '土地面积变更原因'),
-    ('land_area_change_time', '土地面积变更时间'),
-    ('local_welfare_forest_area', '地方公益林面积'),
-    ('local_welfare_forest_change_reason', '地方公益林变更原因'),
-    ('local_welfare_forest_change_time', '地方公益林变更时间'),
-    ('national_welfare_forest_area', '国家公益林面积'),
-    ('national_welfare_forest_change_reason', '国家公益林变更原因'),
-    ('national_welfare_forest_change_time', '国家公益林变更时间'),
-    ('commercial_forest_area', '非国有天然商品林面积'),
-    ('commercial_forest_change_reason', '非国有天然商品林变更原因'),
-    ('commercial_forest_change_time', '非国有天然商品林变更时间'),
-]
-
-MATCH_BY_NAME = 'name'
-MATCH_BY_ID_CARD = 'id_card'
-
-
-def _col_letter(n):
-    """1 → A, 2 → B, 27 → AA"""
-    s = ''
-    while n > 0:
-        n, r = divmod(n - 1, 26)
-        s = chr(65 + r) + s
-    return s
-
-
-class ColumnMappingDialog(QDialog):
-    """选择Sheet、表头行、匹配方式和各列填写内容"""
-
-    def __init__(self, wb, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("列映射设置")
-        self.setMinimumSize(650, 520)
-        self._wb = wb
-        self._ws = wb.active
-        self._headers = []
-        self._field_combos = []
-        self._setup_ui()
-        self._on_sheet_changed()
-
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-
-        info = QLabel("请选择Sheet、表头行、匹配方式和需要填写的数据列：")
-        info.setFont(QFont(FONT_NAME, FONT_SIZE))
-        layout.addWidget(info)
-
-        row1 = QHBoxLayout()
-        row1.addWidget(QLabel("Sheet："))
-        self.cbo_sheet = QComboBox()
-        self.cbo_sheet.setFont(QFont(FONT_NAME, FONT_SIZE))
-        for name in self._wb.sheetnames:
-            self.cbo_sheet.addItem(name)
-        self.cbo_sheet.currentIndexChanged.connect(self._on_sheet_changed)
-        row1.addWidget(self.cbo_sheet)
-
-        row1.addSpacing(20)
-        row1.addWidget(QLabel("表头行："))
-        self.spin_header_row = QSpinBox()
-        self.spin_header_row.setFont(QFont(FONT_NAME, FONT_SIZE))
-        self.spin_header_row.setMinimum(1)
-        self.spin_header_row.setValue(1)
-        self.spin_header_row.valueChanged.connect(self._on_header_row_changed)
-        row1.addWidget(self.spin_header_row)
-
-        row1.addSpacing(20)
-        row1.addWidget(QLabel("匹配方式："))
-        self.cbo_match = QComboBox()
-        self.cbo_match.setFont(QFont(FONT_NAME, FONT_SIZE))
-        self.cbo_match.addItem("按姓名匹配", MATCH_BY_NAME)
-        self.cbo_match.addItem("按身份证号匹配", MATCH_BY_ID_CARD)
-        self.cbo_match.currentIndexChanged.connect(self._update_field_combos)
-        row1.addWidget(self.cbo_match)
-
-        row1.addSpacing(20)
-        row1.addWidget(QLabel("匹配列："))
-        self.cbo_match_col = QComboBox()
-        self.cbo_match_col.setFont(QFont(FONT_NAME, FONT_SIZE))
-        row1.addWidget(self.cbo_match_col)
-        row1.addStretch()
-        layout.addLayout(row1)
-
-        table_label = QLabel("各列填写内容：")
-        table_label.setFont(QFont(FONT_NAME, FONT_SIZE))
-        layout.addWidget(table_label)
-
-        self.table = QTableWidget()
-        self.table.setFont(QFont(FONT_NAME, FONT_SIZE))
-        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["列号", "表头内容", "填写内容"])
-        self.table.verticalHeader().setVisible(False)
-        layout.addWidget(self.table)
-
-        btn_row = QHBoxLayout()
-        btn_row.addStretch()
-        btn_ok = QPushButton("确定")
-        btn_ok.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; font-weight: bold; padding: 8px 30px;")
-        btn_ok.clicked.connect(self.accept)
-        btn_cancel = QPushButton("取消")
-        btn_cancel.setStyleSheet(f"background-color: {BTN_CANCEL_COLOR}; padding: 8px 30px;")
-        btn_cancel.clicked.connect(self.reject)
-        btn_row.addWidget(btn_ok)
-        btn_row.addWidget(btn_cancel)
-        layout.addLayout(btn_row)
-
-    def _on_sheet_changed(self):
-        sheet_name = self.cbo_sheet.currentText()
-        self._ws = self._wb[sheet_name]
-        self.spin_header_row.setMaximum(self._ws.max_row)
-        self._on_header_row_changed()
-
-    def _on_header_row_changed(self):
-        header_row = self.spin_header_row.value()
-        self._headers = []
-        max_col = self._ws.max_column
-        for col in range(1, max_col + 1):
-            val = self._ws.cell(header_row, col).value
-            self._headers.append(str(val).strip() if val is not None else "")
-
-        self.cbo_match_col.blockSignals(True)
-        self.cbo_match_col.clear()
-        for i, h in enumerate(self._headers):
-            letter = _col_letter(i + 1)
-            display = f"{letter}: {h or '(空)'}"
-            self.cbo_match_col.addItem(display, i + 1)
-        self.cbo_match_col.blockSignals(False)
-
-        self.table.setRowCount(len(self._headers))
-        self._field_combos = []
-
-        for i, h in enumerate(self._headers):
-            letter = _col_letter(i + 1)
-            idx_item = QTableWidgetItem(letter)
-            idx_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.table.setItem(i, 0, idx_item)
-
-            header_item = QTableWidgetItem(h or "(空)")
-            header_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.table.setItem(i, 1, header_item)
-
-            combo = QComboBox()
-            combo.setFont(QFont(FONT_NAME, FONT_SIZE))
-            for val, label in FIELD_OPTIONS:
-                combo.addItem(label, val)
-            self._field_combos.append(combo)
-            self.table.setCellWidget(i, 2, combo)
-
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self._update_field_combos()
-
-    def _update_field_combos(self):
-        match_by = self.cbo_match.currentData()
-        for combo in self._field_combos:
-            for i in range(combo.count()):
-                combo.model().item(i).setEnabled(combo.itemData(i) != match_by)
-
-    @property
-    def ws(self):
-        return self._ws
-
-    @property
-    def header_row(self):
-        return self.spin_header_row.value()
-
-    @property
-    def match_by(self):
-        return self.cbo_match.currentData()
-
-    @property
-    def match_col(self):
-        return self.cbo_match_col.currentData()
-
-    @property
-    def fill_map(self):
-        match_col = self.cbo_match_col.currentData()
-        result = {}
-        for i, combo in enumerate(self._field_combos):
-            val = combo.currentData()
-            if val and (i + 1) != match_col:
-                result[i + 1] = val
-        return result
+__all__ = ['_col_letter', 'ColumnMappingDialog']

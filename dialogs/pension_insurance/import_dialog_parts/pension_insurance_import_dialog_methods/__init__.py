@@ -1,0 +1,15 @@
+from .._imports import *
+from .._consts import *
+from ..funcs import *
+
+from .m_init_mixin import PensionInsuranceImportDialogMInitMixin
+from .setup_ui_mixin import PensionInsuranceImportDialogSetupUiMixin
+from .browse_mixin import PensionInsuranceImportDialogBrowseMixin
+from .run_import_mixin import PensionInsuranceImportDialogRunImportMixin
+from .start_import_mixin import PensionInsuranceImportDialogStartImportMixin
+from .on_progress_mixin import PensionInsuranceImportDialogOnProgressMixin
+from .on_finished_mixin import PensionInsuranceImportDialogOnFinishedMixin
+from .on_error_mixin import PensionInsuranceImportDialogOnErrorMixin
+
+class PensionInsuranceImportDialog(PensionInsuranceImportDialogMInitMixin, PensionInsuranceImportDialogSetupUiMixin, PensionInsuranceImportDialogBrowseMixin, PensionInsuranceImportDialogRunImportMixin, PensionInsuranceImportDialogStartImportMixin, PensionInsuranceImportDialogOnProgressMixin, PensionInsuranceImportDialogOnFinishedMixin, PensionInsuranceImportDialogOnErrorMixin, QDialog):
+    pass

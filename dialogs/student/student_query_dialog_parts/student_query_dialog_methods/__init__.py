@@ -1,0 +1,17 @@
+from .._imports import *
+from .._consts import *
+from ..funcs import *
+
+from .m_init_mixin import StudentQueryDialogMInitMixin
+from .setup_ui_mixin import StudentQueryDialogSetupUiMixin
+from .load_data_mixin import StudentQueryDialogLoadDataMixin
+from .get_person_mixin import StudentQueryDialogGetPersonMixin
+from .search_mixin import StudentQueryDialogSearchMixin
+from .get_selected_person_ids_mixin import StudentQueryDialogGetSelectedPersonIdsMixin
+from .select_all_mixin import StudentQueryDialogSelectAllMixin
+from .deselect_all_mixin import StudentQueryDialogDeselectAllMixin
+from .batch_school_mixin import StudentQueryDialogBatchSchoolMixin
+from .batch_left_behind_mixin import StudentQueryDialogBatchLeftBehindMixin
+
+class StudentQueryDialog(StudentQueryDialogMInitMixin, StudentQueryDialogSetupUiMixin, StudentQueryDialogLoadDataMixin, StudentQueryDialogGetPersonMixin, StudentQueryDialogSearchMixin, StudentQueryDialogGetSelectedPersonIdsMixin, StudentQueryDialogSelectAllMixin, StudentQueryDialogDeselectAllMixin, StudentQueryDialogBatchSchoolMixin, StudentQueryDialogBatchLeftBehindMixin, QDialog):
+    pass

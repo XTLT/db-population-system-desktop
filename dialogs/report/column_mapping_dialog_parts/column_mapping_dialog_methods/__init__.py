@@ -1,0 +1,17 @@
+from .._imports import *
+from .._consts import *
+from ..funcs import *
+
+from .m_init_mixin import ColumnMappingDialogMInitMixin
+from .setup_ui_mixin import ColumnMappingDialogSetupUiMixin
+from .on_sheet_changed_mixin import ColumnMappingDialogOnSheetChangedMixin
+from .on_header_row_changed_mixin import ColumnMappingDialogOnHeaderRowChangedMixin
+from .update_field_combos_mixin import ColumnMappingDialogUpdateFieldCombosMixin
+from .ws_mixin import ColumnMappingDialogWsMixin
+from .header_row_mixin import ColumnMappingDialogHeaderRowMixin
+from .match_by_mixin import ColumnMappingDialogMatchByMixin
+from .match_col_mixin import ColumnMappingDialogMatchColMixin
+from .fill_map_mixin import ColumnMappingDialogFillMapMixin
+
+class ColumnMappingDialog(ColumnMappingDialogMInitMixin, ColumnMappingDialogSetupUiMixin, ColumnMappingDialogOnSheetChangedMixin, ColumnMappingDialogOnHeaderRowChangedMixin, ColumnMappingDialogUpdateFieldCombosMixin, ColumnMappingDialogWsMixin, ColumnMappingDialogHeaderRowMixin, ColumnMappingDialogMatchByMixin, ColumnMappingDialogMatchColMixin, ColumnMappingDialogFillMapMixin, QDialog):
+    pass

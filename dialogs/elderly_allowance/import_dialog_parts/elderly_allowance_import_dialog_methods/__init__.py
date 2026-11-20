@@ -1,0 +1,15 @@
+from .._imports import *
+from .._consts import *
+from ..funcs import *
+
+from .m_init_mixin import ElderlyAllowanceImportDialogMInitMixin
+from .setup_ui_mixin import ElderlyAllowanceImportDialogSetupUiMixin
+from .browse_mixin import ElderlyAllowanceImportDialogBrowseMixin
+from .run_import_mixin import ElderlyAllowanceImportDialogRunImportMixin
+from .start_import_mixin import ElderlyAllowanceImportDialogStartImportMixin
+from .on_progress_mixin import ElderlyAllowanceImportDialogOnProgressMixin
+from .on_finished_mixin import ElderlyAllowanceImportDialogOnFinishedMixin
+from .on_error_mixin import ElderlyAllowanceImportDialogOnErrorMixin
+
+class ElderlyAllowanceImportDialog(ElderlyAllowanceImportDialogMInitMixin, ElderlyAllowanceImportDialogSetupUiMixin, ElderlyAllowanceImportDialogBrowseMixin, ElderlyAllowanceImportDialogRunImportMixin, ElderlyAllowanceImportDialogStartImportMixin, ElderlyAllowanceImportDialogOnProgressMixin, ElderlyAllowanceImportDialogOnFinishedMixin, ElderlyAllowanceImportDialogOnErrorMixin, QDialog):
+    pass
