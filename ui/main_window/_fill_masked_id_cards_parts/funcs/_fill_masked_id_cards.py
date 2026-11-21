@@ -2,6 +2,13 @@
 from .._imports import *
 from .._consts import *
 
+
+def _get_column_select_dialog_class():
+    """延迟导入列选择对话框，避免 funcs 与 column_select_dialog_methods 循环导入。"""
+    from ..column_select_dialog_methods import _ColumnSelectDialog
+    return _ColumnSelectDialog
+
+
 def _fill_masked_id_cards(self):
     """用系统中已有人员的完整身份证，补全Excel中脱敏的证件号码（前12位+******）。
 
@@ -23,7 +30,7 @@ def _fill_masked_id_cards(self):
         QMessageBox.critical(self, "错误", f"读取Excel文件失败：{e}")
         return
 
-    dlg = _ColumnSelectDialog(wb, self)
+    dlg = _get_column_select_dialog_class()(wb, self)
     if dlg.exec() != QDialog.DialogCode.Accepted:
         return
     if not dlg.name_col or not dlg.id_col or dlg.name_col.startswith("（") or dlg.id_col.startswith("（"):

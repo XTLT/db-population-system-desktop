@@ -1,6 +1,7 @@
 """原模块的顶层函数 save_recent_server。"""
 from .._imports import *
 from .._consts import *
+from .get_recent_servers import get_recent_servers
 
 def save_recent_server(url):
     servers = get_recent_servers()
