@@ -86,6 +86,11 @@ def _setup_menu(self):
     student_menu.addSeparator()
     student_menu.addAction(grade_promotion_action)
 
+    house_build_menu = menubar.addMenu("宅基地建房")
+    hb_view_action = QAction("建房申请登记（申请表/审批表）", self)
+    hb_view_action.triggered.connect(self._view_house_build)
+    house_build_menu.addAction(hb_view_action)
+
     subsidy_menu = menubar.addMenu("地力补贴")
     subsidy_import_action = QAction("导入地力补贴", self)
     subsidy_import_action.triggered.connect(self._import_land_subsidy)

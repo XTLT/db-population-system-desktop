@@ -34,6 +34,15 @@ from .api_upload_photo import api_upload_photo
 from .api_download_photo import api_download_photo
 from .api_delete_photo_on_server import api_delete_photo_on_server
 from .api_export_filtered import api_export_filtered
+from .api_house_build import (
+    api_house_build_list,
+    api_house_build_get,
+    api_house_build_create,
+    api_house_build_update,
+    api_house_build_delete,
+    api_house_build_prefill,
+    api_house_build_download,
+)
 from ._request_raw import _request_raw
 from ._download_file import _download_file
 from .test_connection import test_connection
@@ -81,6 +90,13 @@ __all__ = [
     "api_download_photo",
     "api_delete_photo_on_server",
     "api_export_filtered",
+    "api_house_build_list",
+    "api_house_build_get",
+    "api_house_build_create",
+    "api_house_build_update",
+    "api_house_build_delete",
+    "api_house_build_prefill",
+    "api_house_build_download",
     "_request_raw",
     "_download_file",
     "test_connection",

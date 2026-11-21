@@ -54,6 +54,7 @@ from ._generate_tekun_payment_template import _generate_tekun_payment_template
 from ._grade_promotion import _grade_promotion
 from ._import_land_subsidy import _import_land_subsidy
 from ._view_land_subsidy import _view_land_subsidy
+from ._view_house_build import _view_house_build
 from ._import_pension_insurance import _import_pension_insurance
 from ._view_pension_insurance import _view_pension_insurance
 from ._add_household import _add_household
@@ -125,6 +126,7 @@ __all__ = [
     '_grade_promotion',
     '_import_land_subsidy',
     '_view_land_subsidy',
+    '_view_house_build',
     '_import_pension_insurance',
     '_view_pension_insurance',
     '_add_household',
