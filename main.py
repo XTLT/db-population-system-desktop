@@ -73,6 +73,7 @@ from ui.main_window import (  # noqa: E402,F401
     _grade_promotion,
     _import_land_subsidy,
     _view_land_subsidy,
+    _view_house_build,
     _import_pension_insurance,
     _view_pension_insurance,
     _add_household,
@@ -144,6 +145,7 @@ MainWindow._generate_tekun_payment_template = _generate_tekun_payment_template
 MainWindow._grade_promotion = _grade_promotion
 MainWindow._import_land_subsidy = _import_land_subsidy
 MainWindow._view_land_subsidy = _view_land_subsidy
+MainWindow._view_house_build = _view_house_build
 MainWindow._import_pension_insurance = _import_pension_insurance
 MainWindow._view_pension_insurance = _view_pension_insurance
 MainWindow._add_household = _add_household
