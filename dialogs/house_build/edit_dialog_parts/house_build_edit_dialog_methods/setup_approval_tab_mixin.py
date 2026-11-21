@@ -16,7 +16,7 @@ class HouseBuildEditDialogSetupApprovalTabMixin:
         layout.setSpacing(8)
         font = QFont(FONT_NAME, FONT_SIZE)
 
-        box_head = QGroupBox("审批基本情况（面积单位：平方米）")
+        box_head = QGroupBox("审批基本情况（面积单位：m²）")
         grid = QGridLayout(box_head)
         self.e_ap_land_area = QLineEdit()
         self.e_ap_foundation = QLineEdit()
@@ -37,9 +37,9 @@ class HouseBuildEditDialogSetupApprovalTabMixin:
         self.cmb_ap_land_type.setFont(font)
 
         grid.addWidget(self._lbl("批准宅基地面积"), 0, 0)
-        grid.addWidget(self.e_ap_land_area, 0, 1)
+        grid.addWidget(self._area_input(self.e_ap_land_area), 0, 1)
         grid.addWidget(self._lbl("房基占地面积"), 0, 2)
-        grid.addWidget(self.e_ap_foundation, 0, 3)
+        grid.addWidget(self._area_input(self.e_ap_foundation), 0, 3)
         grid.addWidget(self._lbl("建房地址"), 0, 4)
         grid.addWidget(self.e_ap_address, 0, 5)
         grid.addWidget(self._lbl("建房类型"), 1, 0)
@@ -47,7 +47,7 @@ class HouseBuildEditDialogSetupApprovalTabMixin:
         grid.addWidget(self._lbl("地类"), 1, 2)
         grid.addWidget(self.cmb_ap_land_type, 1, 3)
         grid.addWidget(self._lbl("住房建筑面积"), 1, 4)
-        grid.addWidget(self.e_ap_floor_area, 1, 5)
+        grid.addWidget(self._area_input(self.e_ap_floor_area), 1, 5)
         grid.addWidget(self._lbl("建筑层数"), 2, 0)
         grid.addWidget(self.e_ap_floors, 2, 1)
         grid.addWidget(self._lbl("建筑高度"), 2, 2)
@@ -77,6 +77,18 @@ class HouseBuildEditDialogSetupApprovalTabMixin:
         layout.addStretch()
         scroll.setWidget(inner)
         outer.addWidget(scroll)
+
+    def _area_input(self, edit):
+        """面积输入框：右侧固定 m² 单位。"""
+        box = QWidget()
+        hbox = QHBoxLayout(box)
+        hbox.setContentsMargins(0, 0, 0, 0)
+        hbox.setSpacing(4)
+        hbox.addWidget(edit, 1)
+        unit = QLabel("m²")
+        unit.setFont(QFont(FONT_NAME, FONT_SIZE))
+        hbox.addWidget(unit, 0)
+        return box
 
     def _lbl(self, text):
         label = QLabel(text)
