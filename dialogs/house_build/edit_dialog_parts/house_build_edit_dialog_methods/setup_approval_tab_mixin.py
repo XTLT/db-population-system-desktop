@@ -16,7 +16,7 @@ class HouseBuildEditDialogSetupApprovalTabMixin:
         layout.setSpacing(8)
         font = QFont(FONT_NAME, FONT_SIZE)
 
-        box_head = QGroupBox("审批基本情况（面积单位：m²）")
+        box_head = QGroupBox("审批基本情况（灰色项自动沿用申请表，不用重复填；面积单位：m²）")
         grid = QGridLayout(box_head)
         self.e_ap_land_area = QLineEdit()
         self.e_ap_foundation = QLineEdit()
@@ -54,7 +54,21 @@ class HouseBuildEditDialogSetupApprovalTabMixin:
         grid.addWidget(self.e_ap_height, 2, 3)
         layout.addWidget(box_head)
 
+        # 与申请表重复的项只读，随申请表实时同步
+        for w in (self.e_ap_foundation, self.e_ap_floor_area, self.e_ap_floors, self.e_ap_height):
+            w.setReadOnly(True)
+            w.setStyleSheet("background-color: #f0f0f0;")
+        for combo in (self.cmb_ap_build_type, self.cmb_ap_land_type):
+            combo.setEnabled(False)
+        self._bind_apply_sync()
+
         self.ap_widgets = {}
+        note = QLabel("打印时五个机构意见格按空表原文（示例意见 +（盖章）+ 空白负责人/年月日），"
+                      "此处的意见与负责人仅存档、不打印。")
+        note.setFont(font)
+        note.setWordWrap(True)
+        note.setStyleSheet("color: #888888;")
+        layout.addWidget(note)
         for key, title in APPROVAL_GROUPS:
             box = QGroupBox(title)
             grid_b = QGridLayout(box)
@@ -77,6 +91,25 @@ class HouseBuildEditDialogSetupApprovalTabMixin:
         layout.addStretch()
         scroll.setWidget(inner)
         outer.addWidget(scroll)
+
+    def _bind_apply_sync(self):
+        """把申请表里重复字段的变化接到审批表的只读镜像上。"""
+        self.e_foundation_area.textChanged.connect(lambda _t: self._sync_approval_from_apply())
+        self.e_house_floor_area.textChanged.connect(lambda _t: self._sync_approval_from_apply())
+        self.e_floors.textChanged.connect(lambda _t: self._sync_approval_from_apply())
+        self.e_building_height.textChanged.connect(lambda _t: self._sync_approval_from_apply())
+        self.cmb_build_type.currentIndexChanged.connect(lambda _i: self._sync_approval_from_apply())
+        self.cmb_land_type.currentIndexChanged.connect(lambda _i: self._sync_approval_from_apply())
+        self._sync_approval_from_apply()
+
+    def _sync_approval_from_apply(self):
+        """审批表与申请表重复的项一律取申请表的值。"""
+        self.e_ap_foundation.setText(self.e_foundation_area.text().strip())
+        self.e_ap_floor_area.setText(self.e_house_floor_area.text().strip())
+        self.e_ap_floors.setText(self.e_floors.text().strip())
+        self.e_ap_height.setText(self.e_building_height.text().strip())
+        self.cmb_ap_build_type.setCurrentIndex(self.cmb_build_type.currentIndex())
+        self.cmb_ap_land_type.setCurrentIndex(self.cmb_land_type.currentIndex())
 
     def _area_input(self, edit):
         """面积输入框：右侧固定 m² 单位。"""

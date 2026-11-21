@@ -30,6 +30,7 @@ class HouseBuildEditDialogOnPrefillMixin:
         self.e_group_name.setText(result.get('group_name', ''))
         fill_member_rows(self.tbl_members, result.get('members') or [])
         self._show_history_note(result.get('hu_hao', ''), result.get('history') or [])
+        self._sync_approval_from_apply()
         QMessageBox.information(
             self, "完成",
             '已从人口库带出：%s，户内成员 %d 人。' % (

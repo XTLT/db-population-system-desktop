@@ -64,3 +64,5 @@ class HouseBuildEditDialogLoadDataMixin:
             widgets['date'].setText(item.get('date', ''))
 
         self._show_history_note(data.get('hu_hao', ''))
+        # 审批表镜像字段以申请表为准
+        self._sync_approval_from_apply()
