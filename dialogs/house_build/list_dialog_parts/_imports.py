@@ -18,4 +18,5 @@ from network.client import (
     api_house_build_delete,
     api_house_build_prefill,
     api_house_build_download,
+    api_house_build_batch_download,
 )

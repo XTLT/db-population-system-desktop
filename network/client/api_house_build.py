@@ -3,7 +3,7 @@
 from urllib.parse import urlencode
 
 from ._request import _request
-from ._download_file import _download_file
+from ._download_file import _download_file, _download_file_post
 
 
 def api_house_build_list(keyword: str = '', status: str = '', year: str = '',
@@ -38,3 +38,11 @@ def api_house_build_prefill(id_card: str) -> dict:
 
 def api_house_build_download(app_id: str, fmt: str, save_path: str):
     _download_file(f'/api/persons/house-build/{app_id}/export?fmt={fmt}', save_path)
+
+
+def api_house_build_batch_download(app_ids: list, save_path: str):
+    _download_file_post(
+        '/api/persons/house-build/batch-export',
+        {'ids': list(app_ids), 'fmt': 'pdf'},
+        save_path,
+    )

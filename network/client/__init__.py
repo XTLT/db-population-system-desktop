@@ -42,6 +42,7 @@ from .api_house_build import (
     api_house_build_delete,
     api_house_build_prefill,
     api_house_build_download,
+    api_house_build_batch_download,
 )
 from ._request_raw import _request_raw
 from ._download_file import _download_file
@@ -97,6 +98,7 @@ __all__ = [
     "api_house_build_delete",
     "api_house_build_prefill",
     "api_house_build_download",
+    "api_house_build_batch_download",
     "_request_raw",
     "_download_file",
     "test_connection",
