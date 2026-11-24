@@ -63,6 +63,9 @@ class HouseBuildEditDialogSetupUiMixin:
         btn_xlsx.setStyleSheet("padding: 8px;")
         btn_pdf = QPushButton("导出PDF")
         btn_pdf.setStyleSheet("padding: 8px;")
+        btn_multi = QPushButton("多户导出（会议/公示）")
+        btn_multi.setStyleSheet("padding: 8px;")
+        btn_multi.setToolTip("打开列表勾选同一场会议的户；每户 6 页，会议记录和公示多户共用一张")
         btn_save = QPushButton("保存")
         btn_save.setStyleSheet(f"background-color: {BTN_SAVE_COLOR}; color: white; padding: 8px 20px;")
         btn_cancel = QPushButton("取消")
@@ -70,6 +73,7 @@ class HouseBuildEditDialogSetupUiMixin:
 
         btn_layout.addWidget(btn_xlsx)
         btn_layout.addWidget(btn_pdf)
+        btn_layout.addWidget(btn_multi)
         btn_layout.addStretch()
         btn_layout.addWidget(btn_save)
         btn_layout.addWidget(btn_cancel)
@@ -80,3 +84,4 @@ class HouseBuildEditDialogSetupUiMixin:
         btn_cancel.clicked.connect(self.reject)
         btn_xlsx.clicked.connect(lambda: self._do_export('xlsx'))
         btn_pdf.clicked.connect(lambda: self._do_export('pdf'))
+        btn_multi.clicked.connect(self._do_multi_export)

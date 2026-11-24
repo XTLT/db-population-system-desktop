@@ -36,13 +36,25 @@ def api_house_build_prefill(id_card: str) -> dict:
     return _request('GET', '/api/persons/house-build/prefill?' + urlencode({'id_card': id_card}))
 
 
-def api_house_build_download(app_id: str, fmt: str, save_path: str):
-    _download_file(f'/api/persons/house-build/{app_id}/export?fmt={fmt}', save_path)
+def api_house_build_download(app_id: str, fmt: str, save_path: str, meeting: dict | None = None):
+    params = {'fmt': fmt}
+    if fmt == 'pdf' and meeting:
+        params.update({
+            'meeting_date': meeting.get('date', ''),
+            'meeting_place': meeting.get('place', ''),
+            'meeting_host': meeting.get('host', ''),
+            'meeting_recorder': meeting.get('recorder', ''),
+            'meeting_township': meeting.get('township', ''),
+            'meeting_village': meeting.get('village', ''),
+        })
+    _download_file(
+        f'/api/persons/house-build/{app_id}/export?' + urlencode(params), save_path,
+    )
 
 
-def api_house_build_batch_download(app_ids: list, save_path: str):
+def api_house_build_batch_download(app_ids: list, save_path: str, meeting: dict | None = None):
     _download_file_post(
         '/api/persons/house-build/batch-export',
-        {'ids': list(app_ids), 'fmt': 'pdf'},
+        {'ids': list(app_ids), 'fmt': 'pdf', 'meeting': meeting or {}},
         save_path,
     )
