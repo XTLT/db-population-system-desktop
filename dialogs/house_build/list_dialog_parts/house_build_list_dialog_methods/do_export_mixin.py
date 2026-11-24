@@ -165,24 +165,19 @@ class _BatchMeetingDialog(QDialog):
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
-        addr_hint = QLabel(
-            "乡（镇、街道）/村（社区）为本次共用抬头，会写入每户承诺书、成员证明、"
-            "一户一宅和相邻意见；详细地址仍取各户自己的档案。"
-        )
-        addr_hint.setWordWrap(True)
-        addr_hint.setStyleSheet("color: #666;")
-        layout.addWidget(addr_hint)
-
-        addr_form = QFormLayout()
+        addr_box = QGroupBox("本人申请在（本次导出共用抬头）")
+        addr_row = QHBoxLayout(addr_box)
         self.ed_township = QLineEdit()
         self.ed_township.setText(township)
         self.ed_township.setPlaceholderText("例：云峰镇；可直接写全称")
         self.ed_village = QLineEdit()
         self.ed_village.setText(village)
         self.ed_village.setPlaceholderText("例：云峰村；可直接写全称")
-        addr_form.addRow("乡（镇、街道）：", self.ed_township)
-        addr_form.addRow("村（社区）：", self.ed_village)
-        layout.addLayout(addr_form)
+        addr_row.addWidget(QLabel("乡（镇、街道）："))
+        addr_row.addWidget(self.ed_township, 1)
+        addr_row.addWidget(QLabel("村（社区）："))
+        addr_row.addWidget(self.ed_village, 1)
+        layout.addWidget(addr_box)
 
         top = QHBoxLayout()
         top.addWidget(QLabel("参会/公示户："))
